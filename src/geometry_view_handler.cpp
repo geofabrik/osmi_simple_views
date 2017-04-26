@@ -173,26 +173,26 @@ void GeometryViewHandler::single_node_in_way(const osmium::Way& way) {
 }
 
 void GeometryViewHandler::duplicated_node_in_way(const osmium::Way& way) {
-    osmium::object_id_type last_node = 0;
     // prevent that a way with duplicates is written twice
-    bool first_error = false;
-    //TODO extend by a check of the coordinates
-    for (const osmium::NodeRef& nd_ref : way.nodes()) {
-        if (!nd_ref.location().valid()) {
+    bool multiple_errors = false;
+    for (osmium::WayNodeList::const_iterator it = way.nodes().cbegin(); it != way.nodes().cend() - 1;
+            ++it) {
+        osmium::WayNodeList::const_iterator next = it + 1;
+        if (!(it->location().valid()) || !(next->location().valid())) {
             continue;
         }
-        if (last_node == nd_ref.ref()) {
-            gdalcpp::Feature feature(m_geometry_duplicate_node_in_way_node, m_factory.create_point(nd_ref));
+        if (it->ref() == next->ref() || (it->lat() == next->lat() && it->lon() == next->lon())) {
+            gdalcpp::Feature feature(m_geometry_duplicate_node_in_way_node, m_factory.create_point(*it));
             static char idbuffer[20];
             sprintf(idbuffer, "%ld", way.id());
             feature.set_field("way_id", idbuffer);
             static char idbuffer2[20];
-            sprintf(idbuffer2, "%ld", nd_ref.ref());
+            sprintf(idbuffer2, "%ld", it->ref());
             feature.set_field("node_id", idbuffer2);
             std::string the_timestamp (way.timestamp().to_iso());
             feature.set_field("lastchange", the_timestamp.c_str());
             feature.add_to_layer();
-            if (first_error) {
+            if (!multiple_errors) {
                 gdalcpp::Feature way_feature(m_geometry_duplicate_node_in_way_way, m_factory.create_linestring(way));
                 way_feature.set_field("way_id", idbuffer);
                 way_feature.set_field("node_id", idbuffer);
@@ -201,9 +201,8 @@ void GeometryViewHandler::duplicated_node_in_way(const osmium::Way& way) {
                 way_feature.set_field("lastchange", the_timestamp.c_str());
                 way_feature.add_to_layer();
             }
-            first_error = true;
+            multiple_errors = true;
         }
-        last_node = nd_ref.ref();
     }
 }
 
@@ -326,6 +325,23 @@ bool GeometryViewHandler::all_nodes_valid(const osmium::WayNodeList& wnl) {
     return true;
 }
 
+bool GeometryViewHandler::way_is_degenerated(const osmium::WayNodeList& nodes) {
+    if (nodes.size() == 1) {
+        return true;
+    }
+    for (osmium::WayNodeList::const_iterator it = nodes.cbegin(); it != nodes.cend() - 1;
+            ++it) {
+        osmium::WayNodeList::const_iterator next = it + 1;
+        // If we found two consecutive nodes which have different IDs and locations,
+        // we are able to build a valid LineString. For most valid ways the loop will be
+        // iterated only one time.
+        if (next->lat() != it->lat() && next->lon() != it->lon()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void GeometryViewHandler::way(const osmium::Way& way) {
     bool valid_nodes = all_nodes_valid(way.nodes());
     if (valid_nodes) {
@@ -333,7 +349,7 @@ void GeometryViewHandler::way(const osmium::Way& way) {
             handle_way_many_nodes(way);
         }
     }
-    if (way.nodes().size() == 1) {
+    if (way_is_degenerated(way.nodes())) {
         if (valid_nodes) {
             single_node_in_way(way);
         }

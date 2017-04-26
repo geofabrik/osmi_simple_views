@@ -170,6 +170,14 @@ class GeometryViewHandler : public osmium::handler::Handler {
     void check_self_intersection(const osmium::Way& way);
 
     /**
+     * Check if a way is degenerated.
+     *
+     * A way is degenerated if it has only one node or if it lacks of a pair of two consecutive nodes with
+     * different ID and different location.
+     */
+    bool way_is_degenerated(const osmium::WayNodeList& nodes);
+
+    /**
      * Check if all nodes of the way are valid.
      */
     bool all_nodes_valid(const osmium::WayNodeList& wnl);
