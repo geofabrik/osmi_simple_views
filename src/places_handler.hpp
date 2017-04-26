@@ -46,6 +46,7 @@ class PlacesHandler : public osmium::handler::Handler {
     gdalcpp::Layer m_polygons;
     gdalcpp::Layer m_errors_points;
     gdalcpp::Layer m_errors_polygons;
+    gdalcpp::Layer m_cities;
 
     /**
      * Check if value of the place tag is well-known.
@@ -68,9 +69,12 @@ class PlacesHandler : public osmium::handler::Handler {
      * \param osm_object OSM object to be written
      * \param geomtype char representing the type of the OSM object (n = node, w = way, r = relation)
      * \param id ID of the OSM object
+     * \param place_value value of the place key of the OSM object
+     * \param should the object be added to the cities layer instead of a normal layer?
      */
     void add_feature(std::unique_ptr<OGRGeometry>&& geometry, const osmium::OSMObject& osm_object,
-            const char* geomtype, const osmium::object_id_type id);
+            const char* geomtype, const osmium::object_id_type id, const char* place_value,
+            bool city_layer = false);
 
     /**
      * Set some basic fields needed by all layers
@@ -94,6 +98,12 @@ class PlacesHandler : public osmium::handler::Handler {
      */
     void add_error(const osmium::OSMObject& osm_object, const osmium::object_id_type id,
             const char* geomtype, std::string error);
+
+    /**
+     * Check if the population of a settlement is within resonable bounds.
+     */
+    void check_population(const osmium::OSMObject& osm_object, const osmium::object_id_type id,
+            const char* geomtype, const char* place_value, long int population);
 
 public:
     PlacesHandler() = delete;

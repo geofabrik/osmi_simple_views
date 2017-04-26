@@ -21,8 +21,8 @@ PlacesHandler::PlacesHandler(std::string& output_filename, std::string& output_f
         m_points(m_dataset, "points", wkbPoint),
         m_polygons(m_dataset, "polygons", wkbMultiPolygon),
         m_errors_points(m_dataset, "errors_points", wkbPoint),
-        m_errors_polygons(m_dataset, "errors_polygons", wkbMultiPolygon)
-        {
+        m_errors_polygons(m_dataset, "errors_polygons", wkbMultiPolygon),
+        m_cities(m_dataset, "cities", wkbPoint) {
     m_dataset.enable_auto_transactions(10000);
     // default layer creation options
     if (output_format == "SQlite") {
@@ -78,6 +78,15 @@ PlacesHandler::PlacesHandler(std::string& output_filename, std::string& output_f
     m_errors_polygons.add_field("error", OFTString, 60);
     m_errors_polygons.add_field("value", OFTString, 100);
     m_errors_polygons.add_field("lastchange", OFTString, 21);
+    // cities layer
+    m_cities.add_field("node_id", OFTString, 10);
+    m_cities.add_field("popstr", OFTString, 20);
+    m_cities.add_field("population", OFTInteger, 10);
+    m_cities.add_field("capitalstr", OFTString, 20);
+    m_cities.add_field("capital", OFTInteger, 2);
+    m_cities.add_field("admlvl", OFTInteger, 2);
+    m_cities.add_field("name", OFTString, 100);
+    m_cities.add_field("lastchange", OFTString, 21);
 }
 
 bool PlacesHandler::place_value_ok(const char* value) {
@@ -159,31 +168,65 @@ bool PlacesHandler::is_capital(const osmium::TagList& tags) {
     return false;
 }
 
+void PlacesHandler::check_population(const osmium::OSMObject& osm_object, const osmium::object_id_type id,
+        const char* geomtype, const char* place_value, long int population) {
+    if (!place_value || population == 0) {
+        return;
+    }
+    if (!strcmp(place_value, "city") && population < 10000) {
+        add_error(osm_object, id, geomtype, "population too small for city");
+    } else if (!strcmp(place_value, "town") && population > 200000) {
+        add_error(osm_object, id, geomtype, "population too large for town");
+    } else if (!strcmp(place_value, "town") && population < 500) {
+        add_error(osm_object, id, geomtype, "population too small for town");
+    } else if (!strcmp(place_value, "village") && population > 20000) {
+        add_error(osm_object, id, geomtype, "population too small for town");
+    } else if (!strcmp(place_value, "hamlet") && population > 1000) {
+        add_error(osm_object, id, geomtype, "population too large for hamlet");
+    } else if (!strcmp(place_value, "suburb") && population > 1000000) {
+        add_error(osm_object, id, geomtype, "population too large for suburb");
+    } else if (!strcmp(place_value, "isolated_dwelling") && population > 500) {
+        add_error(osm_object, id, geomtype, "population too large for suburb");
+    } else if (!strcmp(place_value, "city") && population > 60000000) {
+        add_error(osm_object, id, geomtype, "population too large for city");
+    } else if (population > 12000000000) {
+        add_error(osm_object, id, geomtype, "population too large for planet");
+    }
+}
+
 void PlacesHandler::add_feature(std::unique_ptr<OGRGeometry>&& geometry, const osmium::OSMObject& osm_object,
-        const char* geomtype, const osmium::object_id_type id) {
+        const char* geomtype, const osmium::object_id_type id, const char* place_value, bool city_layer /*= false*/) {
     gdalcpp::Layer* current_layer = &m_points;
     if (osm_object.type() == osmium::item_type::area) {
         current_layer = &m_polygons;
     }
+    if (city_layer) {
+        current_layer = &m_cities;
+    }
     gdalcpp::Feature feature(*current_layer, std::move(geometry));
     set_basic_fields(feature, osm_object, id);
 
-    const char* place = osm_object.get_value_by_key("place", "");
-    feature.set_field("place", place);
-    if (place_value_ok(place)) {
-        feature.set_field("type", osm_object.get_value_by_key("place", ""));
-    } else {
-        add_error(osm_object, id, geomtype, "unknown place value");
+    // place and type field
+    if (!city_layer) {
+        feature.set_field("place", place_value);
+        if (place_value_ok(place_value)) {
+            feature.set_field("type", place_value);
+        } else {
+            add_error(osm_object, id, geomtype, "unknown place value");
+        }
     }
+
+    // population
     const char* popstr = osm_object.get_value_by_key("population");
     if (popstr) {
         feature.set_field("popstr", popstr);
         char* rest;
-        long int value_int = std::strtol(popstr, &rest, 10);
+        long int population = std::strtol(popstr, &rest, 10);
         if (*rest) {
             add_error(osm_object, id, geomtype, "characters after population number");
-        } else if (value_int < 100000000 && value_int > 0) {
-            feature.set_field("population", static_cast<int>(value_int));
+        } else if (population < 20000000000 && population > 0) {
+            feature.set_field("population", static_cast<int>(population));
+            check_population(osm_object, id, geomtype, place_value, population);
         } else {
             feature.set_field("population", 0);
             add_error(osm_object, id, geomtype, "population number beyond usual range");
@@ -191,6 +234,8 @@ void PlacesHandler::add_feature(std::unique_ptr<OGRGeometry>&& geometry, const o
     } else {
         feature.set_field("population", 0);
     }
+
+    // capital
     const char* capitalstr = osm_object.get_value_by_key("capital", "");
     feature.set_field("capitalstr", capitalstr);
     if (is_capital(osm_object.tags())) {
@@ -208,6 +253,8 @@ void PlacesHandler::add_feature(std::unique_ptr<OGRGeometry>&& geometry, const o
     } else {
         feature.set_field("admlvl", static_cast<int>(admlvl_int));
     }
+
+    // name
     feature.set_field("name", osm_object.get_value_by_key("name", ""));
     feature.add_to_layer();
 }
@@ -248,18 +295,34 @@ void PlacesHandler::add_error(const osmium::OSMObject& osm_object, const osmium:
 void PlacesHandler::node(const osmium::Node& node) {
     const char* place = node.get_value_by_key("place");
     if (place) {
-        add_feature(m_factory.create_point(node), node, "n", node.id());
+        add_feature(m_factory.create_point(node), node, "n", node.id(), place);
+        if (!strcmp(place, "city")) {
+            add_feature(m_factory.create_point(node), node, "n", node.id(), place, true);
+        }
     }
 }
 
 void PlacesHandler::area(const osmium::Area& area) {
     const char* place = area.get_value_by_key("place");
     try {
+        std::string geomtype;
         if (place) {
             if (area.from_way()) {
-                add_feature(m_factory.create_multipolygon(area), area, "w", area.orig_id());
+                geomtype = "w";
+                add_feature(m_factory.create_multipolygon(area), area, geomtype.c_str(), area.orig_id(), place);
             } else {
-                add_feature(m_factory.create_multipolygon(area), area, "r", area.orig_id());
+                geomtype = "r";
+                add_feature(m_factory.create_multipolygon(area), area, geomtype.c_str(), area.orig_id(), place);
+            }
+        }
+        if (place && !strcmp(place, "city")) {
+            std::unique_ptr<OGRMultiPolygon> multipolygon = m_factory.create_multipolygon(area);
+            auto centroid_point = std::unique_ptr<OGRPoint>(new OGRPoint());
+            OGRErr centroid_error = multipolygon->Centroid(centroid_point.get());
+            if (centroid_error == OGRERR_NONE) {
+                add_feature(std::unique_ptr<OGRPoint>(std::move(centroid_point)), area, geomtype.c_str(), area.orig_id(), place, true);
+            } else {
+                m_verbose_output << "Error creating centroid for area " << area.id() << ": " << centroid_error << "\n";
             }
         }
     } catch (osmium::geometry_error& err) {

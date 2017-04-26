@@ -21,6 +21,7 @@
 #include <osmium/visitor.hpp>
 
 #include "places_handler.hpp"
+#include "geometry_view_handler.hpp"
 
 using index_type = osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>;
 using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
@@ -36,7 +37,8 @@ void print_help(char* arg0) {
 #ifndef ONLYMERCATOROUTPUT
     std::cerr << "  -s EPSG, --srs=ESPG  Output projection (EPSG code) (default: 3857)\n";
 #endif
-    std::cerr << "  -v, --verbose        Verbose output\n";
+    std::cerr << "  -t TYPE, --type=TYPE View to be produced\n" \
+              << "  -v, --verbose        Verbose output\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -47,10 +49,12 @@ int main(int argc, char* argv[]) {
         {"gdal-lco", required_argument, 0, 200},
         {"index", required_argument, 0, 'i'},
         {"srs", required_argument, 0, 's'},
+        {"type",   required_argument, 0, 't'},
         {"verbose",   no_argument, 0, 'v'},
         {0, 0, 0, 0}
     };
 
+    std::string view_type = "";
     std::string location_index_type = "sparse_mmap_array";
     std::vector<std::string> gdal_options;
     std::string output_format = "SQlite";
@@ -58,7 +62,7 @@ int main(int argc, char* argv[]) {
     bool verbose = false;
 
     while (true) {
-        int c = getopt_long(argc, argv, "hf:i:s:v", long_options, 0);
+        int c = getopt_long(argc, argv, "hf:i:s:t:v", long_options, 0);
         if (c == -1) {
             break;
         }
@@ -106,6 +110,9 @@ int main(int argc, char* argv[]) {
                 }
 #endif
                 break;
+            case 't':
+                view_type = optarg;
+                break;
             case 'v':
                 verbose = true;
                 break;
@@ -127,30 +134,43 @@ int main(int argc, char* argv[]) {
         input_filename = "-";
     }
 
+    if (view_type == "") {
+        std::cerr << "ERROR: Argument -t VIEW is mandatory.\n";
+        print_help(argv[0]);
+        exit(1);
+    }
+
 
     const auto& map_factory = osmium::index::MapFactory<osmium::unsigned_object_id_type, osmium::Location>::instance();
     auto location_index = map_factory.create_map(location_index_type);
     location_handler_type location_handler(*location_index);
 
+    osmium::util::VerboseOutput verbose_output(verbose);
+
     osmium::area::Assembler::config_type assembler_config;
     osmium::area::MultipolygonCollector<osmium::area::Assembler> collector(assembler_config);
 
-    osmium::util::VerboseOutput verbose_output(verbose);
+    if (view_type == "places") {
+        verbose_output.print("Pass 1 (Multipolygons) ...\n");
+        osmium::io::Reader reader1(input_filename, osmium::osm_entity_bits::relation);
+        collector.read_relations(reader1);
+        reader1.close();
 
-    verbose_output.print("Pass 1 (Multipolygons) ...\n");
-    osmium::io::Reader reader1(input_filename, osmium::osm_entity_bits::relation);
-    collector.read_relations(reader1);
-    reader1.close();
-
-    verbose_output.print("Pass 1 done\n");
+        verbose_output.print("Pass 1 done\n");
+    }
     verbose_output.print("Pass 2 ...\n");
 
-    PlacesHandler places_handler(output_filename, output_format, gdal_options, verbose_output, srs);
     osmium::io::Reader reader2(input_filename, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way);
-    osmium::apply(reader2, location_handler, places_handler,
-            collector.handler([&places_handler](const osmium::memory::Buffer& area_buffer) {
-            osmium::apply(area_buffer, places_handler);
-            }));
+    if (view_type == "places") {
+        PlacesHandler places_handler(output_filename, output_format, gdal_options, verbose_output, srs);
+        osmium::apply(reader2, location_handler, places_handler,
+                collector.handler([&places_handler](const osmium::memory::Buffer& area_buffer) {
+                osmium::apply(area_buffer, places_handler);
+                }));
+    } else if (view_type == "geometry") {
+        GeometryViewHandler geom_view_handler(output_filename, output_format, gdal_options, verbose_output, srs);
+        osmium::apply(reader2, location_handler, geom_view_handler);
+    }
     reader2.close();
     verbose_output.print("Pass 2 done\n");
 }
