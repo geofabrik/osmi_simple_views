@@ -181,7 +181,7 @@ void GeometryViewHandler::duplicated_node_in_way(const osmium::Way& way) {
     }
 }
 
-/*static*/ osmium::Location GeometryViewHandler::intersection(const osmium::Segment& s1, const osmium::Segment&s2) {
+/*static*/ osmium::Location GeometryViewHandler::intersection(const osmium::UndirectedSegment& s1, const osmium::UndirectedSegment&s2) {
     if (s1.first()  == s2.first()  ||
         s1.first()  == s2.second() ||
         s1.second() == s2.first()  ||

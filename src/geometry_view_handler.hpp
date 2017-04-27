@@ -111,7 +111,7 @@ class GeometryViewHandler : public AbstractViewHandler {
     /**
      * Get intersection point of two segments.
      */
-    static osmium::Location intersection(const osmium::Segment& s1, const osmium::Segment&s2);
+    static osmium::Location intersection(const osmium::UndirectedSegment& s1, const osmium::UndirectedSegment&s2);
 
     /**
      * Check if the intervals of two segments on the x axis overlap. If not, an intersection is impossible.
