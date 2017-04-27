@@ -8,18 +8,6 @@
 #ifndef SRC_GEOMETRY_VIEW_HANDLER_HPP_
 #define SRC_GEOMETRY_VIEW_HANDLER_HPP_
 
-#include <gdalcpp.hpp>
-
-#include <osmium/handler.hpp>
-#include <osmium/geom/ogr.hpp>
-
-#ifdef ONLYMERCATOROUTPUT
-    #include <osmium/geom/mercator_projection.hpp>
-#else
-    #include <osmium/geom/projection.hpp>
-#endif
-
-#include <osmium/osm/node.hpp>
 #include <osmium/osm/undirected_segment.hpp>
 
 #include "abstract_view_handler.hpp"

@@ -19,8 +19,6 @@
     #include <osmium/geom/projection.hpp>
 #endif
 
-#include <osmium/osm/node.hpp>
-#include <osmium/osm/undirected_segment.hpp>
 #include <osmium/osm/way.hpp>
 #include <osmium/util/verbose_output.hpp>
 
