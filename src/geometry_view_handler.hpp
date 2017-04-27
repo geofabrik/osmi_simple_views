@@ -29,10 +29,6 @@ class GeometryViewHandler : public AbstractViewHandler {
     gdalcpp::Layer m_geometry_self_intersection_ways;
     /// layer for intersection points of self intersecting ways
     gdalcpp::Layer m_geometry_self_intersection_points;
-
-    /// maximum length of a string field
-    static constexpr size_t MAX_FIELD_LENGTH = 254;
-
     /**
      * Add a feature to the output layers.
      *

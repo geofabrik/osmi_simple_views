@@ -22,6 +22,7 @@
 
 #include "places_handler.hpp"
 #include "geometry_view_handler.hpp"
+#include "highway_view_handler.hpp"
 
 using index_type = osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>;
 using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
@@ -170,6 +171,9 @@ int main(int argc, char* argv[]) {
     } else if (view_type == "geometry") {
         GeometryViewHandler geom_view_handler(output_filename, output_format, gdal_options, verbose_output, srs);
         osmium::apply(reader2, location_handler, geom_view_handler);
+    } else if (view_type == "highways") {
+        HighwayViewHandler highway_view_handler(output_filename, output_format, gdal_options, verbose_output, srs);
+        osmium::apply(reader2, location_handler, highway_view_handler);
     }
     reader2.close();
     verbose_output.print("Pass 2 done\n");
