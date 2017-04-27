@@ -21,28 +21,10 @@
 
 #include <osmium/osm/node.hpp>
 #include <osmium/osm/undirected_segment.hpp>
-#include <osmium/osm/way.hpp>
-#include <osmium/util/verbose_output.hpp>
 
-class GeometryViewHandler : public osmium::handler::Handler {
+#include "abstract_view_handler.hpp"
 
-    /**
-     * If ONLYMERCATOROUTPUT is defined, output coordinates are always Web
-     * Mercator coordinates. If it is not defined, we will transform them if
-     * the output SRS is different from the input SRS (4326).
-     */
-#ifdef ONLYMERCATOROUTPUT
-    /// factory to build OGR geometries in Web Mercator projection
-    osmium::geom::OGRFactory<osmium::geom::MercatorProjection> m_factory;
-#else
-    /// factory to build OGR geometries with a coordinate transformation if necessary
-    osmium::geom::OGRFactory<osmium::geom::Projection> m_factory;
-#endif
-
-    /// reference to output manager for STDERR
-    osmium::util::VerboseOutput& m_verbose_output;
-    /// ORG dataset
-    gdalcpp::Dataset m_dataset;
+class GeometryViewHandler : public AbstractViewHandler {
     /// layer for ways which have many nodes
     gdalcpp::Layer m_geometry_long_ways;
     /// layer for segments which are very long
@@ -176,11 +158,6 @@ class GeometryViewHandler : public osmium::handler::Handler {
      * different ID and different location.
      */
     bool way_is_degenerated(const osmium::WayNodeList& nodes);
-
-    /**
-     * Check if all nodes of the way are valid.
-     */
-    bool all_nodes_valid(const osmium::WayNodeList& wnl);
 
 public:
     GeometryViewHandler() = delete;

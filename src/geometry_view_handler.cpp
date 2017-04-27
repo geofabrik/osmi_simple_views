@@ -13,11 +13,7 @@
 GeometryViewHandler::GeometryViewHandler(std::string& output_filename, std::string& output_format,
         std::vector<std::string>& gdal_options, osmium::util::VerboseOutput& verbose_output,
         int epsg /*= 3857*/) :
-#ifndef ONLYMERCATOROUTPUT
-        m_factory(osmium::geom::Projection(epsg)),
-#endif
-        m_verbose_output(verbose_output),
-        m_dataset(output_format, output_filename, gdalcpp::SRS(epsg)),
+        AbstractViewHandler(output_filename, output_format, gdal_options, verbose_output, epsg),
         m_geometry_long_ways(m_dataset, "geometry_long_ways", wkbLineString),
         m_geometry_long_seg_seg(m_dataset, "geometry_long_seg_seg", wkbLineString),
         m_geometry_long_seg_way(m_dataset, "geometry_long_seg_way", wkbLineString),
@@ -27,28 +23,6 @@ GeometryViewHandler::GeometryViewHandler(std::string& output_filename, std::stri
         m_geometry_self_intersection_ways(m_dataset, "geometry_self_intersection_ways", wkbLineString),
         m_geometry_self_intersection_points(m_dataset, "geometry_self_intersection_points", wkbPoint)
         {
-    m_dataset.enable_auto_transactions(10000);
-    // default layer creation options
-    if (output_format == "SQlite") {
-        CPLSetConfigOption("OGR_SQLITE_SYNCHRONOUS", "OFF");
-        CPLSetConfigOption("OGR_SQLITE_PRAGMA", "journal_mode=OFF,TEMP_STORE=MEMORY,temp_store=memory,LOCKING_MODE=EXCLUSIVE");
-        CPLSetConfigOption("OGR_SQLITE_CACHE", "600");
-        CPLSetConfigOption("OGR_SQLITE_JOURNAL", "OFF");
-        CPLSetConfigOption("SPATIAL_INDEX", "NO");
-        CPLSetConfigOption("COMPRESS_GEOM", "NO");
-        CPLSetConfigOption("SPATIALITE", "YES");
-    } else if (output_format == "ESRI Shapefile") {
-        CPLSetConfigOption("SHAPE_ENCODING", "UTF8");
-    }
-    // apply layer creation options
-    for (std::string& option : gdal_options) {
-        size_t equal_sign_pos = option.find("=");
-        if (equal_sign_pos != std::string::npos) {
-            std::string key = option.substr(0, equal_sign_pos);
-            std::string value = option.substr(equal_sign_pos+1, option.size() - 1 - equal_sign_pos);
-            CPLSetConfigOption(key.c_str(), value.c_str());
-        }
-    }
     // add fields to layers
     m_geometry_long_ways.add_field("way_id", OFTString, 10);
     m_geometry_long_ways.add_field("lastchange", OFTString, 21);
@@ -315,16 +289,6 @@ void GeometryViewHandler::check_self_intersection(const osmium::Way& way) {
     }
 }
 
-bool GeometryViewHandler::all_nodes_valid(const osmium::WayNodeList& wnl) {
-    for (const osmium::NodeRef& nd_ref : wnl) {
-        if (!nd_ref.location().valid()) {
-            m_verbose_output << "Invalid location for node " << nd_ref.ref() << "\n";
-            return false;
-        }
-    }
-    return true;
-}
-
 bool GeometryViewHandler::way_is_degenerated(const osmium::WayNodeList& nodes) {
     if (nodes.size() == 1) {
         return true;
@@ -335,7 +299,7 @@ bool GeometryViewHandler::way_is_degenerated(const osmium::WayNodeList& nodes) {
         // If we found two consecutive nodes which have different IDs and locations,
         // we are able to build a valid LineString. For most valid ways the loop will be
         // iterated only one time.
-        if (next->lat() != it->lat() && next->lon() != it->lon()) {
+        if (next->lat() != it->lat() || next->lon() != it->lon()) {
             return false;
         }
     }
