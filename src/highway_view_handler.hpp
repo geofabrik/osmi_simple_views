@@ -8,11 +8,18 @@
 #ifndef SRC_HIGHWAY_VIEW_HANDLER_HPP_
 #define SRC_HIGHWAY_VIEW_HANDLER_HPP_
 
+#include <string.h>
 #include <functional>
 #include <string>
 #include <vector>
 
 #include "abstract_view_handler.hpp"
+
+struct charptr_comp {
+    bool operator()(const char* const a, const char* const b) const {
+        return strcmp(a, b) < 0;
+    }
+};
 
 class HighwayViewHandler : public AbstractViewHandler {
     /// layer for ways with lanes=* value which is not an unsigned integer
@@ -24,13 +31,12 @@ class HighwayViewHandler : public AbstractViewHandler {
     gdalcpp::Layer m_highway_name_missing_major;
     gdalcpp::Layer m_highway_name_missing_minor;
     gdalcpp::Layer m_highway_oneway;
-    gdalcpp::Layer m_highway_type_deprecated;
     gdalcpp::Layer m_highway_road;
     gdalcpp::Layer m_highway_type_unknown;
 
 
     /// param vector of functions returning false if a tag is malformed.
-    std::vector<std::function<bool (const char*)>> m_checks;
+    std::vector<std::function<bool (const osmium::TagList&)>> m_checks;
 
     /**
      * vector with keys of the OSM tags to be checked. The n-th element of this vector
@@ -40,6 +46,12 @@ class HighwayViewHandler : public AbstractViewHandler {
 
     /// output layer for errorenous objects if the check fails
     std::vector<gdalcpp::Layer*> m_layers;
+
+    /**
+     * Check if the value of the maxspeed tag matches one of the common
+     * values like RO:urban.
+     */
+    static bool is_valid_const_speed(const char* maxspeed_value);
 
     /**
      * Build a string containing tags (length of key and value below 48 characters)
@@ -79,9 +91,24 @@ class HighwayViewHandler : public AbstractViewHandler {
      *
      * \returns true if the name is a valid name
      */
-    static bool name_not_fixme(const char* name_value);
+    static bool name_not_fixme(const osmium::TagList& tags);
 
-    static bool lanes_ok(const char* name_value);
+    static bool lanes_ok(const osmium::TagList& tags);
+
+    static bool oneway_ok(const osmium::TagList& tags);
+
+    static bool maxspeed_ok(const osmium::TagList& tags);
+
+    static bool maxheight_ok(const osmium::TagList& tags);
+
+    static bool name_missing_major(const osmium::TagList& tags);
+
+    static bool name_missing_minor(const osmium::TagList& tags);
+
+    static bool highway_road(const osmium::TagList& tags);
+
+    static bool highway_unknown(const osmium::TagList& tags);
+
 
     /**
      * Run all checks on an OSM object.
@@ -93,11 +120,11 @@ class HighwayViewHandler : public AbstractViewHandler {
     /**
      * Register a check to be run for each object
      *
-     * \param function function to be run. It has to return false if the value is malformed.
+     * \param function function to be run. It has to return false if the object should be added to the layer.
      * \param key OSM key whose value has to be checked
      * \param layer layer which the errorenous OSM object should be added to
      */
-    void register_check(std::function<bool (const char*)> function, std::string key, gdalcpp::Layer* layer);
+    void register_check(std::function<bool (const osmium::TagList&)> function, std::string key, gdalcpp::Layer* layer);
 
 public:
     HighwayViewHandler(std::string& output_filename, std::string& output_format, std::vector<std::string>& gdal_options,
