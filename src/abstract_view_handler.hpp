@@ -58,6 +58,8 @@ public:
 
     virtual ~AbstractViewHandler();
 
+    void node(const osmium::Node&) {}
+
     virtual void way(const osmium::Way& way) = 0;
 };
 
