@@ -6,7 +6,6 @@
  */
 
 #include "highway_view_handler.hpp"
-#include <iostream>
 
 
 HighwayViewHandler::HighwayViewHandler(std::string& output_filename, std::string& output_format,
@@ -164,6 +163,10 @@ std::string HighwayViewHandler::tags_string(const osmium::TagList& tags, const c
 
 void HighwayViewHandler::set_fields(gdalcpp::Layer* layer, const osmium::Way& way, const char* third_field_name,
         const char* third_field_value, std::string& other_tags) {
+    if (way.nodes().size() <= 2 && way.nodes().front().location() == way.nodes().back().location()) {
+        // Way is too short to build a valid linestring. Other views will report this as an error.
+        return;
+    }
     gdalcpp::Feature feature(*layer, m_factory.create_linestring(way));
     static char idbuffer[20];
     sprintf(idbuffer, "%ld", way.id());
