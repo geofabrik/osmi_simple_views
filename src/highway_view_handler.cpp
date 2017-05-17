@@ -174,7 +174,7 @@ void HighwayViewHandler::set_fields(gdalcpp::Layer* layer, const osmium::Way& wa
         }
         feature.add_to_layer();
     } catch (osmium::geometry_error& err) {
-        m_verbose_output << err.what();
+        m_verbose_output << err.what() << "\n";
     }
 }
 
