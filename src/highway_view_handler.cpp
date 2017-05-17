@@ -243,6 +243,9 @@ bool HighwayViewHandler::maxheight_ok(const osmium::TagList& tags) {
     if (!maxheight_value) {
         return true;
     }
+    if (!strcmp(maxheight_value, "none") || !strcmp(maxheight_value, "default") || !strcmp(maxheight_value, "physical")) {
+        return true;
+    }
     char* rest;
     // try parsing as metric
     double maxheight_m = std::strtod(maxheight_value, &rest);
@@ -261,13 +264,14 @@ bool HighwayViewHandler::maxheight_ok(const osmium::TagList& tags) {
                     return true;
                 }
                 return false;
+            } else if (*rest == 0) {
+                // ' followed by nothing
+                return true;
             } else if (*rest) {
                 // ' is followed by a non-numeric character
                 return false;
             }
         }
-    } else if (!strcmp(maxheight_value, "none") || !strcmp(maxheight_value, "physical")) {
-        return true;
     }
     // This shouldn't happen and we consider this as an error.
     // If th integer is not followed by a ', it is no imperical unit.
