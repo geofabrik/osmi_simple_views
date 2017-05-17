@@ -28,24 +28,24 @@ TaggingViewHandler::TaggingViewHandler(std::string& output_filename, std::string
     m_tagging_fixmes_on_ways.add_field("tag", OFTString, 200);
     m_tagging_fixmes_on_ways.add_field("lastchange", OFTString, 21);
     m_tagging_nodes_with_empty_k.add_field("node_id", OFTString, 10);
-    m_tagging_nodes_with_empty_k.add_field("value", OFTString, MAX_STRING_LENGTH);
+    m_tagging_nodes_with_empty_k.add_field("value", OFTString, 100);
     m_tagging_nodes_with_empty_k.add_field("lastchange", OFTString, 21);
     m_tagging_ways_with_empty_k.add_field("way_id", OFTString, 10);
-    m_tagging_ways_with_empty_k.add_field("value", OFTString, MAX_STRING_LENGTH);
+    m_tagging_ways_with_empty_k.add_field("value", OFTString, 100);
     m_tagging_ways_with_empty_k.add_field("lastchange", OFTString, 21);
     m_tagging_nodes_with_empty_v.add_field("node_id", OFTString, 10);
-    m_tagging_nodes_with_empty_v.add_field("key", OFTString, MAX_STRING_LENGTH);
+    m_tagging_nodes_with_empty_v.add_field("key", OFTString, 100);
     m_tagging_nodes_with_empty_v.add_field("lastchange", OFTString, 21);
     m_tagging_ways_with_empty_v.add_field("way_id", OFTString, 10);
-    m_tagging_ways_with_empty_v.add_field("key", OFTString, MAX_STRING_LENGTH);
+    m_tagging_ways_with_empty_v.add_field("key", OFTString, 100);
     m_tagging_ways_with_empty_v.add_field("lastchange", OFTString, 21);
     m_tagging_misspelled_node_keys.add_field("node_id", OFTString, 10);
-    m_tagging_misspelled_node_keys.add_field("key", OFTString, 100);
+    m_tagging_misspelled_node_keys.add_field("key", OFTString, MAX_STRING_LENGTH);
     m_tagging_misspelled_node_keys.add_field("error", OFTString, 20);
     m_tagging_misspelled_node_keys.add_field("otherkey", OFTString, 100);
     m_tagging_misspelled_node_keys.add_field("lastchange", OFTString, 21);
     m_tagging_misspelled_way_keys.add_field("way_id", OFTString, 10);
-    m_tagging_misspelled_way_keys.add_field("key", OFTString, 100);
+    m_tagging_misspelled_way_keys.add_field("key", OFTString, MAX_STRING_LENGTH);
     m_tagging_misspelled_way_keys.add_field("error", OFTString, 20);
     m_tagging_misspelled_way_keys.add_field("otherkey", OFTString, 100);
     m_tagging_misspelled_way_keys.add_field("lastchange", OFTString, 21);
@@ -53,18 +53,22 @@ TaggingViewHandler::TaggingViewHandler(std::string& output_filename, std::string
 
 void TaggingViewHandler::write_feature_to_simple_layer(gdalcpp::Layer* layer,
         const osmium::OSMObject& object, const char* field_name, const char* value) {
-    std::unique_ptr<OGRGeometry> geometry;
-    if (object.type() == osmium::item_type::way) {
-        geometry =m_factory.create_linestring(static_cast<const osmium::Way&>(object));
-    } else if (object.type() == osmium::item_type::node) {
-        geometry = m_factory.create_point(static_cast<const osmium::Node&>(object));
+    try {
+        std::unique_ptr<OGRGeometry> geometry;
+        if (object.type() == osmium::item_type::way) {
+            geometry =m_factory.create_linestring(static_cast<const osmium::Way&>(object));
+        } else if (object.type() == osmium::item_type::node) {
+            geometry = m_factory.create_point(static_cast<const osmium::Node&>(object));
+        }
+        gdalcpp::Feature feature(*layer, std::move(geometry));
+        set_basic_fields(feature, object, field_name, value);
+        feature.add_to_layer();
+    } catch (osmium::geometry_error& err) {
+        m_verbose_output << err.what() << "\n";
     }
-    gdalcpp::Feature feature(*layer, std::move(geometry));
-    set_basic_fields(feature, object, field_name, value);
-    feature.add_to_layer();
 }
 
-void TaggingViewHandler::set_basic_fields(gdalcpp::Feature& feature, const osmium::OSMObject& object,
+/*static*/ void TaggingViewHandler::set_basic_fields(gdalcpp::Feature& feature, const osmium::OSMObject& object,
         const char* field_name, const char* value) {
     static char idbuffer[20];
     sprintf(idbuffer, "%ld", object.id());
@@ -73,7 +77,9 @@ void TaggingViewHandler::set_basic_fields(gdalcpp::Feature& feature, const osmiu
     } else if (object.type() == osmium::item_type::node) {
         feature.set_field("node_id", idbuffer);
     }
-    feature.set_field(field_name, value);
+    if (field_name && value) {
+        feature.set_field(field_name, value);
+    }
     std::string timestamp = object.timestamp().to_iso();
     feature.set_field("lastchange", timestamp.c_str());
 }
@@ -128,6 +134,21 @@ void TaggingViewHandler::empty_value(const osmium::OSMObject& object) {
     }
 }
 
+void TaggingViewHandler::key_with_space(const osmium::OSMObject& object) {
+    for (const osmium::Tag& t : object.tags()) {
+        for (size_t i = 0; i < strlen(t.key()); ++i) {
+            if (isspace(t.key()[i])) {
+                char output_value[2 * 256 + 5];
+                sprintf(output_value, "'%s'='%s'", t.key(), t.value());
+                // shorten to MAX_STRING_LENGTH
+                output_value[MAX_STRING_LENGTH] = '\0';
+                write_missspelled(object, t.key(), "contains_whitespace", nullptr);
+                break;
+            }
+        }
+    }
+}
+
 void TaggingViewHandler::empty_key(const osmium::OSMObject& object) {
     gdalcpp::Layer* current_layer;
     if (object.type() == osmium::item_type::way) {
@@ -138,12 +159,8 @@ void TaggingViewHandler::empty_key(const osmium::OSMObject& object) {
         return;
     }
     for (const osmium::Tag& t : object.tags()) {
-        if (!strcmp(t.key(), "") || strchr(t.key(), ' ') != nullptr) {
-            char output_value[2 * 256 + 5];
-            sprintf(output_value, "'%s'='%s'", t.key(), t.value());
-            // shorten to MAX_STRING_LENGTH
-            output_value[MAX_STRING_LENGTH] = '\0';
-            write_feature_to_simple_layer(current_layer, object, "value", output_value);
+        if (!strcmp(t.key(), "")) {
+            write_feature_to_simple_layer(current_layer, object, "value", t.value());
             break;
         }
     }
@@ -159,36 +176,58 @@ void TaggingViewHandler::unusual_character(const osmium::OSMObject& object) {
         }
         for (size_t i = 0; i < strlen(t.key()); ++i) {
             if (!is_good_character(t.key()[i])) {
-                write_missspelled(object, t.key(), "unusual_char", nullptr);
+                if (object.type() == osmium::item_type::node) {
+                    write_missspelled(object, t.key(), "node_with_unusual_char", nullptr);
+                } else if (object.type() == osmium::item_type::node) {
+                    write_missspelled(object, t.key(), "way_with_unusual_char", nullptr);
+                }
                 return;
             }
         }
     }
 }
 
+void TaggingViewHandler::check_key_length(const osmium::OSMObject& object) {
+    for (const osmium::Tag& t : object.tags()) {
+        if (strlen(t.key()) <= 2) {
+            write_missspelled(object, t.key(), "short", nullptr);
+            break;
+        }
+        if (strlen(t.key()) > 50) {
+            write_missspelled(object, t.key(), "long", nullptr);
+            break;
+        }
+    }
+}
+
+
 void TaggingViewHandler::write_missspelled(const osmium::OSMObject& object,
         const char* key, const char* error, const char* otherkey) {
     gdalcpp::Layer* current_layer;
-    if (object.type() == osmium::item_type::way) {
-        current_layer = &m_tagging_misspelled_way_keys;
-    } else if (object.type() == osmium::item_type::node) {
-        current_layer = &m_tagging_misspelled_node_keys;
-    } else {
-        return;
-    }
     std::unique_ptr<OGRGeometry> geometry;
-    if (object.type() == osmium::item_type::way) {
-        geometry = m_factory.create_linestring(static_cast<const osmium::Way&>(object));
-    } else if (object.type() == osmium::item_type::node) {
-        geometry = m_factory.create_point(static_cast<const osmium::Node&>(object));
+    try {
+        if (object.type() == osmium::item_type::way) {
+            current_layer = &m_tagging_misspelled_way_keys;
+            geometry = m_factory.create_linestring(static_cast<const osmium::Way&>(object));
+        } else if (object.type() == osmium::item_type::node) {
+            current_layer = &m_tagging_misspelled_node_keys;
+            geometry = m_factory.create_point(static_cast<const osmium::Node&>(object));
+        } else {
+            return;
+        }
+        if (object.type() == osmium::item_type::way) {
+        } else if (object.type() == osmium::item_type::node) {
+        }
+        gdalcpp::Feature feature(*current_layer, std::move(geometry));
+        set_basic_fields(feature, object, "key", key);
+        feature.set_field("error", error);
+        if (otherkey) {
+            feature.set_field("otherkey", otherkey);
+        }
+        feature.add_to_layer();
+    } catch (osmium::geometry_error& err) {
+        m_verbose_output << err.what() << "\n";
     }
-    gdalcpp::Feature feature(*current_layer, std::move(geometry));
-    set_basic_fields(feature, object, "key", key);
-    feature.set_field("error", error);
-    if (otherkey) {
-        feature.set_field("otherkey", otherkey);
-    }
-    feature.add_to_layer();
 }
 
 /*static*/ bool TaggingViewHandler::is_a_x_key_key(const char* key, const char* whitelisted_base) {
@@ -221,9 +260,9 @@ bool TaggingViewHandler::is_good_character(const char character) {
 void TaggingViewHandler::handle_object(const osmium::OSMObject& object) {
     empty_value(object);
     check_fixme(object);
-    empty_value(object);
     empty_key(object);
     unusual_character(object);
+    check_key_length(object);
 }
 
 void TaggingViewHandler::node(const osmium::Node& node) {

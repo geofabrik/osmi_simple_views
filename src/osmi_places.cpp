@@ -24,6 +24,7 @@
 #include "geometry_view_handler.hpp"
 #include "highway_view_handler.hpp"
 #include "tagging_view_handler.hpp"
+#include "any_relation_collector.hpp"
 
 using index_type = osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>;
 using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
@@ -151,13 +152,19 @@ int main(int argc, char* argv[]) {
 
     osmium::area::Assembler::config_type assembler_config;
     osmium::area::MultipolygonCollector<osmium::area::Assembler> collector(assembler_config);
+    AnyRelationCollector any_collector(verbose_output, srs);
 
     if (view_type == "places") {
         verbose_output.print("Pass 1 (Multipolygons) ...\n");
         osmium::io::Reader reader1(input_filename, osmium::osm_entity_bits::relation);
         collector.read_relations(reader1);
         reader1.close();
-
+        verbose_output.print("Pass 1 done\n");
+    } else if (view_type == "tagging") {
+        verbose_output.print("Pass 1 (Relations) ...\n");
+        osmium::io::Reader reader1(input_filename, osmium::osm_entity_bits::relation);
+        any_collector.read_relations(reader1);
+        reader1.close();
         verbose_output.print("Pass 1 done\n");
     }
     verbose_output.print("Pass 2 ...\n");
@@ -177,8 +184,13 @@ int main(int argc, char* argv[]) {
         osmium::apply(reader2, location_handler, highway_view_handler);
     } else if (view_type == "tagging") {
         TaggingViewHandler tagging_view_handler(output_filename, output_format, gdal_options, verbose_output, srs);
-        osmium::apply(reader2, location_handler, tagging_view_handler);
+        any_collector.set_dataset_ptr(tagging_view_handler.get_dataset_pointer());
+        {
+            osmium::apply(reader2, location_handler, tagging_view_handler, any_collector.handler());
+            any_collector.release_dataset();
+        }
     }
     reader2.close();
     verbose_output.print("Pass 2 done\n");
+
 }
