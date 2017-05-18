@@ -1,5 +1,5 @@
 /*
- * osmi_places.cpp
+ * osmi_simple_views.cpp
  *
  *  Created on:  2017-04-18
  *      Author: Michael Reichert <michael.reichert@geofabrik.de>
