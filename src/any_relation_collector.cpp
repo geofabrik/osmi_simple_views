@@ -17,7 +17,7 @@ bool AnyRelationCollector::keep_relation(const osmium::Relation& relation) const
     return (type && (!strcmp(type, "multipolygon") || !strcmp(type, "boundary")));
 }
 
-bool AnyRelationCollector::keep_member(const osmium::relations::RelationMeta& relation_meta,
+bool AnyRelationCollector::keep_member(const osmium::relations::RelationMeta&,
         const osmium::RelationMember& member) const {
     return (member.type() == osmium::item_type::way);
 }
@@ -37,7 +37,7 @@ void AnyRelationCollector::way_not_in_any_relation(const osmium::Way& way) {
     }
 }
 
-void AnyRelationCollector::complete_relation(osmium::relations::RelationMeta& relation_meta) {}
+void AnyRelationCollector::complete_relation(osmium::relations::RelationMeta&) {}
 
 void AnyRelationCollector::set_dataset_ptr(gdalcpp::Dataset* dataset_ptr) {
     m_dataset_ptr = dataset_ptr;

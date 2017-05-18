@@ -105,7 +105,7 @@ bool GeometryViewHandler::check_segments_length(const osmium::Way& way) {
         // 0.3 degree is about 21 km near 49.0° N
         if (length > 20000) {
             long_segment = true;
-            gdalcpp::Feature feature(m_geometry_long_seg_seg, std::move(build_linestring_from_segment(it, (it + 1))));
+            gdalcpp::Feature feature(m_geometry_long_seg_seg, build_linestring_from_segment(it, (it + 1)));
             static char idbuffer[20];
             sprintf(idbuffer, "%ld", way.id());
             feature.set_field("way_id", idbuffer);

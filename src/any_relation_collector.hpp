@@ -36,7 +36,7 @@ public:
     /**
      * Tells Osmium which members to keep for a relation of interest.
      */
-    bool keep_member(const osmium::relations::RelationMeta& relation_meta, const osmium::RelationMember& member) const;
+    bool keep_member(const osmium::relations::RelationMeta&, const osmium::RelationMember& member) const;
 
     /**
      * This method is called for all ways that are not a member of
@@ -47,7 +47,7 @@ public:
      */
     void way_not_in_any_relation(const osmium::Way& way);
 
-    void complete_relation(osmium::relations::RelationMeta& relation_meta);
+    void complete_relation(osmium::relations::RelationMeta&);
 
     /**
      * Assign the pointer pointing to a dataset.

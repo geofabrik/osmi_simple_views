@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
     };
 
     std::string view_type = "";
-    std::string location_index_type = "sparse_mmap_array";
+    std::string location_index_type = "sparse_mem_array";
     std::string output_format = "SQlite";
     int srs = 3857;
     bool verbose = false;
