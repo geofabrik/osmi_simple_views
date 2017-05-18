@@ -10,38 +10,10 @@
 
 #include <memory>
 
-#include <gdalcpp.hpp>
+#include "abstract_view_handler.hpp"
 
-#include <osmium/handler.hpp>
-#include <osmium/geom/ogr.hpp>
+class PlacesHandler : public AbstractViewHandler {
 
-#ifdef ONLYMERCATOROUTPUT
-    #include <osmium/geom/mercator_projection.hpp>
-#else
-    #include <osmium/geom/projection.hpp>
-#endif
-
-#include <osmium/osm/node.hpp>
-#include <osmium/osm/area.hpp>
-#include <osmium/util/verbose_output.hpp>
-
-class PlacesHandler : public osmium::handler::Handler {
-
-    /**
-     * If ONLYMERCATOROUTPUT is defined, output coordinates are always Web
-     * Mercator coordinates. If it is not defined, we will transform them if
-     * the output SRS is different from the input SRS (4326).
-     */
-#ifdef ONLYMERCATOROUTPUT
-    /// factory to build OGR geometries in Web Mercator projection
-    osmium::geom::OGRFactory<osmium::geom::MercatorProjection> m_factory;
-#else
-    /// factory to build OGR geometries with a coordinate transformation if necessary
-    osmium::geom::OGRFactory<osmium::geom::Projection> m_factory;
-#endif
-
-    osmium::util::VerboseOutput& m_verbose_output;
-    gdalcpp::Dataset m_dataset;
     gdalcpp::Layer m_points;
     gdalcpp::Layer m_polygons;
     gdalcpp::Layer m_errors_points;
@@ -108,7 +80,7 @@ class PlacesHandler : public osmium::handler::Handler {
 public:
     PlacesHandler() = delete;
 
-    PlacesHandler(std::string& output_filename, std::string& output_format, std::vector<std::string>& gdal_options,
+    PlacesHandler(std::string& output_filename, std::string& output_format,
             osmium::util::VerboseOutput& verbose_output, int epsg = 3857);
 
     void node(const osmium::Node& node);

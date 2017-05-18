@@ -146,7 +146,7 @@ class GeometryViewHandler : public AbstractViewHandler {
 public:
     GeometryViewHandler() = delete;
 
-    GeometryViewHandler(std::string& output_filename, std::string& output_format, std::vector<std::string>& gdal_options,
+    GeometryViewHandler(std::string& output_filename, std::string& output_format,
             osmium::util::VerboseOutput& verbose_output, int epsg = 3857);
 
     void way(const osmium::Way& way);

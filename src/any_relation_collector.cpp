@@ -8,9 +8,9 @@
 #include "any_relation_collector.hpp"
 #include "tagging_view_handler.hpp"
 
-AnyRelationCollector::AnyRelationCollector(osmium::util::VerboseOutput& verbose_output,
-        int epsg /*= 3857*/) :
-        OGROutputBase(verbose_output, epsg) { }
+AnyRelationCollector::AnyRelationCollector(osmium::util::VerboseOutput& verbose_output, std::string& output_format,
+        int epsg  /*= 3857*/) :
+        OGROutputBase(verbose_output, output_format, epsg) { }
 
 bool AnyRelationCollector::keep_relation(const osmium::Relation& relation) const {
     const char* type = relation.get_value_by_key("type");
@@ -42,7 +42,8 @@ void AnyRelationCollector::complete_relation(osmium::relations::RelationMeta& re
 void AnyRelationCollector::set_dataset_ptr(gdalcpp::Dataset* dataset_ptr) {
     m_dataset_ptr = dataset_ptr;
     m_tagging_ways_without_tags =
-            std::unique_ptr<gdalcpp::Layer>(new gdalcpp::Layer(*m_dataset_ptr, "tagging_ways_without_tags", wkbLineString));
+            std::unique_ptr<gdalcpp::Layer>(new gdalcpp::Layer(*m_dataset_ptr, "tagging_ways_without_tags",
+            wkbLineString, GDAL_DEFAULT_OPTIONS));
 
     m_tagging_ways_without_tags->add_field("way_id", OFTString, 10);
     m_tagging_ways_without_tags->add_field("lastchange", OFTString, 21);

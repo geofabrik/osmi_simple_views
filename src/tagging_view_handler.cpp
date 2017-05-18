@@ -9,17 +9,16 @@
 #include "tagging_view_handler.hpp"
 
 TaggingViewHandler::TaggingViewHandler(std::string& output_filename, std::string& output_format,
-        std::vector<std::string>& gdal_options, osmium::util::VerboseOutput& verbose_output,
-        int epsg) :
-        AbstractViewHandler(output_filename, output_format, gdal_options, verbose_output, epsg),
-        m_tagging_fixmes_on_nodes(m_dataset, "tagging_fixmes_on_nodes", wkbPoint),
-        m_tagging_fixmes_on_ways(m_dataset, "tagging_fixmes_on_ways", wkbLineString),
-        m_tagging_nodes_with_empty_k(m_dataset, "tagging_nodes_with_empty_k", wkbPoint),
-        m_tagging_ways_with_empty_k(m_dataset, "tagging_ways_with_empty_k", wkbLineString),
-        m_tagging_nodes_with_empty_v(m_dataset, "tagging_nodes_with_empty_v", wkbPoint),
-        m_tagging_ways_with_empty_v(m_dataset, "tagging_ways_with_empty_v", wkbLineString),
-        m_tagging_misspelled_node_keys(m_dataset, "tagging_misspelled_node_keys", wkbPoint),
-        m_tagging_misspelled_way_keys(m_dataset, "tagging_misspelled_way_keys", wkbLineString)
+        osmium::util::VerboseOutput& verbose_output, int epsg) :
+        AbstractViewHandler(output_filename, output_format, verbose_output, epsg),
+        m_tagging_fixmes_on_nodes(m_dataset, "tagging_fixmes_on_nodes", wkbPoint, GDAL_DEFAULT_OPTIONS),
+        m_tagging_fixmes_on_ways(m_dataset, "tagging_fixmes_on_ways", wkbLineString, GDAL_DEFAULT_OPTIONS),
+        m_tagging_nodes_with_empty_k(m_dataset, "tagging_nodes_with_empty_k", wkbPoint, GDAL_DEFAULT_OPTIONS),
+        m_tagging_ways_with_empty_k(m_dataset, "tagging_ways_with_empty_k", wkbLineString, GDAL_DEFAULT_OPTIONS),
+        m_tagging_nodes_with_empty_v(m_dataset, "tagging_nodes_with_empty_v", wkbPoint, GDAL_DEFAULT_OPTIONS),
+        m_tagging_ways_with_empty_v(m_dataset, "tagging_ways_with_empty_v", wkbLineString, GDAL_DEFAULT_OPTIONS),
+        m_tagging_misspelled_node_keys(m_dataset, "tagging_misspelled_node_keys", wkbPoint, GDAL_DEFAULT_OPTIONS),
+        m_tagging_misspelled_way_keys(m_dataset, "tagging_misspelled_way_keys", wkbLineString, GDAL_DEFAULT_OPTIONS)
 {
     m_tagging_fixmes_on_nodes.add_field("node_id", OFTString, 10);
     m_tagging_fixmes_on_nodes.add_field("tag", OFTString, 200);

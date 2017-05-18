@@ -26,14 +26,16 @@ protected:
 public:
     AbstractViewHandler() = delete;
 
-    AbstractViewHandler(std::string& output_filename, std::string& output_format, std::vector<std::string>& gdal_options,
-            osmium::util::VerboseOutput& verbose_output, int epsg = 3857);
+    AbstractViewHandler(std::string& output_filename, std::string& output_format,
+            osmium::util::VerboseOutput& verbose_output, int epsg);
 
     virtual ~AbstractViewHandler();
 
     void node(const osmium::Node&) {}
 
     void way(const osmium::Way&) {}
+
+    void area(const osmium::Area&) {}
 
     /**
      * Get a pointer to the dataset being used. The ownership will stay at AbstractViewHandler.

@@ -8,11 +8,9 @@
 #include "abstract_view_handler.hpp"
 
 AbstractViewHandler::AbstractViewHandler(std::string& output_filename, std::string& output_format,
-        std::vector<std::string>& gdal_options, osmium::util::VerboseOutput& verbose_output,
-        int epsg /*= 3857*/) :
-        OGROutputBase(verbose_output, epsg),
-        m_dataset(output_format, output_filename, gdalcpp::SRS(epsg)) {
-    set_important_ogr_options(output_format, gdal_options);
+        osmium::util::VerboseOutput& verbose_output, int epsg) :
+        OGROutputBase(verbose_output, output_format, epsg),
+        m_dataset(output_format, output_filename, gdalcpp::SRS(epsg), get_gdal_default_options(output_format)) {
     m_dataset.enable_auto_transactions(10000);
 }
 

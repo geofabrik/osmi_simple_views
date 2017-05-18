@@ -127,7 +127,7 @@ class HighwayViewHandler : public AbstractViewHandler {
     void register_check(std::function<bool (const osmium::TagList&)> function, std::string key, gdalcpp::Layer* layer);
 
 public:
-    HighwayViewHandler(std::string& output_filename, std::string& output_format, std::vector<std::string>& gdal_options,
+    HighwayViewHandler(std::string& output_filename, std::string& output_format,
             osmium::util::VerboseOutput& verbose_output, int epsg = 3857);
 
     void way(const osmium::Way& way);

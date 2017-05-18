@@ -21,7 +21,7 @@ true, true, true>, public OGROutputBase {
 public:
     AnyRelationCollector() = delete;
 
-    AnyRelationCollector(osmium::util::VerboseOutput& verbose_output,
+    AnyRelationCollector(osmium::util::VerboseOutput& verbose_output, std::string& output_format,
             int epsg = 3857);
 
     /**

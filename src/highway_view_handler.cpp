@@ -9,18 +9,17 @@
 
 
 HighwayViewHandler::HighwayViewHandler(std::string& output_filename, std::string& output_format,
-        std::vector<std::string>& gdal_options, osmium::util::VerboseOutput& verbose_output,
-        int epsg /*= 3857*/) :
-        AbstractViewHandler(output_filename, output_format, gdal_options, verbose_output, epsg),
-        m_highway_lanes(m_dataset, "highway_lanes", wkbLineString),
-        m_highway_maxheight(m_dataset, "highway_maxheight", wkbLineString),
-        m_highway_maxspeed(m_dataset, "highway_maxspeed", wkbLineString),
-        m_highway_name_fixme(m_dataset, "highway_name_fixme", wkbLineString),
-        m_highway_name_missing_major(m_dataset, "highway_name_missing_major", wkbLineString),
-        m_highway_name_missing_minor(m_dataset, "highway_name_missing_minor", wkbLineString),
-        m_highway_oneway(m_dataset, "highway_oneway", wkbLineString),
-        m_highway_road(m_dataset, "highway_road", wkbLineString),
-        m_highway_type_unknown(m_dataset, "highway_type_unknown", wkbLineString)
+        osmium::util::VerboseOutput& verbose_output, int epsg /*= 3857*/) :
+        AbstractViewHandler(output_filename, output_format, verbose_output, epsg),
+        m_highway_lanes(m_dataset, "highway_lanes", wkbLineString, GDAL_DEFAULT_OPTIONS),
+        m_highway_maxheight(m_dataset, "highway_maxheight", wkbLineString, GDAL_DEFAULT_OPTIONS),
+        m_highway_maxspeed(m_dataset, "highway_maxspeed", wkbLineString, GDAL_DEFAULT_OPTIONS),
+        m_highway_name_fixme(m_dataset, "highway_name_fixme", wkbLineString, GDAL_DEFAULT_OPTIONS),
+        m_highway_name_missing_major(m_dataset, "highway_name_missing_major", wkbLineString, GDAL_DEFAULT_OPTIONS),
+        m_highway_name_missing_minor(m_dataset, "highway_name_missing_minor", wkbLineString, GDAL_DEFAULT_OPTIONS),
+        m_highway_oneway(m_dataset, "highway_oneway", wkbLineString, GDAL_DEFAULT_OPTIONS),
+        m_highway_road(m_dataset, "highway_road", wkbLineString, GDAL_DEFAULT_OPTIONS),
+        m_highway_type_unknown(m_dataset, "highway_type_unknown", wkbLineString, GDAL_DEFAULT_OPTIONS)
         {
     // add fields to layers
     m_highway_lanes.add_field("way_id", OFTString, 10);

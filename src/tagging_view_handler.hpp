@@ -90,8 +90,7 @@ public:
     TaggingViewHandler() = delete;
 
     TaggingViewHandler(std::string& output_filename, std::string& output_format,
-            std::vector<std::string>& gdal_options, osmium::util::VerboseOutput& verbose_output,
-            int epsg = 3857);
+            osmium::util::VerboseOutput& verbose_output, int epsg = 3857);
 
     void node(const osmium::Node& node);
 
