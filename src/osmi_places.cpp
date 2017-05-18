@@ -34,7 +34,7 @@ void print_help(char* arg0) {
               << "Options:\n" \
               << "  -h, --help           This help message.\n" \
               << "  -f, --format         Output format (default: SQlite)\n" \
-              << "  -i, --index          Set index type for location index (default: sparse_mem_array)\n" \
+              << "  -i, --index          Set index type for location index (default: sparse_mem_array)\n";
 #ifndef ONLYMERCATOROUTPUT
     std::cerr << "  -s EPSG, --srs=ESPG  Output projection (EPSG code) (default: 3857)\n";
 #endif
