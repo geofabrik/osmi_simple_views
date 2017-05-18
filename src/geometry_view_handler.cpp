@@ -7,6 +7,8 @@
  *  This file contains code from OSMCoastline by Jochen Topf, see
  *  http://osmcode.org/osmcoastline/ for more informations.
  *
+ *  This file is part of osmi_simple_views.
+ *
  *  osmi_simple_views is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
