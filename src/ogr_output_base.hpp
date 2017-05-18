@@ -1,9 +1,22 @@
 /*
- * ogr_output_base.hpp
+ *  © 2017 Geofabrik GmbH
  *
- *  Created on:  2017-05-17
- *      Author: Michael Reichert <michael.reichert@geofabrik.de>
+ *  This file is part of osmi_simple_views.
+ *
+ *  osmi_simple_views is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  osmi_simple_views is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with osmi_simple_views. If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #ifndef SRC_OGR_OUTPUT_BASE_HPP_
 #define SRC_OGR_OUTPUT_BASE_HPP_

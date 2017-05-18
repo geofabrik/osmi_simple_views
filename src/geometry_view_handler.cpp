@@ -1,9 +1,26 @@
 /*
- * geometry_view_handler.cpp
+ *  © 2017 Geofabrik GmbH
+ *  © 2012-2016 Jochen Topf <jochen@topf.org>
+ * *
+ *  This file is part of osmi_simple_views.
  *
- *  Created on:  2017-04-24
- *      Author: Michael Reichert <michael.reichert@geofabrik.de>
+ *  This file contains code from OSMCoastline by Jochen Topf, see
+ *  http://osmcode.org/osmcoastline/ for more informations.
+ *
+ *  osmi_simple_views is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  osmi_simple_views is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with osmi_simple_views. If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "geometry_view_handler.hpp"
 
@@ -179,6 +196,10 @@ void GeometryViewHandler::duplicated_node_in_way(const osmium::Way& way) {
     }
 }
 
+/**
+ * This method was copied from
+ * [OSMCoastline](https://github.com/osmcode/osmcoastline/blob/master/src/coastline_ring_collection.cpp)
+ */
 /*static*/ osmium::Location GeometryViewHandler::intersection(const osmium::UndirectedSegment& s1, const osmium::UndirectedSegment&s2) {
     if (s1.first()  == s2.first()  ||
         s1.first()  == s2.second() ||
@@ -209,6 +230,10 @@ void GeometryViewHandler::duplicated_node_in_way(const osmium::Way& way) {
     return osmium::Location();
 }
 
+/**
+ * This method was copied from
+ * [OSMCoastline](https://github.com/osmcode/osmcoastline/blob/master/src/coastline_ring_collection.cpp)
+ */
 /*static*/ bool GeometryViewHandler::outside_x_range(const osmium::UndirectedSegment& s1, const osmium::UndirectedSegment& s2) {
     if (s1.first().x() > s2.second().x()) {
         return true;
@@ -216,6 +241,10 @@ void GeometryViewHandler::duplicated_node_in_way(const osmium::Way& way) {
     return false;
 }
 
+/**
+ * This method was copied from
+ * [OSMCoastline](https://github.com/osmcode/osmcoastline/blob/master/src/coastline_ring_collection.cpp)
+ */
 /*static*/ bool GeometryViewHandler::y_range_overlap(const osmium::UndirectedSegment& s1, const osmium::UndirectedSegment& s2) {
     const int tmin = s1.first().y() < s1.second().y() ? s1.first().y( ) : s1.second().y();
     const int tmax = s1.first().y() < s1.second().y() ? s1.second().y() : s1.first().y();
@@ -251,6 +280,10 @@ void GeometryViewHandler::add_self_intersection_point(const osmium::Location& lo
     feature.add_to_layer();
 }
 
+/**
+ * This method was copied and modified from
+ * [OSMCoastline](https://github.com/osmcode/osmcoastline/blob/master/src/coastline_ring_collection.cpp)
+ */
 void GeometryViewHandler::check_self_intersection(const osmium::Way& way) {
     std::vector<osmium::UndirectedSegment> segments;
     for (size_t i = 0; i != way.nodes().size() - 1; ++i) {
