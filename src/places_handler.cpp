@@ -166,13 +166,13 @@ void PlacesHandler::check_population(const osmium::OSMObject& osm_object, const 
     } else if (!strcmp(place_value, "town") && population < 500) {
         add_error(osm_object, id, geomtype, "population too small for town");
     } else if (!strcmp(place_value, "village") && population > 20000) {
-        add_error(osm_object, id, geomtype, "population too small for town");
+        add_error(osm_object, id, geomtype, "population too large for village");
     } else if (!strcmp(place_value, "hamlet") && population > 1000) {
         add_error(osm_object, id, geomtype, "population too large for hamlet");
     } else if (!strcmp(place_value, "suburb") && population > 1000000) {
         add_error(osm_object, id, geomtype, "population too large for suburb");
     } else if (!strcmp(place_value, "isolated_dwelling") && population > 500) {
-        add_error(osm_object, id, geomtype, "population too large for suburb");
+        add_error(osm_object, id, geomtype, "population too large for isolated_dwelling");
     } else if (!strcmp(place_value, "city") && population > 60000000) {
         add_error(osm_object, id, geomtype, "population too large for city");
     } else if (population > 12000000000) {
