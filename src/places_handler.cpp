@@ -241,7 +241,12 @@ void PlacesHandler::add_feature(std::unique_ptr<OGRGeometry>&& geometry, const o
     }
 
     // name
-    feature.set_field("name", osm_object.get_value_by_key("name", ""));
+    const char* name = osm_object.get_value_by_key("name");
+    if (name) {
+        feature.set_field("name", name);
+    } else {
+        add_error(osm_object, id, geomtype, "place_without_name");
+    }
     feature.add_to_layer();
 }
 
