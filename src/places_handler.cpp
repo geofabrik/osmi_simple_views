@@ -160,23 +160,23 @@ void PlacesHandler::check_population(const osmium::OSMObject& osm_object, const 
         return;
     }
     if (!strcmp(place_value, "city") && population < 10000) {
-        add_error(osm_object, id, geomtype, "population too small for city");
+        add_error(osm_object, id, geomtype, "population too small for city", std::to_string(population));
     } else if (!strcmp(place_value, "town") && population > 200000) {
-        add_error(osm_object, id, geomtype, "population too large for town");
+        add_error(osm_object, id, geomtype, "population too large for town", std::to_string(population));
     } else if (!strcmp(place_value, "town") && population < 500) {
-        add_error(osm_object, id, geomtype, "population too small for town");
-    } else if (!strcmp(place_value, "village") && population > 20000) {
-        add_error(osm_object, id, geomtype, "population too large for village");
+        add_error(osm_object, id, geomtype, "population too small for town", std::to_string(population));
+    } else if (!strcmp(place_value, "village") && population > 25000) {
+        add_error(osm_object, id, geomtype, "population too large for village", std::to_string(population));
     } else if (!strcmp(place_value, "hamlet") && population > 1000) {
-        add_error(osm_object, id, geomtype, "population too large for hamlet");
+        add_error(osm_object, id, geomtype, "population too large for hamlet", std::to_string(population));
     } else if (!strcmp(place_value, "suburb") && population > 1000000) {
-        add_error(osm_object, id, geomtype, "population too large for suburb");
+        add_error(osm_object, id, geomtype, "population too large for suburb", std::to_string(population));
     } else if (!strcmp(place_value, "isolated_dwelling") && population > 500) {
-        add_error(osm_object, id, geomtype, "population too large for isolated_dwelling");
+        add_error(osm_object, id, geomtype, "population too large for isolated_dwelling", std::to_string(population));
     } else if (!strcmp(place_value, "city") && population > 60000000) {
-        add_error(osm_object, id, geomtype, "population too large for city");
+        add_error(osm_object, id, geomtype, "population too large for city", std::to_string(population));
     } else if (population > 12000000000) {
-        add_error(osm_object, id, geomtype, "population too large for planet");
+        add_error(osm_object, id, geomtype, "population too large for planet", std::to_string(population));
     }
 }
 
@@ -209,13 +209,13 @@ void PlacesHandler::add_feature(std::unique_ptr<OGRGeometry>&& geometry, const o
         char* rest;
         long int population = std::strtol(popstr, &rest, 10);
         if (*rest) {
-            add_error(osm_object, id, geomtype, "characters after population number");
+            add_error(osm_object, id, geomtype, "characters after population number", popstr);
         } else if (population < 20000000000 && population > 0) {
             feature.set_field("population", static_cast<int>(population));
             check_population(osm_object, id, geomtype, place_value, population);
         } else {
             feature.set_field("population", 0);
-            add_error(osm_object, id, geomtype, "population number beyond usual range");
+            add_error(osm_object, id, geomtype, "population number beyond usual range", popstr);
         }
     } else {
         feature.set_field("population", 0);
@@ -229,6 +229,7 @@ void PlacesHandler::add_feature(std::unique_ptr<OGRGeometry>&& geometry, const o
     } else {
         feature.set_field("capital", 0);
     }
+
     const char* admin_level = osm_object.get_value_by_key("admin_level", "");
     char* rest;
     long int admlvl_int = std::strtol(admin_level, &rest, 10);
@@ -260,7 +261,7 @@ void PlacesHandler::set_basic_fields(gdalcpp::Feature& feature, const osmium::OS
 }
 
 void PlacesHandler::add_error(const osmium::OSMObject& osm_object, const osmium::object_id_type id,
-        const char* geomtype, std::string error) {
+        const char* geomtype, std::string error, std::string different_value /*= ""*/) {
     std::unique_ptr<OGRGeometry> geometry;
     gdalcpp::Layer* error_layer;
     switch (osm_object.type()) {
@@ -278,7 +279,11 @@ void PlacesHandler::add_error(const osmium::OSMObject& osm_object, const osmium:
     gdalcpp::Feature the_feature(*error_layer, std::move(geometry));
     set_basic_fields(the_feature, osm_object, id);
     the_feature.set_field("error", error.c_str());
-    the_feature.set_field("value", osm_object.get_value_by_key("place", ""));
+    if (different_value == "") {
+        the_feature.set_field("value", osm_object.get_value_by_key("place", ""));
+    } else {
+        the_feature.set_field("value", different_value.c_str());
+    }
     the_feature.set_field("geomtype", geomtype);
     the_feature.add_to_layer();
 }

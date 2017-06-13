@@ -80,9 +80,10 @@ class PlacesHandler : public AbstractViewHandler {
      * \param geomtype char representing the type of the OSM object (n = node, w = way, r = relation)
      * \param id ID of the OSM object
      * \param error type of error
+     * \param different_value string to be to the `value` column if it should not be the value of the place key
      */
     void add_error(const osmium::OSMObject& osm_object, const osmium::object_id_type id,
-            const char* geomtype, std::string error);
+            const char* geomtype, std::string error, std::string different_value = "");
 
     /**
      * Check if the population of a settlement is within resonable bounds.
