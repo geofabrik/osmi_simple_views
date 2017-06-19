@@ -32,32 +32,32 @@ TaggingViewHandler::TaggingViewHandler(std::string& output_filename, std::string
         m_tagging_misspelled_way_keys(m_dataset, "tagging_misspelled_way_keys", wkbLineString, GDAL_DEFAULT_OPTIONS)
 {
     m_tagging_fixmes_on_nodes.add_field("node_id", OFTString, 10);
-    m_tagging_fixmes_on_nodes.add_field("tag", OFTString, 200);
+    m_tagging_fixmes_on_nodes.add_field("tag", OFTString, MAX_STRING_LENGTH);
     m_tagging_fixmes_on_nodes.add_field("lastchange", OFTString, 21);
     m_tagging_fixmes_on_ways.add_field("way_id", OFTString, 10);
-    m_tagging_fixmes_on_ways.add_field("tag", OFTString, 200);
+    m_tagging_fixmes_on_ways.add_field("tag", OFTString, MAX_STRING_LENGTH);
     m_tagging_fixmes_on_ways.add_field("lastchange", OFTString, 21);
     m_tagging_nodes_with_empty_k.add_field("node_id", OFTString, 10);
-    m_tagging_nodes_with_empty_k.add_field("value", OFTString, 100);
+    m_tagging_nodes_with_empty_k.add_field("value", OFTString, MAX_STRING_LENGTH);
     m_tagging_nodes_with_empty_k.add_field("lastchange", OFTString, 21);
     m_tagging_ways_with_empty_k.add_field("way_id", OFTString, 10);
-    m_tagging_ways_with_empty_k.add_field("value", OFTString, 100);
+    m_tagging_ways_with_empty_k.add_field("value", OFTString, MAX_STRING_LENGTH);
     m_tagging_ways_with_empty_k.add_field("lastchange", OFTString, 21);
     m_tagging_nodes_with_empty_v.add_field("node_id", OFTString, 10);
-    m_tagging_nodes_with_empty_v.add_field("key", OFTString, 100);
+    m_tagging_nodes_with_empty_v.add_field("key", OFTString, MAX_STRING_LENGTH);
     m_tagging_nodes_with_empty_v.add_field("lastchange", OFTString, 21);
     m_tagging_ways_with_empty_v.add_field("way_id", OFTString, 10);
-    m_tagging_ways_with_empty_v.add_field("key", OFTString, 100);
+    m_tagging_ways_with_empty_v.add_field("key", OFTString, MAX_STRING_LENGTH);
     m_tagging_ways_with_empty_v.add_field("lastchange", OFTString, 21);
     m_tagging_misspelled_node_keys.add_field("node_id", OFTString, 10);
     m_tagging_misspelled_node_keys.add_field("key", OFTString, MAX_STRING_LENGTH);
     m_tagging_misspelled_node_keys.add_field("error", OFTString, 20);
-    m_tagging_misspelled_node_keys.add_field("otherkey", OFTString, 100);
+    m_tagging_misspelled_node_keys.add_field("otherkey", OFTString, MAX_STRING_LENGTH);
     m_tagging_misspelled_node_keys.add_field("lastchange", OFTString, 21);
     m_tagging_misspelled_way_keys.add_field("way_id", OFTString, 10);
     m_tagging_misspelled_way_keys.add_field("key", OFTString, MAX_STRING_LENGTH);
     m_tagging_misspelled_way_keys.add_field("error", OFTString, 20);
-    m_tagging_misspelled_way_keys.add_field("otherkey", OFTString, 100);
+    m_tagging_misspelled_way_keys.add_field("otherkey", OFTString, MAX_STRING_LENGTH);
     m_tagging_misspelled_way_keys.add_field("lastchange", OFTString, 21);
 }
 
@@ -88,7 +88,15 @@ void TaggingViewHandler::write_feature_to_simple_layer(gdalcpp::Layer* layer,
         feature.set_field("node_id", idbuffer);
     }
     if (field_name && value) {
-        feature.set_field(field_name, value);
+        // shorten value if too long
+        if (strlen(value) > MAX_STRING_LENGTH) {
+            char output_value[MAX_STRING_LENGTH + 5];
+            strncpy(output_value, value, MAX_STRING_LENGTH);
+            output_value[MAX_STRING_LENGTH] = '\0';
+            feature.set_field(field_name, output_value);
+        } else {
+            feature.set_field(field_name, value);
+        }
     }
     std::string timestamp = object.timestamp().to_iso();
     feature.set_field("lastchange", timestamp.c_str());
@@ -125,6 +133,19 @@ void TaggingViewHandler::check_fixme(const osmium::OSMObject& object) {
         write_feature_to_simple_layer(current_layer, object, "tag", tag.c_str());
         return;
     }
+    for (const osmium::Tag& t : object.tags()) {
+        const char* tag_value = t.value();
+        if (!tag_value) {
+            continue;
+        }
+        if (!strcmp(tag_value, "FIXME") || !strcmp(tag_value, "fixme")) {
+            std::string tag = t.key();
+            tag += "=";
+            tag += tag_value;
+            write_feature_to_simple_layer(current_layer, object, "tag", tag.c_str());
+            return;
+        }
+    }
 }
 
 void TaggingViewHandler::empty_value(const osmium::OSMObject& object) {
@@ -150,8 +171,6 @@ void TaggingViewHandler::key_with_space(const osmium::OSMObject& object) {
             if (isspace(t.key()[i])) {
                 char output_value[2 * 256 + 5];
                 sprintf(output_value, "'%s'='%s'", t.key(), t.value());
-                // shorten to MAX_STRING_LENGTH
-                output_value[MAX_STRING_LENGTH] = '\0';
                 write_missspelled(object, output_value, "contains_whitespace", nullptr);
                 break;
             }
