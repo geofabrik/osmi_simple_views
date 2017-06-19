@@ -138,7 +138,7 @@ void TaggingViewHandler::check_fixme(const osmium::OSMObject& object) {
         if (!tag_value) {
             continue;
         }
-        if (!strcmp(tag_value, "FIXME") || !strcmp(tag_value, "fixme")) {
+        if (!strcasecmp(tag_value, "FIXME")) {
             std::string tag = t.key();
             tag += "=";
             tag += tag_value;
