@@ -152,7 +152,7 @@ void TaggingViewHandler::key_with_space(const osmium::OSMObject& object) {
                 sprintf(output_value, "'%s'='%s'", t.key(), t.value());
                 // shorten to MAX_STRING_LENGTH
                 output_value[MAX_STRING_LENGTH] = '\0';
-                write_missspelled(object, t.key(), "contains_whitespace", nullptr);
+                write_missspelled(object, output_value, "contains_whitespace", nullptr);
                 break;
             }
         }
