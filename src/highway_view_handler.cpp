@@ -305,9 +305,14 @@ bool HighwayViewHandler::name_missing_major(const osmium::TagList& tags) {
 }
 
 bool HighwayViewHandler::name_missing_minor(const osmium::TagList& tags) {
+    const char* tiger_reviewed = tags.get_value_by_key("tiger:reviewed");
     const char* name = tags.get_value_by_key("name");
     const char* ref = tags.get_value_by_key("ref");
     if (name || ref) {
+        return true;
+    }
+    // return true (i.e. don't write to output file) if they are unreviewed ways from TIGER import
+    if (tiger_reviewed && !strcmp(tiger_reviewed, "no")) {
         return true;
     }
     const char* highway = tags.get_value_by_key("highway");
