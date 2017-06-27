@@ -67,18 +67,6 @@ class HighwayViewHandler : public AbstractViewHandler {
     static bool is_valid_const_speed(const char* maxspeed_value);
 
     /**
-     * Build a string containing tags (length of key and value below 48 characters)
-     * to be inserted into a "tag" column. The returned string is shorter than
-     * MAX_FIELD_LENGTH characters. No keys or values will be truncated.
-     *
-     * \param tags TagList of the OSM object
-     * \param not_include key whose value should not be included in the tags' string
-     *
-     * \returns string with the tags
-     */
-    std::string tags_string(const osmium::TagList& tags, const char* not_include);
-
-    /**
      * Create a feature, set its field and add it to its layer.
      *
      * This method sets `way_id` and `tags` automatically.

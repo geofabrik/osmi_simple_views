@@ -29,7 +29,9 @@ TaggingViewHandler::TaggingViewHandler(std::string& output_filename, std::string
         m_tagging_nodes_with_empty_v(m_dataset, "tagging_nodes_with_empty_v", wkbPoint, GDAL_DEFAULT_OPTIONS),
         m_tagging_ways_with_empty_v(m_dataset, "tagging_ways_with_empty_v", wkbLineString, GDAL_DEFAULT_OPTIONS),
         m_tagging_misspelled_node_keys(m_dataset, "tagging_misspelled_node_keys", wkbPoint, GDAL_DEFAULT_OPTIONS),
-        m_tagging_misspelled_way_keys(m_dataset, "tagging_misspelled_way_keys", wkbLineString, GDAL_DEFAULT_OPTIONS)
+        m_tagging_misspelled_way_keys(m_dataset, "tagging_misspelled_way_keys", wkbLineString, GDAL_DEFAULT_OPTIONS),
+        m_tagging_nonop_confusion_nodes(m_dataset, "tagging_nonop_confusion_nodes", wkbPoint, GDAL_DEFAULT_OPTIONS),
+        m_tagging_nonop_confusion_ways(m_dataset, "tagging_nonop_confusion_ways", wkbLineString, GDAL_DEFAULT_OPTIONS)
 {
     m_tagging_fixmes_on_nodes.add_field("node_id", OFTString, 10);
     m_tagging_fixmes_on_nodes.add_field("tag", OFTString, MAX_STRING_LENGTH);
@@ -59,6 +61,12 @@ TaggingViewHandler::TaggingViewHandler(std::string& output_filename, std::string
     m_tagging_misspelled_way_keys.add_field("error", OFTString, 20);
     m_tagging_misspelled_way_keys.add_field("otherkey", OFTString, MAX_STRING_LENGTH);
     m_tagging_misspelled_way_keys.add_field("lastchange", OFTString, 21);
+    m_tagging_nonop_confusion_nodes.add_field("node_id", OFTString, 10);
+    m_tagging_nonop_confusion_nodes.add_field("tags", OFTString, MAX_STRING_LENGTH);
+    m_tagging_nonop_confusion_nodes.add_field("lastchange", OFTString, 21);
+    m_tagging_nonop_confusion_ways.add_field("way_id", OFTString, 10);
+    m_tagging_nonop_confusion_ways.add_field("tags", OFTString, MAX_STRING_LENGTH);
+    m_tagging_nonop_confusion_ways.add_field("lastchange", OFTString, 21);
 }
 
 void TaggingViewHandler::write_feature_to_simple_layer(gdalcpp::Layer* layer,
@@ -286,12 +294,66 @@ bool TaggingViewHandler::is_good_character(const char character) {
     return false;
 }
 
+void TaggingViewHandler::hidden_nonop(const osmium::OSMObject& object) {
+    gdalcpp::Layer* current_layer;
+    if (object.type() == osmium::item_type::way) {
+        current_layer = &m_tagging_nonop_confusion_ways;
+    } else if (object.type() == osmium::item_type::node) {
+        current_layer = &m_tagging_nonop_confusion_nodes;
+    } else {
+        return;
+    }
+    if (!has_important_core_tag(object.tags())) {
+        return;
+    }
+    const char* disused = object.get_value_by_key("disused");
+    const char* abandoned = object.get_value_by_key("abandoned");
+    const char* razed = object.get_value_by_key("razed");
+    const char* dismantled = object.get_value_by_key("dismantled");
+    const char* construction = object.get_value_by_key("construction");
+    const char* proposed = object.get_value_by_key("proposed");
+    if (!value_is_false(disused) || !value_is_false(abandoned) || !value_is_false(razed)
+            || !value_is_false(dismantled) || !value_is_false(construction) || !value_is_false(proposed)) {
+        write_feature_to_simple_layer(current_layer, object, "tags", tags_string(object.tags(), nullptr).c_str());
+    }
+}
+
+bool TaggingViewHandler::has_important_core_tag(const osmium::TagList& tags) {
+    const char* highway = tags.get_value_by_key("highway");
+    if (highway && !is_nonop(highway)) {
+        return true;
+    }
+    const char* railway = tags.get_value_by_key("railway");
+    if (railway && !is_nonop(railway)) {
+        return true;
+    }
+    const char* amenity = tags.get_value_by_key("amenity");
+    if (amenity && !is_nonop(amenity)) {
+        return true;
+    }
+    const char* shop = tags.get_value_by_key("shop");
+    if (shop && !is_nonop(shop)) {
+        return true;
+    }
+    return false;
+}
+
+bool TaggingViewHandler::value_is_false(const char* value) {
+    return value == nullptr || !strcmp(value, "no") || !strcmp(value, "false");
+}
+
+bool TaggingViewHandler::is_nonop(const char* key) {
+    return !strcmp(key, "disused") || !strcmp(key, "abandoned") || !strcmp(key, "razed")
+            || !strcmp(key, "dismantled") || !strcmp(key, "construction") || !strcmp(key, "proposed");
+}
+
 void TaggingViewHandler::handle_object(const osmium::OSMObject& object) {
     empty_value(object);
     check_fixme(object);
     empty_key(object);
     unusual_character(object);
     check_key_length(object);
+    hidden_nonop(object);
 }
 
 void TaggingViewHandler::node(const osmium::Node& node) {

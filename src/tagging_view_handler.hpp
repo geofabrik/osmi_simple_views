@@ -23,6 +23,7 @@
 #include "abstract_view_handler.hpp"
 
 class TaggingViewHandler : public AbstractViewHandler {
+
     static constexpr size_t MAX_STRING_LENGTH = 254;
 
     gdalcpp::Layer m_tagging_fixmes_on_nodes;
@@ -33,6 +34,8 @@ class TaggingViewHandler : public AbstractViewHandler {
     gdalcpp::Layer m_tagging_ways_with_empty_v;
     gdalcpp::Layer m_tagging_misspelled_node_keys;
     gdalcpp::Layer m_tagging_misspelled_way_keys;
+    gdalcpp::Layer m_tagging_nonop_confusion_nodes;
+    gdalcpp::Layer m_tagging_nonop_confusion_ways;
 
     /**
      * Write a feature to on of the layers which only have the fields
@@ -92,6 +95,34 @@ class TaggingViewHandler : public AbstractViewHandler {
      * Check if a character is an accepted character for keys and non-name values.
      */
     bool is_good_character(const char character);
+
+    /**
+     *
+     */
+    void hidden_nonop(const osmium::OSMObject& object);
+
+    /**
+     * Check if an object has an important tag.
+     *
+     * Following keys are considered as important: highway, railway, man_made, amenity, shop
+     *
+     * \returns instance of CoreTags
+     */
+    static bool has_important_core_tag(const osmium::TagList& tags);
+
+    /**
+     * Check if a value is "no" or "false".
+     *
+     * \return true if it is so or value is a nullptr
+     */
+    static bool value_is_false(const char* value);
+
+    /**
+     * Check if the given key is a key which intends to indicate non-operational use:
+     *
+     * disused, abandoned, razed, dismantled, proposed, construction
+     */
+    static bool is_nonop(const char* key);
 
     /**
      * Apply all checks on an object.

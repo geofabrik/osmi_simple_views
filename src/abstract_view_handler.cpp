@@ -41,3 +41,23 @@ bool AbstractViewHandler::all_nodes_valid(const osmium::WayNodeList& wnl) {
 gdalcpp::Dataset* AbstractViewHandler::get_dataset_pointer() {
     return &m_dataset;
 }
+
+std::string AbstractViewHandler::tags_string(const osmium::TagList& tags, const char* not_include) {
+    std::string tag_str;
+    // only add tags to the tags string if their key and value are shorter than 50 characters
+    for (const osmium::Tag& t : tags) {
+        if (not_include && !strcmp(t.key(), not_include)) {
+            continue;
+        }
+        size_t add_length = strlen(t.key()) + strlen(t.value()) + 2;
+        if (add_length < 50 && tag_str.length() + add_length < MAX_FIELD_LENGTH) {
+            tag_str += t.key();
+            tag_str += '=';
+            tag_str += t.value();
+            tag_str += '|';
+        }
+    }
+    // remove last | from tag_str
+    tag_str.pop_back();
+    return tag_str;
+}

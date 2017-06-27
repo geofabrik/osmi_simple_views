@@ -53,6 +53,19 @@ public:
      * Get a pointer to the dataset being used. The ownership will stay at AbstractViewHandler.
      */
     gdalcpp::Dataset* get_dataset_pointer();
+
+    /**
+     * Build a string containing tags (length of key and value below 48 characters)
+     * to be inserted into a "tag" column. The returned string is shorter than
+     * MAX_FIELD_LENGTH characters. No keys or values will be truncated.
+     *
+     * \param tags TagList of the OSM object
+     * \param not_include key whose value should not be included in the string of all tags.
+     * If it is a null pointer, this check is skipped.
+     *
+     * \returns string with the tags
+     */
+    std::string tags_string(const osmium::TagList& tags, const char* not_include);
 };
 
 
