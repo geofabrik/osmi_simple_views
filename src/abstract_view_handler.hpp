@@ -43,11 +43,11 @@ public:
 
     virtual ~AbstractViewHandler();
 
-    void node(const osmium::Node&) {}
+    virtual void node(const osmium::Node&) = 0;
 
-    void way(const osmium::Way&) {}
+    virtual void way(const osmium::Way&) = 0;
 
-    void area(const osmium::Area&) {}
+    virtual void area(const osmium::Area&) = 0;
 
     /**
      * Get a pointer to the dataset being used. The ownership will stay at AbstractViewHandler.

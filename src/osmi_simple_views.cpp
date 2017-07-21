@@ -32,11 +32,9 @@
 #include <osmium/io/any_input.hpp>
 #include <osmium/visitor.hpp>
 
-#include "places_handler.hpp"
-#include "geometry_view_handler.hpp"
-#include "highway_view_handler.hpp"
-#include "tagging_view_handler.hpp"
 #include "any_relation_collector.hpp"
+
+#include "handler_collection.hpp"
 
 using index_type = osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>;
 using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
@@ -50,7 +48,9 @@ void print_help(char* arg0) {
 #ifndef ONLYMERCATOROUTPUT
     std::cerr << "  -s EPSG, --srs=ESPG  Output projection (EPSG code) (default: 3857)\n";
 #endif
-    std::cerr << "  -t TYPE, --type=TYPE View to be produced (tagging, highways, places, geometry)\n" \
+    std::cerr << "  -t TYPE, --type=TYPE View to be produced (tagging, highways, places, geometry).\n" \
+              << "                       Use `-t view1 -t view2` if you want to produce files of\n" \
+              << "                       multiple views.\n" \
               << "  -v, --verbose        Verbose output\n";
 }
 
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
         {0, 0, 0, 0}
     };
 
-    enum { none, places, geometry, highways, tagging } view_type = none;
+    std::vector<ViewType> views;
     std::string location_index_type = "sparse_mem_array";
     std::string output_format = "SQlite";
     int srs = 3857;
@@ -115,13 +115,13 @@ int main(int argc, char* argv[]) {
                 break;
             case 't':
                 if (!strcmp(optarg, "tagging")) {
-                    view_type = tagging;
+                    views.push_back(ViewType::tagging);
                 } else if (!strcmp(optarg, "geometry")) {
-                    view_type = geometry;
+                    views.push_back(ViewType::geometry);
                 } else if (!strcmp(optarg, "highways")) {
-                    view_type = highways;
+                    views.push_back(ViewType::highways);
                 } else if (!strcmp(optarg, "places")) {
-                    view_type = places;
+                    views.push_back(ViewType::places);
                 } else {
                     std::cerr << "ERROR: -t must be one of tagging, geometry, highways, places\n";
                     print_help(argv[0]);
@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
         input_filename = "-";
     }
 
-    if (view_type == none) {
+    if (views.size() == 0) {
         std::cerr << "ERROR: Argument -t VIEW is mandatory.\n";
         print_help(argv[0]);
         exit(1);
@@ -165,43 +165,42 @@ int main(int argc, char* argv[]) {
     osmium::area::MultipolygonCollector<osmium::area::Assembler> collector(assembler_config);
     AnyRelationCollector any_collector(verbose_output, output_format, srs);
 
-    if (view_type == places) {
-        verbose_output.print("Pass 1 (Multipolygons) ...\n");
-        osmium::io::Reader reader1(input_filename, osmium::osm_entity_bits::relation);
-        collector.read_relations(reader1);
-        reader1.close();
-        verbose_output.print("Pass 1 done\n");
-    } else if (view_type == tagging) {
-        verbose_output.print("Pass 1 (Relations) ...\n");
-        osmium::io::Reader reader1(input_filename, osmium::osm_entity_bits::relation);
-        any_collector.read_relations(reader1);
-        reader1.close();
-        verbose_output.print("Pass 1 done\n");
-    }
-    verbose_output.print("Pass 2 ...\n");
+    HandlerCollection handlers;
+    int pass_count = 1;
 
-    osmium::io::Reader reader2(input_filename, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way);
-    if (view_type == places) {
-        PlacesHandler places_handler(output_filename, output_format, verbose_output, srs);
-        osmium::apply(reader2, location_handler, places_handler,
-                collector.handler([&places_handler](const osmium::memory::Buffer& area_buffer) {
-                osmium::apply(area_buffer, places_handler);
-                }));
-    } else if (view_type == geometry) {
-        GeometryViewHandler geom_view_handler(output_filename, output_format, verbose_output, srs);
-        osmium::apply(reader2, location_handler, geom_view_handler);
-    } else if (view_type == highways) {
-        HighwayViewHandler highway_view_handler(output_filename, output_format, verbose_output, srs);
-        osmium::apply(reader2, location_handler, highway_view_handler);
-    } else if (view_type == tagging) {
-        TaggingViewHandler tagging_view_handler(output_filename, output_format, verbose_output, srs);
-        any_collector.set_dataset_ptr(tagging_view_handler.get_dataset_pointer());
-        {
-            osmium::apply(reader2, location_handler, tagging_view_handler, any_collector.handler());
-            any_collector.release_dataset();
+    // additional passes for views which use relations
+    for (auto vt : views) {
+        if (vt == ViewType::places) {
+            verbose_output << "Pass " << pass_count << " (Multipolygons) ...\n";
+            osmium::io::Reader reader1(input_filename, osmium::osm_entity_bits::relation);
+            reader1.close();
+            verbose_output << "Pass " << pass_count << " done\n";
+            ++pass_count;
+        } else if (vt == ViewType::tagging) {
+            verbose_output << "Pass " << pass_count << " (Relations) ...\n";
+            osmium::io::Reader reader1(input_filename, osmium::osm_entity_bits::relation);
+            any_collector.read_relations(reader1);
+            reader1.close();
+            verbose_output << "Pass " << pass_count << " done\n";
+            ++pass_count;
         }
     }
+    verbose_output << "Pass " << pass_count << " ...\n";
+
+    osmium::io::Reader reader2(input_filename, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way);
+    for (auto vt : views) {
+        if (vt == ViewType::tagging) {
+            any_collector.set_dataset_ptr(handlers.add_handler(vt, output_filename, output_format, verbose_output, srs));
+        } else {
+            handlers.add_handler(vt, output_filename, output_format, verbose_output, srs);
+        }
+        if (vt == ViewType::places) {
+            handlers.add_multipolygon_collector(collector);
+        }
+    }
+
+    osmium::apply(reader2, location_handler, handlers, any_collector.handler());
     reader2.close();
-    verbose_output.print("Pass 2 done\n");
+    verbose_output << "Pass " << pass_count << " done\n";
 
 }

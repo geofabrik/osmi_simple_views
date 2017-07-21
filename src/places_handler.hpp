@@ -100,6 +100,9 @@ public:
     void node(const osmium::Node& node);
 
     void area(const osmium::Area& area);
+
+    void way(const osmium::Way&) {};
+    void relation(const osmium::Relation&) {};
 };
 
 

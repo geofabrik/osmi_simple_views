@@ -36,7 +36,8 @@ bool AnyRelationCollector::keep_member(const osmium::relations::RelationMeta&,
 }
 
 void AnyRelationCollector::way_not_in_any_relation(const osmium::Way& way) {
-    if (way.tags().size() > 0) {
+    if (way.tags().size() > 0 || !m_dataset_ptr) {
+        // m_dataset_ptr is empty if AnyRelationCollector was initialized but no tagging view should be produced
         return;
     }
     try {

@@ -156,6 +156,9 @@ public:
      */
     static void set_basic_fields(gdalcpp::Feature& feature, const osmium::OSMObject& object,
             const char* field_name, const char* value);
+
+    void relation(const osmium::Relation&) {};
+    void area(const osmium::Area&) {};
 };
 
 

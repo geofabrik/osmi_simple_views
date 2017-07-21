@@ -132,6 +132,10 @@ public:
             osmium::util::VerboseOutput& verbose_output, int epsg = 3857);
 
     void way(const osmium::Way& way);
+
+    void node(const osmium::Node&) {};
+    void relation(const osmium::Relation&) {};
+    void area(const osmium::Area&) {};
 };
 
 
