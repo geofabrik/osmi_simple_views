@@ -97,14 +97,17 @@ class TaggingViewHandler : public AbstractViewHandler {
     bool is_good_character(const char character);
 
     /**
-     *
+     * Search for objects with a core tag but a disused/abandoned/razed/dismanted/construction/proposed=yes.
      */
     void hidden_nonop(const osmium::OSMObject& object);
 
     /**
      * Check if an object has an important tag.
      *
-     * Following keys are considered as important: highway, railway, man_made, amenity, shop
+     * Following keys are considered as important: highway, railway, amenity, shop
+     *
+     * man_made is not in the list of searched keys because this would cause too much
+     * false positives returned by the hidden_nonop check.
      *
      * \returns instance of CoreTags
      */
