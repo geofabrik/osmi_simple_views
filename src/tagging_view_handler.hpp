@@ -36,6 +36,8 @@ class TaggingViewHandler : public AbstractViewHandler {
     gdalcpp::Layer m_tagging_misspelled_way_keys;
     gdalcpp::Layer m_tagging_nonop_confusion_nodes;
     gdalcpp::Layer m_tagging_nonop_confusion_ways;
+    gdalcpp::Layer m_tagging_no_feature_tag_nodes;
+    gdalcpp::Layer m_tagging_no_feature_tag_ways;
 
     /**
      * Write a feature to on of the layers which only have the fields
@@ -126,6 +128,18 @@ class TaggingViewHandler : public AbstractViewHandler {
      * disused, abandoned, razed, dismantled, proposed, construction
      */
     static bool is_nonop(const char* key);
+
+    /**
+     * Check if an object has a name or description tag but no main tag.
+     */
+    void no_main_tags(const osmium::OSMObject& object);
+
+    /**
+     * Check if a tag has a "feature" key, i.e. it has a key which describes what it is.
+     */
+    static bool has_feature_key(const osmium::TagList& tags);
+
+    static bool has_non_feature_key(const osmium::TagList& tags);
 
     /**
      * Apply all checks on an object.

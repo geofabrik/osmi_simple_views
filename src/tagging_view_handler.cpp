@@ -31,7 +31,9 @@ TaggingViewHandler::TaggingViewHandler(std::string& output_filename, std::string
         m_tagging_misspelled_node_keys(m_dataset, "tagging_misspelled_node_keys", wkbPoint, GDAL_DEFAULT_OPTIONS),
         m_tagging_misspelled_way_keys(m_dataset, "tagging_misspelled_way_keys", wkbLineString, GDAL_DEFAULT_OPTIONS),
         m_tagging_nonop_confusion_nodes(m_dataset, "tagging_nonop_confusion_nodes", wkbPoint, GDAL_DEFAULT_OPTIONS),
-        m_tagging_nonop_confusion_ways(m_dataset, "tagging_nonop_confusion_ways", wkbLineString, GDAL_DEFAULT_OPTIONS)
+        m_tagging_nonop_confusion_ways(m_dataset, "tagging_nonop_confusion_ways", wkbLineString, GDAL_DEFAULT_OPTIONS),
+        m_tagging_no_feature_tag_nodes(m_dataset, "tagging_no_feature_tag_nodes", wkbPoint, GDAL_DEFAULT_OPTIONS),
+        m_tagging_no_feature_tag_ways(m_dataset, "tagging_no_feature_tag_ways", wkbLineString, GDAL_DEFAULT_OPTIONS)
 {
     m_tagging_fixmes_on_nodes.add_field("node_id", OFTString, 10);
     m_tagging_fixmes_on_nodes.add_field("tag", OFTString, MAX_STRING_LENGTH);
@@ -67,6 +69,12 @@ TaggingViewHandler::TaggingViewHandler(std::string& output_filename, std::string
     m_tagging_nonop_confusion_ways.add_field("way_id", OFTString, 10);
     m_tagging_nonop_confusion_ways.add_field("tags", OFTString, MAX_STRING_LENGTH);
     m_tagging_nonop_confusion_ways.add_field("lastchange", OFTString, 21);
+    m_tagging_no_feature_tag_nodes.add_field("node_id", OFTString, 10);
+    m_tagging_no_feature_tag_nodes.add_field("tags", OFTString, MAX_STRING_LENGTH);
+    m_tagging_no_feature_tag_nodes.add_field("lastchange", OFTString, 21);
+    m_tagging_no_feature_tag_ways.add_field("way_id", OFTString, 10);
+    m_tagging_no_feature_tag_ways.add_field("tags", OFTString, MAX_STRING_LENGTH);
+    m_tagging_no_feature_tag_ways.add_field("lastchange", OFTString, 21);
 }
 
 void TaggingViewHandler::write_feature_to_simple_layer(gdalcpp::Layer* layer,
@@ -347,6 +355,148 @@ bool TaggingViewHandler::is_nonop(const char* key) {
             || !strcmp(key, "dismantled") || !strcmp(key, "construction") || !strcmp(key, "proposed");
 }
 
+bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
+    for (const osmium::Tag& t : tags) {
+        if (!strcmp(t.key(), "building")) {
+            return true;
+        } else if (!strcmp(t.key(), "landuse")) {
+            return true;
+        } else if (!strcmp(t.key(), "highway")) {
+            return true;
+        } else if (!strcmp(t.key(), "railway")) {
+            return true;
+        } else if (!strcmp(t.key(), "amenity")) {
+            return true;
+        } else if (!strcmp(t.key(), "shop")) {
+            return true;
+        } else if (!strcmp(t.key(), "natural")) {
+            return true;
+        } else if (!strcmp(t.key(), "waterway")) {
+            return true;
+        } else if (!strcmp(t.key(), "power")) {
+            return true;
+        } else if (!strcmp(t.key(), "barrier")) {
+            return true;
+        } else if (!strcmp(t.key(), "leisure")) {
+            return true;
+        } else if (!strcmp(t.key(), "man_made")) {
+            return true;
+        } else if (!strcmp(t.key(), "tourism")) {
+            return true;
+        } else if (!strcmp(t.key(), "boundary")) {
+            return true;
+        } else if (!strcmp(t.key(), "public_transport")) {
+            return true;
+        } else if (!strcmp(t.key(), "sport")) {
+            return true;
+        } else if (!strcmp(t.key(), "emergency")) {
+            return true;
+        } else if (!strcmp(t.key(), "historic")) {
+            return true;
+        } else if (!strcmp(t.key(), "route")) {
+            return true;
+        } else if (!strcmp(t.key(), "aeroway")) {
+            return true;
+        } else if (!strcmp(t.key(), "place")) {
+            return true;
+        } else if (!strcmp(t.key(), "craft")) {
+            return true;
+        } else if (!strcmp(t.key(), "entrance")) {
+            return true;
+        } else if (!strcmp(t.key(), "playground")) {
+            return true;
+        } else if (!strcmp(t.key(), "aerialway")) {
+            return true;
+        } else if (!strcmp(t.key(), "healthcare")) {
+            return true;
+        } else if (!strcmp(t.key(), "military")) {
+            return true;
+        } else if (!strcmp(t.key(), "building:part")) {
+            return true;
+        } else if (!strcmp(t.key(), "training")) {
+            return true;
+        } else if (!strcmp(t.key(), "traffic_sign")) {
+            return true;
+        } else if (!strcmp(t.key(), "xmas:feature")) {
+            return true;
+        } else if (!strcmp(t.key(), "seamark:type")) {
+            return true;
+        } else if (!strcmp(t.key(), "waterway:sign")) {
+            return true;
+        } else if (!strcmp(t.key(), "university")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "historic")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "razed")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "demolished")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "abandoned")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "disused")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "construction")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "proposed")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "temporary")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "TMC")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "pipeline")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "club")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "golf")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "junction")) {
+            return true;
+        } else if (!strcmp(t.key(), "office") && (strcmp(t.value(), "yes"))) {
+            // office=yes is no real feature tag, "yes" is is a value for lazy users, newbies and SEO spammers.
+            return true;
+        }
+    }
+    return false;
+}
+
+bool TaggingViewHandler::has_non_feature_key(const osmium::TagList& tags) {
+    for (const osmium::Tag& t : tags) {
+        if (is_a_x_key_key(t.key(), "name")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "description")) {
+            return true;
+//        } else if (is_a_x_key_key(t.key(), "note")) {
+//            return true;
+        } else if (is_a_x_key_key(t.key(), "comment")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "website")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "url")) {
+            return true;
+        } else if (is_a_x_key_key(t.key(), "contact:website")) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void TaggingViewHandler::no_main_tags(const osmium::OSMObject& object) {
+    if (has_feature_key(object.tags())) {
+        return;
+    }
+    gdalcpp::Layer* current_layer;
+    if (object.type() == osmium::item_type::way) {
+        current_layer = &m_tagging_no_feature_tag_ways;
+    } else if (object.type() == osmium::item_type::node) {
+        current_layer = &m_tagging_no_feature_tag_nodes;
+    } else {
+        return;
+    }
+    if (has_non_feature_key(object.tags())) {
+        write_feature_to_simple_layer(current_layer, object, "tags", tags_string(object.tags(), nullptr).c_str());
+    }
+}
+
 void TaggingViewHandler::handle_object(const osmium::OSMObject& object) {
     empty_value(object);
     check_fixme(object);
@@ -354,6 +504,7 @@ void TaggingViewHandler::handle_object(const osmium::OSMObject& object) {
     unusual_character(object);
     check_key_length(object);
     hidden_nonop(object);
+    no_main_tags(object);
 }
 
 void TaggingViewHandler::node(const osmium::Node& node) {
