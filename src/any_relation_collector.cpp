@@ -26,8 +26,12 @@ AnyRelationCollector::AnyRelationCollector(osmium::util::VerboseOutput& verbose_
         OGROutputBase(verbose_output, output_format, epsg) { }
 
 bool AnyRelationCollector::keep_relation(const osmium::Relation& relation) const {
-    const char* type = relation.get_value_by_key("type");
-    return (type && (!strcmp(type, "multipolygon") || !strcmp(type, "boundary")));
+    // whitelisted route=piste/ski/ferry because both can contain member ways without tags.
+    return relation.tags().has_tag("type", "multipolygon")
+            || relation.tags().has_tag("type", "boundary")
+            || (relation.tags().has_tag("type", "route") && relation.tags().has_tag("route", "piste"))
+            || (relation.tags().has_tag("type", "route") && relation.tags().has_tag("route", "ski"))
+            || (relation.tags().has_tag("type", "route") && relation.tags().has_tag("route", "ferry"));
 }
 
 bool AnyRelationCollector::keep_member(const osmium::relations::RelationMeta&,
