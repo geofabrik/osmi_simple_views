@@ -159,7 +159,7 @@ void GeometryViewHandler::single_node_in_way(const osmium::Way& way) {
     feature.set_field("way_id", idbuffer);
     static char idbuffer2[20];
     sprintf(idbuffer2, "%ld", way.nodes().front().ref());
-    feature.set_field("node_id", idbuffer);
+    feature.set_field("node_id", idbuffer2);
     feature.set_field("tags", tags_string(way.tags()).c_str());
     std::string the_timestamp (way.timestamp().to_iso());
     feature.set_field("lastchange", the_timestamp.c_str());
