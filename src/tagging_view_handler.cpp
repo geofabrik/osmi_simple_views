@@ -216,14 +216,16 @@ void TaggingViewHandler::unusual_character(const osmium::OSMObject& object) {
         if (is_a_x_key_key(t.key(), "name") || is_a_x_key_key(t.key(), "description")
                 || is_a_x_key_key(t.key(), "note") || is_a_x_key_key(t.key(), "comment")
                 || !strcmp(t.key(), "fixme") || !strcmp(t.key(), "FIXME")
-                || !strcmp(t.key(), "todo")) {
+                || !strcmp(t.key(), "todo") || !strcmp(t.key(), "website")
+                || is_a_x_key_key(t.key(), "contact") || !strcmp(t.key(), "url")
+                || !strcmp(t.key(), "email")) {
             continue;
         }
         for (size_t i = 0; i < strlen(t.key()); ++i) {
             if (!is_good_character(t.key()[i])) {
                 if (object.type() == osmium::item_type::node) {
                     write_missspelled(object, t.key(), "node_with_unusual_char", nullptr);
-                } else if (object.type() == osmium::item_type::node) {
+                } else if (object.type() == osmium::item_type::way) {
                     write_missspelled(object, t.key(), "way_with_unusual_char", nullptr);
                 }
                 return;
@@ -443,13 +445,13 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
             return true;
         } else if (is_a_x_key_key(t.key(), "TMC")) {
             return true;
-        } else if (is_a_x_key_key(t.key(), "pipeline")) {
+        } else if (!strcmp(t.key(), "pipeline")) {
             return true;
-        } else if (is_a_x_key_key(t.key(), "club")) {
+        } else if (!strcmp(t.key(), "club")) {
             return true;
-        } else if (is_a_x_key_key(t.key(), "golf")) {
+        } else if (!strcmp(t.key(), "golf")) {
             return true;
-        } else if (is_a_x_key_key(t.key(), "junction")) {
+        } else if (!strcmp(t.key(), "junction")) {
             return true;
         } else if (!strcmp(t.key(), "office") && (strcmp(t.value(), "yes"))) {
             // office=yes is no real feature tag, "yes" is is a value for lazy users, newbies and SEO spammers.
