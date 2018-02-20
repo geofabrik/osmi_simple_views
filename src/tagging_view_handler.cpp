@@ -456,6 +456,8 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
         } else if (!strcmp(t.key(), "office") && (strcmp(t.value(), "yes"))) {
             // office=yes is no real feature tag, "yes" is is a value for lazy users, newbies and SEO spammers.
             return true;
+        } else if (!strcmp(t.key(), "harbour")) {
+            return true;
         }
     }
     return false;
