@@ -458,6 +458,8 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
             return true;
         } else if (!strcmp(t.key(), "piste:type")) {
             return true;
+        } else if (!strcmp(t.key(), "mountain_pass")) {
+            return true;
         } else if (!strcmp(t.key(), "harbour")) {
             return true;
         }
