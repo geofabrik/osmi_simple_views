@@ -321,7 +321,8 @@ bool HighwayViewHandler::highway_unknown(const osmium::TagList& tags) {
             || !strcmp(highway, "footway") || !strcmp(highway, "cycleway") || !strcmp(highway, "bridleway")
             || !strcmp(highway, "steps") || !strcmp(highway, "raceway") || !strcmp(highway, "bus_guideway")
             || !strcmp(highway, "construction") || !strcmp(highway, "disused") || !strcmp(highway, "abandoned")
-            || !strcmp(highway, "proposed") || !strcmp(highway, "platform") || !strcmp(highway, "road")) {
+            || !strcmp(highway, "proposed") || !strcmp(highway, "platform") || !strcmp(highway, "road")
+            || !strcmp(highway, "elevator")) {
         return true;
     }
     return false;
