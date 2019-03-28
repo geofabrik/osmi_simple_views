@@ -109,6 +109,17 @@ void TaggingViewHandler::write_feature_to_simple_layer(gdalcpp::Layer* layer,
             char output_value[MAX_STRING_LENGTH + 5];
             strncpy(output_value, value, MAX_STRING_LENGTH);
             output_value[MAX_STRING_LENGTH] = '\0';
+	    // remove last byte(s) if they are multibyte characters but cut in-between
+            size_t i = MAX_STRING_LENGTH - 1;
+            if (output_value[i] & 128) {
+                if (output_value[i] & 64) {
+                    output_value[i] = '\0';
+                } else if ((output_value[i - 1] & 224) == 224) {
+                    output_value[i - 1] = '\0';
+                } else if ((output_value[i - 2] & 240) == 240) {
+                    output_value[i - 2] = '\0';
+                }
+            }
             feature.set_field(field_name, output_value);
         } else {
             feature.set_field(field_name, value);
