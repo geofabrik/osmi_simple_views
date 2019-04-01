@@ -408,6 +408,8 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
             return true;
         } else if (!strcmp(t.key(), "route")) {
             return true;
+        } else if (!strcmp(t.key(), "indoor")) {
+            return true;
         } else if (!strcmp(t.key(), "aeroway")) {
             return true;
         } else if (!strcmp(t.key(), "place")) {
