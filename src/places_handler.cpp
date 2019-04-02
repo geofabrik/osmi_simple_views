@@ -26,11 +26,11 @@
 PlacesHandler::PlacesHandler(std::string& output_filename, std::string& output_format,
         osmium::util::VerboseOutput& verbose_output, int epsg /*= 3857*/) :
         AbstractViewHandler(output_filename, output_format, verbose_output, epsg),
-        m_points(m_dataset, "points", wkbPoint, GDAL_DEFAULT_OPTIONS),
-        m_polygons(m_dataset, "polygons", wkbMultiPolygon, GDAL_DEFAULT_OPTIONS),
-        m_errors_points(m_dataset, "errors_points", wkbPoint, GDAL_DEFAULT_OPTIONS),
-        m_errors_polygons(m_dataset, "errors_polygons", wkbMultiPolygon, GDAL_DEFAULT_OPTIONS),
-        m_cities(m_dataset, "cities", wkbPoint, GDAL_DEFAULT_OPTIONS) {
+        m_points(create_layer("points", wkbPoint, GDAL_DEFAULT_OPTIONS)),
+        m_polygons(create_layer("polygons", wkbMultiPolygon, GDAL_DEFAULT_OPTIONS)),
+        m_errors_points(create_layer("errors_points", wkbPoint, GDAL_DEFAULT_OPTIONS)),
+        m_errors_polygons(create_layer("errors_polygons", wkbMultiPolygon, GDAL_DEFAULT_OPTIONS)),
+        m_cities(create_layer("cities", wkbPoint, GDAL_DEFAULT_OPTIONS)) {
     // add fields to layers
     m_points.add_field("node_id", OFTString, 10);
     m_points.add_field("place", OFTString, 20);
@@ -73,6 +73,10 @@ PlacesHandler::PlacesHandler(std::string& output_filename, std::string& output_f
     m_cities.add_field("admlvl", OFTInteger, 2);
     m_cities.add_field("name", OFTString, 100);
     m_cities.add_field("lastchange", OFTString, 21);
+}
+
+void PlacesHandler::give_correct_name() {
+    rename_output_files("places");
 }
 
 bool PlacesHandler::place_value_ok(const char* value) {

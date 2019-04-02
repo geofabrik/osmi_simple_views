@@ -40,8 +40,8 @@ bool AnyRelationCollector::keep_member(const osmium::relations::RelationMeta&,
 }
 
 void AnyRelationCollector::way_not_in_any_relation(const osmium::Way& way) {
-    if (way.tags().size() > 0 || !m_dataset_ptr) {
-        // m_dataset_ptr is empty if AnyRelationCollector was initialized but no tagging view should be produced
+    if (way.tags().size() > 0 || !m_tagging_ways_without_tags) {
+        // m_tagging_ways_without_tags is empty if AnyRelationCollector was initialized but no tagging view should be produced
         return;
     }
     try {
@@ -57,17 +57,11 @@ void AnyRelationCollector::way_not_in_any_relation(const osmium::Way& way) {
 
 void AnyRelationCollector::complete_relation(osmium::relations::RelationMeta&) {}
 
-void AnyRelationCollector::set_dataset_ptr(gdalcpp::Dataset* dataset_ptr) {
-    m_dataset_ptr = dataset_ptr;
+void AnyRelationCollector::create_layer(gdalcpp::Dataset* dataset) {
     m_tagging_ways_without_tags =
-            std::unique_ptr<gdalcpp::Layer>(new gdalcpp::Layer(*m_dataset_ptr, "tagging_ways_without_tags",
+            std::unique_ptr<gdalcpp::Layer>(new gdalcpp::Layer(*dataset, "tagging_ways_without_tags",
             wkbLineString, GDAL_DEFAULT_OPTIONS));
 
     m_tagging_ways_without_tags->add_field("way_id", OFTString, 10);
     m_tagging_ways_without_tags->add_field("lastchange", OFTString, 21);
-}
-
-void AnyRelationCollector::release_dataset() {
-    m_tagging_ways_without_tags.reset();
-    m_dataset_ptr = nullptr;
 }

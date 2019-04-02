@@ -7,27 +7,31 @@
 
 #include "handler_collection.hpp"
 
-gdalcpp::Dataset* HandlerCollection::add_handler(ViewType view, std::string output_filename, std::string& output_format,
-        osmium::util::VerboseOutput& verbose_output, int epsg /*= 3857*/) {
+void HandlerCollection::give_correct_name() {
+    for (auto& h : m_handlers) {
+        h->give_correct_name();
+    }
+}
+
+gdalcpp::Dataset* HandlerCollection::add_handler(ViewType view, std::string& output_filename, std::string& output_format,
+        osmium::util::VerboseOutput& verbose_output, const char* layer_name, int epsg /*= 3857*/) {
     std::unique_ptr<AbstractViewHandler> handler;
     gdalcpp::Dataset* dataset_ptr = nullptr;
     if (view == ViewType::geometry) {
-        output_filename += "/geometry.db";
         handler.reset(new GeometryViewHandler(output_filename, output_format, verbose_output, epsg));
     } else if (view == ViewType::highways) {
-        output_filename += "/highways.db";
         handler.reset(new HighwayViewHandler(output_filename, output_format, verbose_output, epsg));
     } else if (view == ViewType::tagging) {
-        output_filename += "/tagging.db";
         handler.reset(new TaggingViewHandler(output_filename, output_format, verbose_output, epsg));
     } else if (view == ViewType::places) {
-        output_filename += "/places.db";
         handler.reset(new PlacesHandler(output_filename, output_format, verbose_output, epsg));
         m_places_handler = dynamic_cast<PlacesHandler*>(handler.get());
     } else {
         return nullptr;
     }
-    dataset_ptr = handler->get_dataset_pointer();
+    if (layer_name) {
+        dataset_ptr = handler->get_dataset_pointer(layer_name);
+    }
     m_handlers.push_back(std::move(handler));
     return dataset_ptr;
 }

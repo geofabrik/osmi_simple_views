@@ -28,7 +28,6 @@
 class AnyRelationCollector : public osmium::relations::Collector<AnyRelationCollector,
 true, true, true>, public OGROutputBase {
 
-    gdalcpp::Dataset* m_dataset_ptr = nullptr;
     std::unique_ptr<gdalcpp::Layer> m_tagging_ways_without_tags;
 
 public:
@@ -65,12 +64,7 @@ public:
     /**
      * Assign the pointer pointing to a dataset.
      */
-    void set_dataset_ptr(gdalcpp::Dataset* dataset_ptr);
-
-    /**
-     * Destroy all instances using #m_dataset_ptr.
-     */
-    void release_dataset();
+    void create_layer(gdalcpp::Dataset* dataset);
 
 };
 

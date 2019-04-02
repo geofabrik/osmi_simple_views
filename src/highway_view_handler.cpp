@@ -24,16 +24,15 @@
 HighwayViewHandler::HighwayViewHandler(std::string& output_filename, std::string& output_format,
         osmium::util::VerboseOutput& verbose_output, int epsg /*= 3857*/) :
         AbstractViewHandler(output_filename, output_format, verbose_output, epsg),
-        m_highway_lanes(m_dataset, "highway_lanes", wkbLineString, GDAL_DEFAULT_OPTIONS),
-        m_highway_maxheight(m_dataset, "highway_maxheight", wkbLineString, GDAL_DEFAULT_OPTIONS),
-        m_highway_maxspeed(m_dataset, "highway_maxspeed", wkbLineString, GDAL_DEFAULT_OPTIONS),
-        m_highway_name_fixme(m_dataset, "highway_name_fixme", wkbLineString, GDAL_DEFAULT_OPTIONS),
-        m_highway_name_missing_major(m_dataset, "highway_name_missing_major", wkbLineString, GDAL_DEFAULT_OPTIONS),
-        m_highway_name_missing_minor(m_dataset, "highway_name_missing_minor", wkbLineString, GDAL_DEFAULT_OPTIONS),
-        m_highway_oneway(m_dataset, "highway_oneway", wkbLineString, GDAL_DEFAULT_OPTIONS),
-        m_highway_road(m_dataset, "highway_road", wkbLineString, GDAL_DEFAULT_OPTIONS),
-        m_highway_type_unknown(m_dataset, "highway_type_unknown", wkbLineString, GDAL_DEFAULT_OPTIONS)
-        {
+        m_highway_lanes(create_layer("highway_lanes", wkbLineString, GDAL_DEFAULT_OPTIONS)),
+        m_highway_maxheight(create_layer("highway_maxheight", wkbLineString, GDAL_DEFAULT_OPTIONS)),
+        m_highway_maxspeed(create_layer("highway_maxspeed", wkbLineString, GDAL_DEFAULT_OPTIONS)),
+        m_highway_name_fixme(create_layer("highway_name_fixme", wkbLineString, GDAL_DEFAULT_OPTIONS)),
+        m_highway_name_missing_major(create_layer("highway_name_missing_major", wkbLineString, GDAL_DEFAULT_OPTIONS)),
+        m_highway_name_missing_minor(create_layer("highway_name_missing_minor", wkbLineString, GDAL_DEFAULT_OPTIONS)),
+        m_highway_oneway(create_layer("highway_oneway", wkbLineString, GDAL_DEFAULT_OPTIONS)),
+        m_highway_road(create_layer("highway_road", wkbLineString, GDAL_DEFAULT_OPTIONS)),
+        m_highway_type_unknown(create_layer("highway_type_unknown", wkbLineString, GDAL_DEFAULT_OPTIONS)) {
     // add fields to layers
     m_highway_lanes.add_field("way_id", OFTString, 10);
     m_highway_lanes.add_field("lanes", OFTString, 40);
@@ -72,6 +71,10 @@ HighwayViewHandler::HighwayViewHandler(std::string& output_filename, std::string
     register_check(name_missing_minor, "highway", &m_highway_name_missing_minor);
     register_check(highway_road, "", &m_highway_road);
     register_check(highway_unknown, "highway", &m_highway_type_unknown);
+}
+
+void HighwayViewHandler::give_correct_name() {
+    rename_output_files("highways");
 }
 
 void HighwayViewHandler::register_check(std::function<bool (const osmium::TagList&)> function, std::string key, gdalcpp::Layer* layer) {

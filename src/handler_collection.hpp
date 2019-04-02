@@ -41,13 +41,15 @@ class HandlerCollection : public osmium::handler::Handler {
 
 public:
 
+    void give_correct_name();
+
     /**
      * \brief Create and register a new handler.
      *
-     * \returns pointer to the OGR dataset of the view
+     * \returns pointer to the handler being added
      */
-    gdalcpp::Dataset* add_handler(ViewType view, std::string output_filename, std::string& output_format,
-            osmium::util::VerboseOutput& verbose_output, int epsg = 3857);
+    gdalcpp::Dataset* add_handler(ViewType view, std::string& output_filename, std::string& output_format,
+            osmium::util::VerboseOutput& verbose_output, const char* layer_name, int epsg = 3857);
 
     /**
      * \brief Add a multipolygon collector.

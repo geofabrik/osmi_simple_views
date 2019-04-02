@@ -26,20 +26,53 @@
 #include "ogr_output_base.hpp"
 
 class AbstractViewHandler : public osmium::handler::Handler, public OGROutputBase {
+
+    /**
+     * Get filename suffix by output format with a leading dot.
+     *
+     * If the format is not found, an empty string is returned.
+     *
+     * This method is required because GDAL does not provide such a method.
+     */
+    std::string filename_suffix();
+
+    /**
+     * Return capability to create multiple layers with one data source.
+     *
+     * By default, this method returns false.
+     */
+    bool one_layer_per_datasource_only();
+
 protected:
+    std::string m_output_directory;
+    std::string& m_output_format;
+    int m_epsg;
     /// ORG dataset
-    gdalcpp::Dataset m_dataset;
+    // This has to be a vector of unique_ptr because a vector of objects themselves fails to
+    // compile due to "copy constructor of 'Dataset' is implicitly deleted because field
+    // 'm_options' has a deleted copy constructor".
+    std::vector<std::unique_ptr<gdalcpp::Dataset>> m_datasets;
 
     /**
      * Check if all nodes of the way are valid.
      */
     bool all_nodes_valid(const osmium::WayNodeList& wnl);
 
+    void rename_output_files(const std::string& view_name);
+
 public:
     AbstractViewHandler() = delete;
 
-    AbstractViewHandler(std::string& output_filename, std::string& output_format,
+    AbstractViewHandler(std::string& output_directory, std::string& output_format,
             osmium::util::VerboseOutput& verbose_output, int epsg);
+
+    /**
+     * Add proper file name suffix to the output files. If there is one output dataset only,
+     * give it the name of the view.
+     *
+     * @arg view_name name of the view.
+     */
+    virtual void give_correct_name() = 0;
 
     virtual ~AbstractViewHandler();
 
@@ -50,9 +83,16 @@ public:
     virtual void area(const osmium::Area&) = 0;
 
     /**
+     * Add a new dataset to the vector if the last one cannot be use for multiple layers
+     */
+    void ensure_writeable_dataset(const char* layer_name);
+
+    /**
      * Get a pointer to the dataset being used. The ownership will stay at AbstractViewHandler.
      */
-    gdalcpp::Dataset* get_dataset_pointer();
+    gdalcpp::Dataset* get_dataset_pointer(const char* layer_name);
+
+    gdalcpp::Layer create_layer(const char* layer_name, OGRwkbGeometryType type, const std::vector<std::string>& options = {});
 
     /**
      * Build a string containing tags (length of key and value below 48 characters)
@@ -66,6 +106,7 @@ public:
      * \returns string with the tags
      */
     std::string tags_string(const osmium::TagList& tags, const char* not_include);
+
 };
 
 

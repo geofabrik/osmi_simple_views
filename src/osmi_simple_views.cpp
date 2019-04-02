@@ -40,7 +40,7 @@ using index_type = osmium::index::map::Map<osmium::unsigned_object_id_type, osmi
 using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 
 void print_help(char* arg0) {
-    std::cerr << "Usage: " << arg0 << " [OPTIONS] INFILE OUTFILE\n" \
+    std::cerr << "Usage: " << arg0 << " [OPTIONS] INPUT_FILE OUTPUT_DIRECTORY\n" \
               << "Options:\n" \
               << "  -h, --help           This help message.\n" \
               << "  -f, --format         Output format (default: SQlite)\n" \
@@ -190,9 +190,10 @@ int main(int argc, char* argv[]) {
     osmium::io::Reader reader2(input_filename, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way);
     for (auto vt : views) {
         if (vt == ViewType::tagging) {
-            any_collector.set_dataset_ptr(handlers.add_handler(vt, output_filename, output_format, verbose_output, srs));
+            any_collector.create_layer(handlers.add_handler(vt, output_filename, output_format, verbose_output,
+                    "tagging_ways_without_tags", srs));
         } else {
-            handlers.add_handler(vt, output_filename, output_format, verbose_output, srs);
+            handlers.add_handler(vt, output_filename, output_format, verbose_output, nullptr, srs);
         }
         if (vt == ViewType::places) {
             handlers.add_multipolygon_collector(collector);
@@ -201,6 +202,7 @@ int main(int argc, char* argv[]) {
 
     osmium::apply(reader2, location_handler, handlers, any_collector.handler());
     reader2.close();
+    handlers.give_correct_name();
     verbose_output << "Pass " << pass_count << " done\n";
 
 }

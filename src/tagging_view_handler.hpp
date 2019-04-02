@@ -149,8 +149,10 @@ class TaggingViewHandler : public AbstractViewHandler {
 public:
     TaggingViewHandler() = delete;
 
-    TaggingViewHandler(std::string& output_filename, std::string& output_format,
+    explicit TaggingViewHandler(std::string& output_filename, std::string& output_format,
             osmium::util::VerboseOutput& verbose_output, int epsg = 3857);
+
+    void give_correct_name();
 
     void node(const osmium::Node& node);
 

@@ -97,6 +97,8 @@ public:
     PlacesHandler(std::string& output_filename, std::string& output_format,
             osmium::util::VerboseOutput& verbose_output, int epsg = 3857);
 
+    void give_correct_name();
+
     void node(const osmium::Node& node);
 
     void area(const osmium::Area& area);

@@ -168,11 +168,15 @@ public:
     GeometryViewHandler(std::string& output_filename, std::string& output_format,
             osmium::util::VerboseOutput& verbose_output, int epsg = 3857);
 
+    void give_correct_name();
+
     void way(const osmium::Way& way);
 
     void node(const osmium::Node&) {};
     void relation(const osmium::Relation&) {};
     void area(const osmium::Area&) {};
+
+    std::string name();
 };
 
 
