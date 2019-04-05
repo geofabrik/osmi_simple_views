@@ -38,15 +38,14 @@ possible but not as well tested. You can open the output files using QGIS.
 
 The Spatialite database is used as the data source of the [WMS
 service](https://wiki.openstreetmap.org/wiki/OSM_Inspector/WxS) by the OSMI
-backend. This service provides the map and an GetFeatureInfo API call used by
+backend. This service provides the map and a GetFeatureInfo API call used by
 the frontend.
 
 
 ## Dependencies
 
 * C++11 compiler
-* libosmium (`libosmium-dev`) and all its [important
-* dependencies](http://osmcode.org/libosmium/manual.html#dependencies)
+* libosmium (`libosmium-dev`) and all its [important dependencies](http://osmcode.org/libosmium/manual.html#dependencies)
 * GDAL library (`libgdal-dev`)
 * proj.4 (`libproj4-dev`)
 * CMake (`cmake`)
