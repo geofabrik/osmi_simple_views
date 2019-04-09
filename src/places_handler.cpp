@@ -26,11 +26,11 @@
 PlacesHandler::PlacesHandler(std::string& output_filename, std::string& output_format,
         osmium::util::VerboseOutput& verbose_output, int epsg /*= 3857*/) :
         AbstractViewHandler(output_filename, output_format, verbose_output, epsg),
-        m_points(create_layer("points", wkbPoint, GDAL_DEFAULT_OPTIONS)),
-        m_polygons(create_layer("polygons", wkbMultiPolygon, GDAL_DEFAULT_OPTIONS)),
-        m_errors_points(create_layer("errors_points", wkbPoint, GDAL_DEFAULT_OPTIONS)),
-        m_errors_polygons(create_layer("errors_polygons", wkbMultiPolygon, GDAL_DEFAULT_OPTIONS)),
-        m_cities(create_layer("cities", wkbPoint, GDAL_DEFAULT_OPTIONS)) {
+        m_points(create_layer("points", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_polygons(create_layer("polygons", wkbMultiPolygon, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_errors_points(create_layer("errors_points", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_errors_polygons(create_layer("errors_polygons", wkbMultiPolygon, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_cities(create_layer("cities", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)) {
     // add fields to layers
     m_points.add_field("node_id", OFTString, 10);
     m_points.add_field("place", OFTString, 20);

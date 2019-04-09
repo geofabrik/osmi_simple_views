@@ -107,7 +107,7 @@ void AbstractViewHandler::ensure_writeable_dataset(const char* layer_name) {
         std::string output_filename = m_output_directory;
         output_filename += '/';
         output_filename += layer_name;
-        std::unique_ptr<gdalcpp::Dataset> ds {new gdalcpp::Dataset(m_output_format, output_filename, gdalcpp::SRS(m_epsg), get_gdal_default_options(m_output_format))};
+        std::unique_ptr<gdalcpp::Dataset> ds {new gdalcpp::Dataset(m_output_format, output_filename, gdalcpp::SRS(m_epsg), get_gdal_default_dataset_options(m_output_format))};
         m_datasets.push_back(std::move(ds));
         m_datasets.back()->enable_auto_transactions(10000);
     }

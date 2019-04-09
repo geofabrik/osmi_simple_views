@@ -22,18 +22,18 @@
 TaggingViewHandler::TaggingViewHandler(std::string& output_filename, std::string& output_format,
         osmium::util::VerboseOutput& verbose_output, int epsg) :
         AbstractViewHandler(output_filename, output_format, verbose_output, epsg),
-        m_tagging_fixmes_on_nodes(create_layer("tagging_fixmes_on_nodes", wkbPoint, GDAL_DEFAULT_OPTIONS)),
-        m_tagging_fixmes_on_ways(create_layer("tagging_fixmes_on_ways", wkbLineString, GDAL_DEFAULT_OPTIONS)),
-        m_tagging_nodes_with_empty_k(create_layer("tagging_nodes_with_empty_k", wkbPoint, GDAL_DEFAULT_OPTIONS)),
-        m_tagging_ways_with_empty_k(create_layer("tagging_ways_with_empty_k", wkbLineString, GDAL_DEFAULT_OPTIONS)),
-        m_tagging_nodes_with_empty_v(create_layer("tagging_nodes_with_empty_v", wkbPoint, GDAL_DEFAULT_OPTIONS)),
-        m_tagging_ways_with_empty_v(create_layer("tagging_ways_with_empty_v", wkbLineString, GDAL_DEFAULT_OPTIONS)),
-        m_tagging_misspelled_node_keys(create_layer("tagging_misspelled_node_keys", wkbPoint, GDAL_DEFAULT_OPTIONS)),
-        m_tagging_misspelled_way_keys(create_layer("tagging_misspelled_way_keys", wkbLineString, GDAL_DEFAULT_OPTIONS)),
-        m_tagging_nonop_confusion_nodes(create_layer("tagging_nonop_confusion_nodes", wkbPoint, GDAL_DEFAULT_OPTIONS)),
-        m_tagging_nonop_confusion_ways(create_layer("tagging_nonop_confusion_ways", wkbLineString, GDAL_DEFAULT_OPTIONS)),
-        m_tagging_no_feature_tag_nodes(create_layer("tagging_no_feature_tag_nodes", wkbPoint, GDAL_DEFAULT_OPTIONS)),
-        m_tagging_no_feature_tag_ways(create_layer("tagging_no_feature_tag_ways", wkbLineString, GDAL_DEFAULT_OPTIONS)) {
+        m_tagging_fixmes_on_nodes(create_layer("tagging_fixmes_on_nodes", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_tagging_fixmes_on_ways(create_layer("tagging_fixmes_on_ways", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_tagging_nodes_with_empty_k(create_layer("tagging_nodes_with_empty_k", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_tagging_ways_with_empty_k(create_layer("tagging_ways_with_empty_k", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_tagging_nodes_with_empty_v(create_layer("tagging_nodes_with_empty_v", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_tagging_ways_with_empty_v(create_layer("tagging_ways_with_empty_v", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_tagging_misspelled_node_keys(create_layer("tagging_misspelled_node_keys", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_tagging_misspelled_way_keys(create_layer("tagging_misspelled_way_keys", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_tagging_nonop_confusion_nodes(create_layer("tagging_nonop_confusion_nodes", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_tagging_nonop_confusion_ways(create_layer("tagging_nonop_confusion_ways", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_tagging_no_feature_tag_nodes(create_layer("tagging_no_feature_tag_nodes", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
+        m_tagging_no_feature_tag_ways(create_layer("tagging_no_feature_tag_ways", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)) {
     m_tagging_fixmes_on_nodes.add_field("node_id", OFTString, 10);
     m_tagging_fixmes_on_nodes.add_field("tag", OFTString, MAX_STRING_LENGTH);
     m_tagging_fixmes_on_nodes.add_field("lastchange", OFTString, 21);

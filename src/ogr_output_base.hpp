@@ -55,7 +55,7 @@ protected:
     /// reference to output manager for STDERR
     osmium::util::VerboseOutput& m_verbose_output;
 
-    const std::vector<std::string> GDAL_DEFAULT_OPTIONS;
+    const std::vector<std::string> GDAL_DEFAULT_LAYER_OPTIONS;
 
     /// maximum length of a string field
     static constexpr size_t MAX_FIELD_LENGTH = 254;
@@ -63,14 +63,26 @@ protected:
     /**
      * \brief Add default options for the to the back of a vector of options.
      *
-     * Default options are added at the *back* of the vector. If you read the vector in a later step
+     * Default dataset creation options are added at the *back* of the vector. If you read the vector in a later step
      * to set them via the functions provided by the GDAL library, do it in reverse order. Otherwise
      * the defaults will overwrite your explicitly set options.
      *
      * \param output_format output format
      * \param gdal_options vector where to add the default options.
      */
-    static std::vector<std::string> get_gdal_default_options(std::string& output_format);
+    static std::vector<std::string> get_gdal_default_dataset_options(std::string& output_format);
+
+    /**
+     * \brief Add default options for the to the back of a vector of options.
+     *
+     * Default layer creation options are added at the *back* of the vector. If you read the vector in a later step
+     * to set them via the functions provided by the GDAL library, do it in reverse order. Otherwise
+     * the defaults will overwrite your explicitly set options.
+     *
+     * \param output_format output format
+     * \param gdal_options vector where to add the default options.
+     */
+    static std::vector<std::string> get_gdal_default_layer_options(std::string& output_format);
 
 public:
     OGROutputBase() = delete;
