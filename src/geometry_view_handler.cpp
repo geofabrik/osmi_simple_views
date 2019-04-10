@@ -41,39 +41,39 @@ GeometryViewHandler::GeometryViewHandler(std::string& output_filename, std::stri
         m_geometry_self_intersection_ways(create_layer("geometry_self_intersection_ways", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
         m_geometry_self_intersection_points(create_layer("geometry_self_intersection_points", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)) {
     // add fields to layers
-    m_geometry_long_ways.add_field("way_id", OFTString, 10);
-    m_geometry_long_ways.add_field("lastchange", OFTString, 21);
-    m_geometry_long_ways.add_field("length", OFTInteger, 5);
-    m_geometry_long_ways.add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_geometry_long_ways->add_field("way_id", OFTString, 10);
+    m_geometry_long_ways->add_field("lastchange", OFTString, 21);
+    m_geometry_long_ways->add_field("length", OFTInteger, 5);
+    m_geometry_long_ways->add_field("tags", OFTString, MAX_FIELD_LENGTH);
     // segments of long ways
-    m_geometry_long_seg_seg.add_field("way_id", OFTString, 10);
-    m_geometry_long_seg_seg.add_field("lastchange", OFTString, 21);
-    m_geometry_long_seg_seg.add_field("length", OFTInteger, 9);
+    m_geometry_long_seg_seg->add_field("way_id", OFTString, 10);
+    m_geometry_long_seg_seg->add_field("lastchange", OFTString, 21);
+    m_geometry_long_seg_seg->add_field("length", OFTInteger, 9);
     // ways with long segments
-    m_geometry_long_seg_way.add_field("way_id", OFTString, 10);
-    m_geometry_long_seg_way.add_field("tags", OFTString, MAX_FIELD_LENGTH);
-    m_geometry_long_seg_way.add_field("lastchange", OFTString, 21);
+    m_geometry_long_seg_way->add_field("way_id", OFTString, 10);
+    m_geometry_long_seg_way->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_geometry_long_seg_way->add_field("lastchange", OFTString, 21);
     // ways with a single node
-    m_geometry_single_node_in_way.add_field("way_id", OFTString, 10);
-    m_geometry_single_node_in_way.add_field("node_id", OFTString, 10);
-    m_geometry_single_node_in_way.add_field("tags", OFTString, MAX_FIELD_LENGTH);
-    m_geometry_single_node_in_way.add_field("lastchange", OFTString, 21);
+    m_geometry_single_node_in_way->add_field("way_id", OFTString, 10);
+    m_geometry_single_node_in_way->add_field("node_id", OFTString, 10);
+    m_geometry_single_node_in_way->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_geometry_single_node_in_way->add_field("lastchange", OFTString, 21);
     // ways with a duplicated node
-    m_geometry_duplicate_node_in_way_way.add_field("way_id", OFTString, 10);
-    m_geometry_duplicate_node_in_way_way.add_field("node_id", OFTString, 10);
-    m_geometry_duplicate_node_in_way_way.add_field("tags", OFTString, MAX_FIELD_LENGTH);
-    m_geometry_duplicate_node_in_way_way.add_field("lastchange", OFTString, 21);
+    m_geometry_duplicate_node_in_way_way->add_field("way_id", OFTString, 10);
+    m_geometry_duplicate_node_in_way_way->add_field("node_id", OFTString, 10);
+    m_geometry_duplicate_node_in_way_way->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_geometry_duplicate_node_in_way_way->add_field("lastchange", OFTString, 21);
     // ways with a duplicated node
-    m_geometry_duplicate_node_in_way_node.add_field("way_id", OFTString, 10);
-    m_geometry_duplicate_node_in_way_node.add_field("node_id", OFTString, 10);
-    m_geometry_duplicate_node_in_way_node.add_field("lastchange", OFTString, 21);
+    m_geometry_duplicate_node_in_way_node->add_field("way_id", OFTString, 10);
+    m_geometry_duplicate_node_in_way_node->add_field("node_id", OFTString, 10);
+    m_geometry_duplicate_node_in_way_node->add_field("lastchange", OFTString, 21);
     // ways with self intersection
-    m_geometry_self_intersection_ways.add_field("way_id", OFTString, 10);
-    m_geometry_self_intersection_ways.add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_geometry_self_intersection_ways->add_field("way_id", OFTString, 10);
+    m_geometry_self_intersection_ways->add_field("tags", OFTString, MAX_FIELD_LENGTH);
     // self intersections
-    m_geometry_self_intersection_points.add_field("node_id", OFTString, 10);
-    m_geometry_self_intersection_points.add_field("way_id", OFTString, 10);
-    m_geometry_self_intersection_points.add_field("rel_id", OFTString, 10); // TODO why?
+    m_geometry_self_intersection_points->add_field("node_id", OFTString, 10);
+    m_geometry_self_intersection_points->add_field("way_id", OFTString, 10);
+    m_geometry_self_intersection_points->add_field("rel_id", OFTString, 10); // TODO why?
 }
 
 void GeometryViewHandler::give_correct_name() {
@@ -98,7 +98,7 @@ std::string GeometryViewHandler::tags_string(const osmium::TagList& tags) {
 }
 
 void GeometryViewHandler::handle_way_many_nodes(const osmium::Way& way) {
-    gdalcpp::Feature feature(m_geometry_long_ways, m_factory.create_linestring(way));
+    gdalcpp::Feature feature(*m_geometry_long_ways, m_factory.create_linestring(way));
     static char idbuffer[20];
     sprintf(idbuffer, "%ld", way.id());
     feature.set_field("way_id", idbuffer);
@@ -129,7 +129,7 @@ bool GeometryViewHandler::check_segments_length(const osmium::Way& way) {
             long_segment = true;
             // build_linestring_from_segment(osmium::WayNodeList::const_iterator, osmium::WayNodeList::const_iterator)
             // has to be called with it+2 as second argument because this will be used as it != end in a for loop.
-            gdalcpp::Feature feature(m_geometry_long_seg_seg, build_linestring_from_segment(it, (it + 2)));
+            gdalcpp::Feature feature(*m_geometry_long_seg_seg, build_linestring_from_segment(it, (it + 2)));
             static char idbuffer[20];
             sprintf(idbuffer, "%ld", way.id());
             feature.set_field("way_id", idbuffer);
@@ -144,7 +144,7 @@ bool GeometryViewHandler::check_segments_length(const osmium::Way& way) {
 
 void GeometryViewHandler::handle_long_segments(const osmium::Way& way) {
     if (check_segments_length(way)) {
-        gdalcpp::Feature feature(m_geometry_long_seg_way, m_factory.create_linestring(way));
+        gdalcpp::Feature feature(*m_geometry_long_seg_way, m_factory.create_linestring(way));
         static char idbuffer[20];
         sprintf(idbuffer, "%ld", way.id());
         feature.set_field("way_id", idbuffer);
@@ -156,7 +156,7 @@ void GeometryViewHandler::handle_long_segments(const osmium::Way& way) {
 }
 
 void GeometryViewHandler::single_node_in_way(const osmium::Way& way) {
-    gdalcpp::Feature feature(m_geometry_single_node_in_way, m_factory.create_point(way.nodes().front()));
+    gdalcpp::Feature feature(*m_geometry_single_node_in_way, m_factory.create_point(way.nodes().front()));
     static char idbuffer[20];
     sprintf(idbuffer, "%ld", way.id());
     feature.set_field("way_id", idbuffer);
@@ -179,7 +179,7 @@ void GeometryViewHandler::duplicated_node_in_way(const osmium::Way& way) {
             continue;
         }
         if (it->ref() == next->ref() || (it->lat() == next->lat() && it->lon() == next->lon())) {
-            gdalcpp::Feature feature(m_geometry_duplicate_node_in_way_node, m_factory.create_point(*it));
+            gdalcpp::Feature feature(*m_geometry_duplicate_node_in_way_node, m_factory.create_point(*it));
             static char idbuffer[20];
             sprintf(idbuffer, "%ld", way.id());
             feature.set_field("way_id", idbuffer);
@@ -190,7 +190,7 @@ void GeometryViewHandler::duplicated_node_in_way(const osmium::Way& way) {
             feature.set_field("lastchange", the_timestamp.c_str());
             feature.add_to_layer();
             if (!multiple_errors) {
-                gdalcpp::Feature way_feature(m_geometry_duplicate_node_in_way_way, m_factory.create_linestring(way));
+                gdalcpp::Feature way_feature(*m_geometry_duplicate_node_in_way_way, m_factory.create_linestring(way));
                 way_feature.set_field("way_id", idbuffer);
                 way_feature.set_field("node_id", idbuffer);
                 way_feature.set_field("tags", tags_string(way.tags()).c_str());
@@ -267,7 +267,7 @@ void GeometryViewHandler::add_self_intersection_way(const osmium::Way& way, bool
     if (already_flagged) {
         return;
     }
-    gdalcpp::Feature feature(m_geometry_self_intersection_ways, m_factory.create_linestring(way));
+    gdalcpp::Feature feature(*m_geometry_self_intersection_ways, m_factory.create_linestring(way));
     static char idbuffer[20];
     sprintf(idbuffer, "%ld", way.id());
     feature.set_field("way_id", idbuffer);
@@ -277,7 +277,7 @@ void GeometryViewHandler::add_self_intersection_way(const osmium::Way& way, bool
 
 void GeometryViewHandler::add_self_intersection_point(const osmium::Location& location, const osmium::object_id_type way_id,
         const osmium::object_id_type node_id /*= 0*/) {
-    gdalcpp::Feature feature(m_geometry_self_intersection_points, m_factory.create_point(location));
+    gdalcpp::Feature feature(*m_geometry_self_intersection_points, m_factory.create_point(location));
     static char idbuffer[20];
     sprintf(idbuffer, "%ld", way_id);
     feature.set_field("way_id", idbuffer);
@@ -362,4 +362,16 @@ void GeometryViewHandler::way(const osmium::Way& way) {
     handle_long_segments(way);
     duplicated_node_in_way(way);
     check_self_intersection(way);
+}
+
+void GeometryViewHandler::close() {
+    m_geometry_long_ways.reset();
+    m_geometry_long_seg_seg.reset();
+    m_geometry_long_seg_way.reset();
+    m_geometry_single_node_in_way.reset();
+    m_geometry_duplicate_node_in_way_way.reset();
+    m_geometry_duplicate_node_in_way_node.reset();
+    m_geometry_self_intersection_ways.reset();
+    m_geometry_self_intersection_points.reset();
+    close_datasets();
 }

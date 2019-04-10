@@ -9,6 +9,7 @@
 
 void HandlerCollection::give_correct_name() {
     for (auto& h : m_handlers) {
+        h->close();
         h->give_correct_name();
     }
 }

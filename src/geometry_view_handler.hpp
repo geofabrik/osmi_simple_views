@@ -33,21 +33,21 @@
 
 class GeometryViewHandler : public AbstractViewHandler {
     /// layer for ways which have many nodes
-    gdalcpp::Layer m_geometry_long_ways;
+    std::unique_ptr<gdalcpp::Layer> m_geometry_long_ways;
     /// layer for segments which are very long
-    gdalcpp::Layer m_geometry_long_seg_seg;
+    std::unique_ptr<gdalcpp::Layer> m_geometry_long_seg_seg;
     /// layer for ways which have very long segments
-    gdalcpp::Layer m_geometry_long_seg_way;
+    std::unique_ptr<gdalcpp::Layer> m_geometry_long_seg_way;
     /// layer for ways which have only a single node
-    gdalcpp::Layer m_geometry_single_node_in_way;
+    std::unique_ptr<gdalcpp::Layer> m_geometry_single_node_in_way;
     /// layer for ways which have a duplicated node
-    gdalcpp::Layer m_geometry_duplicate_node_in_way_way;
+    std::unique_ptr<gdalcpp::Layer> m_geometry_duplicate_node_in_way_way;
     /// layer for duplicated nodes in a way
-    gdalcpp::Layer m_geometry_duplicate_node_in_way_node;
+    std::unique_ptr<gdalcpp::Layer> m_geometry_duplicate_node_in_way_node;
     /// layer for ways which intersect themselves
-    gdalcpp::Layer m_geometry_self_intersection_ways;
+    std::unique_ptr<gdalcpp::Layer> m_geometry_self_intersection_ways;
     /// layer for intersection points of self intersecting ways
-    gdalcpp::Layer m_geometry_self_intersection_points;
+    std::unique_ptr<gdalcpp::Layer> m_geometry_self_intersection_points;
     /**
      * Add a feature to the output layers.
      *
@@ -177,6 +177,8 @@ public:
     void area(const osmium::Area&) {};
 
     std::string name();
+
+    void close();
 };
 
 

@@ -26,18 +26,18 @@ class TaggingViewHandler : public AbstractViewHandler {
 
     static constexpr size_t MAX_STRING_LENGTH = 254;
 
-    gdalcpp::Layer m_tagging_fixmes_on_nodes;
-    gdalcpp::Layer m_tagging_fixmes_on_ways;
-    gdalcpp::Layer m_tagging_nodes_with_empty_k;
-    gdalcpp::Layer m_tagging_ways_with_empty_k;
-    gdalcpp::Layer m_tagging_nodes_with_empty_v;
-    gdalcpp::Layer m_tagging_ways_with_empty_v;
-    gdalcpp::Layer m_tagging_misspelled_node_keys;
-    gdalcpp::Layer m_tagging_misspelled_way_keys;
-    gdalcpp::Layer m_tagging_nonop_confusion_nodes;
-    gdalcpp::Layer m_tagging_nonop_confusion_ways;
-    gdalcpp::Layer m_tagging_no_feature_tag_nodes;
-    gdalcpp::Layer m_tagging_no_feature_tag_ways;
+    std::unique_ptr<gdalcpp::Layer> m_tagging_fixmes_on_nodes;
+    std::unique_ptr<gdalcpp::Layer> m_tagging_fixmes_on_ways;
+    std::unique_ptr<gdalcpp::Layer> m_tagging_nodes_with_empty_k;
+    std::unique_ptr<gdalcpp::Layer> m_tagging_ways_with_empty_k;
+    std::unique_ptr<gdalcpp::Layer> m_tagging_nodes_with_empty_v;
+    std::unique_ptr<gdalcpp::Layer> m_tagging_ways_with_empty_v;
+    std::unique_ptr<gdalcpp::Layer> m_tagging_misspelled_node_keys;
+    std::unique_ptr<gdalcpp::Layer> m_tagging_misspelled_way_keys;
+    std::unique_ptr<gdalcpp::Layer> m_tagging_nonop_confusion_nodes;
+    std::unique_ptr<gdalcpp::Layer> m_tagging_nonop_confusion_ways;
+    std::unique_ptr<gdalcpp::Layer> m_tagging_no_feature_tag_nodes;
+    std::unique_ptr<gdalcpp::Layer> m_tagging_no_feature_tag_ways;
 
     /**
      * Write a feature to on of the layers which only have the fields
@@ -153,6 +153,8 @@ public:
             osmium::util::VerboseOutput& verbose_output, int epsg = 3857);
 
     void give_correct_name();
+
+    void close();
 
     void node(const osmium::Node& node);
 

@@ -60,6 +60,8 @@ protected:
 
     void rename_output_files(const std::string& view_name);
 
+    void close_datasets();
+
 public:
     AbstractViewHandler() = delete;
 
@@ -92,7 +94,7 @@ public:
      */
     gdalcpp::Dataset* get_dataset_pointer(const char* layer_name);
 
-    gdalcpp::Layer create_layer(const char* layer_name, OGRwkbGeometryType type, const std::vector<std::string>& options = {});
+    std::unique_ptr<gdalcpp::Layer> create_layer(const char* layer_name, OGRwkbGeometryType type, const std::vector<std::string>& options = {});
 
     /**
      * Build a string containing tags (length of key and value below 48 characters)
@@ -106,6 +108,11 @@ public:
      * \returns string with the tags
      */
     std::string tags_string(const osmium::TagList& tags, const char* not_include);
+
+    /**
+     * Close all open layers and datasets.
+     */
+    virtual void close() = 0;
 
 };
 

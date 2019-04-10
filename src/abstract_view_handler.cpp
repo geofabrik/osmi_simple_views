@@ -54,6 +54,10 @@ bool AbstractViewHandler::one_layer_per_datasource_only() {
         || case_insensitive_comp_left(m_output_format, "esri shapefile");
 }
 
+void AbstractViewHandler::close_datasets() {
+    m_datasets.clear();
+}
+
 std::string AbstractViewHandler::filename_suffix() {
     if (case_insensitive_comp_left(m_output_format, "geojson")) {
         return ".json";
@@ -118,10 +122,10 @@ gdalcpp::Dataset* AbstractViewHandler::get_dataset_pointer(const char* layer_nam
     return m_datasets.back().get();
 }
 
-gdalcpp::Layer AbstractViewHandler::create_layer(const char* layer_name, OGRwkbGeometryType type,
+std::unique_ptr<gdalcpp::Layer> AbstractViewHandler::create_layer(const char* layer_name, OGRwkbGeometryType type,
         const std::vector<std::string>& options /*= {}*/) {
     ensure_writeable_dataset(layer_name);
-    return gdalcpp::Layer(*(m_datasets.back()), layer_name, type, options);
+    return std::unique_ptr<gdalcpp::Layer>{new gdalcpp::Layer(*(m_datasets.back()), layer_name, type, options)};
 }
 
 std::string AbstractViewHandler::tags_string(const osmium::TagList& tags, const char* not_include) {
