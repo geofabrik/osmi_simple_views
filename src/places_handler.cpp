@@ -32,51 +32,61 @@ PlacesHandler::PlacesHandler(std::string& output_filename, std::string& output_f
         m_errors_polygons(create_layer("errors_polygons", wkbMultiPolygon, GDAL_DEFAULT_LAYER_OPTIONS)),
         m_cities(create_layer("cities", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)) {
     // add fields to layers
-    m_points.add_field("node_id", OFTString, 10);
-    m_points.add_field("place", OFTString, 20);
-    m_points.add_field("type", OFTString, 20);
-    m_points.add_field("popstr", OFTString, 20);
-    m_points.add_field("population", OFTInteger, 10);
-    m_points.add_field("capitalstr", OFTString, 20);
-    m_points.add_field("capital", OFTInteger, 2);
-    m_points.add_field("admlvl", OFTInteger, 2);
-    m_points.add_field("name", OFTString, 100);
-    m_points.add_field("lastchange", OFTString, 21);
+    m_points->add_field("node_id", OFTString, 10);
+    m_points->add_field("place", OFTString, 20);
+    m_points->add_field("type", OFTString, 20);
+    m_points->add_field("popstr", OFTString, 20);
+    m_points->add_field("population", OFTInteger, 10);
+    m_points->add_field("capitalstr", OFTString, 20);
+    m_points->add_field("capital", OFTInteger, 2);
+    m_points->add_field("admlvl", OFTInteger, 2);
+    m_points->add_field("name", OFTString, 100);
+    m_points->add_field("lastchange", OFTString, 21);
     // and the same for the polygons layer
-    m_polygons.add_field("node_id", OFTString, 10);
-    m_polygons.add_field("place", OFTString, 20);
-    m_polygons.add_field("type", OFTString, 20);
-    m_polygons.add_field("popstr", OFTString, 20);
-    m_polygons.add_field("population", OFTInteger, 10);
-    m_polygons.add_field("capitalstr", OFTString, 20);
-    m_polygons.add_field("capital", OFTInteger, 2);
-    m_polygons.add_field("admlvl", OFTInteger, 2);
-    m_polygons.add_field("name", OFTString, 100);
-    m_polygons.add_field("lastchange", OFTString, 21);
+    m_polygons->add_field("node_id", OFTString, 10);
+    m_polygons->add_field("place", OFTString, 20);
+    m_polygons->add_field("type", OFTString, 20);
+    m_polygons->add_field("popstr", OFTString, 20);
+    m_polygons->add_field("population", OFTInteger, 10);
+    m_polygons->add_field("capitalstr", OFTString, 20);
+    m_polygons->add_field("capital", OFTInteger, 2);
+    m_polygons->add_field("admlvl", OFTInteger, 2);
+    m_polygons->add_field("name", OFTString, 100);
+    m_polygons->add_field("lastchange", OFTString, 21);
     // errors layer
-    m_errors_points.add_field("node_id", OFTString, 10);
-    m_errors_points.add_field("geomtype", OFTString, 1);
-    m_errors_points.add_field("error", OFTString, 60);
-    m_errors_points.add_field("value", OFTString, 100);
-    m_errors_points.add_field("lastchange", OFTString, 21);
-    m_errors_polygons.add_field("node_id", OFTString, 10);
-    m_errors_polygons.add_field("geomtype", OFTString, 1);
-    m_errors_polygons.add_field("error", OFTString, 60);
-    m_errors_polygons.add_field("value", OFTString, 100);
-    m_errors_polygons.add_field("lastchange", OFTString, 21);
+    m_errors_points->add_field("node_id", OFTString, 10);
+    m_errors_points->add_field("geomtype", OFTString, 1);
+    m_errors_points->add_field("error", OFTString, 60);
+    m_errors_points->add_field("value", OFTString, 100);
+    m_errors_points->add_field("lastchange", OFTString, 21);
+    m_errors_polygons->add_field("node_id", OFTString, 10);
+    m_errors_polygons->add_field("geomtype", OFTString, 1);
+    m_errors_polygons->add_field("error", OFTString, 60);
+    m_errors_polygons->add_field("value", OFTString, 100);
+    m_errors_polygons->add_field("lastchange", OFTString, 21);
     // cities layer
-    m_cities.add_field("node_id", OFTString, 10);
-    m_cities.add_field("popstr", OFTString, 20);
-    m_cities.add_field("population", OFTInteger, 10);
-    m_cities.add_field("capitalstr", OFTString, 20);
-    m_cities.add_field("capital", OFTInteger, 2);
-    m_cities.add_field("admlvl", OFTInteger, 2);
-    m_cities.add_field("name", OFTString, 100);
-    m_cities.add_field("lastchange", OFTString, 21);
+    m_cities->add_field("node_id", OFTString, 10);
+    m_cities->add_field("popstr", OFTString, 20);
+    m_cities->add_field("population", OFTInteger, 10);
+    m_cities->add_field("capitalstr", OFTString, 20);
+    m_cities->add_field("capital", OFTInteger, 2);
+    m_cities->add_field("admlvl", OFTInteger, 2);
+    m_cities->add_field("name", OFTString, 100);
+    m_cities->add_field("lastchange", OFTString, 21);
+
 }
 
 void PlacesHandler::give_correct_name() {
     rename_output_files("places");
+}
+
+void PlacesHandler::close() {
+    m_points.reset();
+    m_polygons.reset();
+    m_errors_points.reset();
+    m_errors_polygons.reset();
+    m_cities.reset();
+    close_datasets();
 }
 
 bool PlacesHandler::place_value_ok(const char* value) {
@@ -189,12 +199,12 @@ void PlacesHandler::check_population(const osmium::OSMObject& osm_object, const 
 
 void PlacesHandler::add_feature(std::unique_ptr<OGRGeometry>&& geometry, const osmium::OSMObject& osm_object,
         const char* geomtype, const osmium::object_id_type id, const char* place_value, bool city_layer /*= false*/) {
-    gdalcpp::Layer* current_layer = &m_points;
+    gdalcpp::Layer* current_layer = m_points.get();
     if (osm_object.type() == osmium::item_type::area) {
-        current_layer = &m_polygons;
+        current_layer = m_polygons.get();
     }
     if (city_layer) {
-        current_layer = &m_cities;
+        current_layer = m_cities.get();
     }
     gdalcpp::Feature feature(*current_layer, std::move(geometry));
     set_basic_fields(feature, osm_object, id);
@@ -274,11 +284,11 @@ void PlacesHandler::add_error(const osmium::OSMObject& osm_object, const osmium:
     switch (osm_object.type()) {
     case osmium::item_type::node:
         geometry = m_factory.create_point(static_cast<const osmium::Node&>(osm_object));
-        error_layer = &m_errors_points;
+        error_layer = m_errors_points.get();
         break;
     case osmium::item_type::area:
         geometry = m_factory.create_multipolygon(static_cast<const osmium::Area&>(osm_object));
-        error_layer = &m_errors_polygons;
+        error_layer = m_errors_polygons.get();
         break;
     default:
         return;

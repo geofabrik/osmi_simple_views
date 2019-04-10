@@ -36,16 +36,16 @@ struct charptr_comp {
 
 class HighwayViewHandler : public AbstractViewHandler {
     /// layer for ways with lanes=* value which is not an unsigned integer
-    gdalcpp::Layer m_highway_lanes;
+    std::unique_ptr<gdalcpp::Layer> m_highway_lanes;
     /// layer for ways with strang maxheight values
-    gdalcpp::Layer m_highway_maxheight;
-    gdalcpp::Layer m_highway_maxspeed;
-    gdalcpp::Layer m_highway_name_fixme;
-    gdalcpp::Layer m_highway_name_missing_major;
-    gdalcpp::Layer m_highway_name_missing_minor;
-    gdalcpp::Layer m_highway_oneway;
-    gdalcpp::Layer m_highway_road;
-    gdalcpp::Layer m_highway_type_unknown;
+    std::unique_ptr<gdalcpp::Layer> m_highway_maxheight;
+    std::unique_ptr<gdalcpp::Layer> m_highway_maxspeed;
+    std::unique_ptr<gdalcpp::Layer> m_highway_name_fixme;
+    std::unique_ptr<gdalcpp::Layer> m_highway_name_missing_major;
+    std::unique_ptr<gdalcpp::Layer> m_highway_name_missing_minor;
+    std::unique_ptr<gdalcpp::Layer> m_highway_oneway;
+    std::unique_ptr<gdalcpp::Layer> m_highway_road;
+    std::unique_ptr<gdalcpp::Layer> m_highway_type_unknown;
 
 
     /// param vector of functions returning false if a tag is malformed.
@@ -80,8 +80,6 @@ class HighwayViewHandler : public AbstractViewHandler {
      * \param other_tags string containing concatenated tags to be written into the field
      * `tags`
      */
-    void set_fields(gdalcpp::Layer& layer, const osmium::Way& way, const char* third_field_name,
-            const char* third_field_value, std::string& other_tags);
     void set_fields(gdalcpp::Layer* layer, const osmium::Way& way, const char* third_field_name,
             const char* third_field_value, std::string& other_tags);
 
@@ -132,6 +130,8 @@ public:
             osmium::util::VerboseOutput& verbose_output, int epsg = 3857);
 
     void give_correct_name();
+
+    void close();
 
     void way(const osmium::Way& way);
 

@@ -163,46 +163,50 @@ int main(int argc, char* argv[]) {
 
     osmium::area::Assembler::config_type assembler_config;
     osmium::area::MultipolygonCollector<osmium::area::Assembler> collector(assembler_config);
-    AnyRelationCollector any_collector(verbose_output, output_format, srs);
-
     HandlerCollection handlers;
-    int pass_count = 1;
+    {
+        // This section enclosed by curly braces ensures that any_collector is destroyed and does
+        // not use its pointer to a dataset of the TaggingViewHandler when the
+        // TaggingViewHandler::close is called.
+        int pass_count = 1;
+        AnyRelationCollector any_collector(verbose_output, output_format, srs);
 
-    // additional passes for views which use relations
-    for (auto vt : views) {
-        if (vt == ViewType::places) {
-            verbose_output << "Pass " << pass_count << " (Multipolygons) ...\n";
-            osmium::io::Reader reader1(input_filename, osmium::osm_entity_bits::relation);
-            reader1.close();
-            verbose_output << "Pass " << pass_count << " done\n";
-            ++pass_count;
-        } else if (vt == ViewType::tagging) {
-            verbose_output << "Pass " << pass_count << " (Relations) ...\n";
-            osmium::io::Reader reader1(input_filename, osmium::osm_entity_bits::relation);
-            any_collector.read_relations(reader1);
-            reader1.close();
-            verbose_output << "Pass " << pass_count << " done\n";
-            ++pass_count;
+        // additional passes for views which use relations
+        for (auto vt : views) {
+            if (vt == ViewType::places) {
+                verbose_output << "Pass " << pass_count << " (Multipolygons) ...\n";
+                osmium::io::Reader reader1(input_filename, osmium::osm_entity_bits::relation);
+                reader1.close();
+                verbose_output << "Pass " << pass_count << " done\n";
+                ++pass_count;
+            } else if (vt == ViewType::tagging) {
+                verbose_output << "Pass " << pass_count << " (Relations) ...\n";
+                osmium::io::Reader reader1(input_filename, osmium::osm_entity_bits::relation);
+                any_collector.read_relations(reader1);
+                reader1.close();
+                verbose_output << "Pass " << pass_count << " done\n";
+                ++pass_count;
+            }
         }
+        verbose_output << "Pass " << pass_count << " ...\n";
+
+        osmium::io::Reader reader2(input_filename, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way);
+        for (auto vt : views) {
+            if (vt == ViewType::tagging) {
+                any_collector.create_layer(handlers.add_handler(vt, output_filename, output_format, verbose_output,
+                        "tagging_ways_without_tags", srs));
+            } else {
+                handlers.add_handler(vt, output_filename, output_format, verbose_output, nullptr, srs);
+            }
+            if (vt == ViewType::places) {
+                handlers.add_multipolygon_collector(collector);
+            }
+        }
+
+        osmium::apply(reader2, location_handler, handlers, any_collector.handler());
+        reader2.close();
+        verbose_output << "Pass " << pass_count << " done\n";
     }
-    verbose_output << "Pass " << pass_count << " ...\n";
-
-    osmium::io::Reader reader2(input_filename, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way);
-    for (auto vt : views) {
-        if (vt == ViewType::tagging) {
-            any_collector.create_layer(handlers.add_handler(vt, output_filename, output_format, verbose_output,
-                    "tagging_ways_without_tags", srs));
-        } else {
-            handlers.add_handler(vt, output_filename, output_format, verbose_output, nullptr, srs);
-        }
-        if (vt == ViewType::places) {
-            handlers.add_multipolygon_collector(collector);
-        }
-    }
-
-    osmium::apply(reader2, location_handler, handlers, any_collector.handler());
-    reader2.close();
     handlers.give_correct_name();
-    verbose_output << "Pass " << pass_count << " done\n";
 
 }

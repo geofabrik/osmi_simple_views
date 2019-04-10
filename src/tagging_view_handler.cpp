@@ -34,46 +34,62 @@ TaggingViewHandler::TaggingViewHandler(std::string& output_filename, std::string
         m_tagging_nonop_confusion_ways(create_layer("tagging_nonop_confusion_ways", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
         m_tagging_no_feature_tag_nodes(create_layer("tagging_no_feature_tag_nodes", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
         m_tagging_no_feature_tag_ways(create_layer("tagging_no_feature_tag_ways", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)) {
-    m_tagging_fixmes_on_nodes.add_field("node_id", OFTString, 10);
-    m_tagging_fixmes_on_nodes.add_field("tag", OFTString, MAX_STRING_LENGTH);
-    m_tagging_fixmes_on_nodes.add_field("lastchange", OFTString, 21);
-    m_tagging_fixmes_on_ways.add_field("way_id", OFTString, 10);
-    m_tagging_fixmes_on_ways.add_field("tag", OFTString, MAX_STRING_LENGTH);
-    m_tagging_fixmes_on_ways.add_field("lastchange", OFTString, 21);
-    m_tagging_nodes_with_empty_k.add_field("node_id", OFTString, 10);
-    m_tagging_nodes_with_empty_k.add_field("value", OFTString, MAX_STRING_LENGTH);
-    m_tagging_nodes_with_empty_k.add_field("lastchange", OFTString, 21);
-    m_tagging_ways_with_empty_k.add_field("way_id", OFTString, 10);
-    m_tagging_ways_with_empty_k.add_field("value", OFTString, MAX_STRING_LENGTH);
-    m_tagging_ways_with_empty_k.add_field("lastchange", OFTString, 21);
-    m_tagging_nodes_with_empty_v.add_field("node_id", OFTString, 10);
-    m_tagging_nodes_with_empty_v.add_field("key", OFTString, MAX_STRING_LENGTH);
-    m_tagging_nodes_with_empty_v.add_field("lastchange", OFTString, 21);
-    m_tagging_ways_with_empty_v.add_field("way_id", OFTString, 10);
-    m_tagging_ways_with_empty_v.add_field("key", OFTString, MAX_STRING_LENGTH);
-    m_tagging_ways_with_empty_v.add_field("lastchange", OFTString, 21);
-    m_tagging_misspelled_node_keys.add_field("node_id", OFTString, 10);
-    m_tagging_misspelled_node_keys.add_field("key", OFTString, MAX_STRING_LENGTH);
-    m_tagging_misspelled_node_keys.add_field("error", OFTString, 20);
-    m_tagging_misspelled_node_keys.add_field("otherkey", OFTString, MAX_STRING_LENGTH);
-    m_tagging_misspelled_node_keys.add_field("lastchange", OFTString, 21);
-    m_tagging_misspelled_way_keys.add_field("way_id", OFTString, 10);
-    m_tagging_misspelled_way_keys.add_field("key", OFTString, MAX_STRING_LENGTH);
-    m_tagging_misspelled_way_keys.add_field("error", OFTString, 20);
-    m_tagging_misspelled_way_keys.add_field("otherkey", OFTString, MAX_STRING_LENGTH);
-    m_tagging_misspelled_way_keys.add_field("lastchange", OFTString, 21);
-    m_tagging_nonop_confusion_nodes.add_field("node_id", OFTString, 10);
-    m_tagging_nonop_confusion_nodes.add_field("tags", OFTString, MAX_STRING_LENGTH);
-    m_tagging_nonop_confusion_nodes.add_field("lastchange", OFTString, 21);
-    m_tagging_nonop_confusion_ways.add_field("way_id", OFTString, 10);
-    m_tagging_nonop_confusion_ways.add_field("tags", OFTString, MAX_STRING_LENGTH);
-    m_tagging_nonop_confusion_ways.add_field("lastchange", OFTString, 21);
-    m_tagging_no_feature_tag_nodes.add_field("node_id", OFTString, 10);
-    m_tagging_no_feature_tag_nodes.add_field("tags", OFTString, MAX_STRING_LENGTH);
-    m_tagging_no_feature_tag_nodes.add_field("lastchange", OFTString, 21);
-    m_tagging_no_feature_tag_ways.add_field("way_id", OFTString, 10);
-    m_tagging_no_feature_tag_ways.add_field("tags", OFTString, MAX_STRING_LENGTH);
-    m_tagging_no_feature_tag_ways.add_field("lastchange", OFTString, 21);
+    m_tagging_fixmes_on_nodes->add_field("node_id", OFTString, 10);
+    m_tagging_fixmes_on_nodes->add_field("tag", OFTString, MAX_STRING_LENGTH);
+    m_tagging_fixmes_on_nodes->add_field("lastchange", OFTString, 21);
+    m_tagging_fixmes_on_ways->add_field("way_id", OFTString, 10);
+    m_tagging_fixmes_on_ways->add_field("tag", OFTString, MAX_STRING_LENGTH);
+    m_tagging_fixmes_on_ways->add_field("lastchange", OFTString, 21);
+    m_tagging_nodes_with_empty_k->add_field("node_id", OFTString, 10);
+    m_tagging_nodes_with_empty_k->add_field("value", OFTString, MAX_STRING_LENGTH);
+    m_tagging_nodes_with_empty_k->add_field("lastchange", OFTString, 21);
+    m_tagging_ways_with_empty_k->add_field("way_id", OFTString, 10);
+    m_tagging_ways_with_empty_k->add_field("value", OFTString, MAX_STRING_LENGTH);
+    m_tagging_ways_with_empty_k->add_field("lastchange", OFTString, 21);
+    m_tagging_nodes_with_empty_v->add_field("node_id", OFTString, 10);
+    m_tagging_nodes_with_empty_v->add_field("key", OFTString, MAX_STRING_LENGTH);
+    m_tagging_nodes_with_empty_v->add_field("lastchange", OFTString, 21);
+    m_tagging_ways_with_empty_v->add_field("way_id", OFTString, 10);
+    m_tagging_ways_with_empty_v->add_field("key", OFTString, MAX_STRING_LENGTH);
+    m_tagging_ways_with_empty_v->add_field("lastchange", OFTString, 21);
+    m_tagging_misspelled_node_keys->add_field("node_id", OFTString, 10);
+    m_tagging_misspelled_node_keys->add_field("key", OFTString, MAX_STRING_LENGTH);
+    m_tagging_misspelled_node_keys->add_field("error", OFTString, 20);
+    m_tagging_misspelled_node_keys->add_field("otherkey", OFTString, MAX_STRING_LENGTH);
+    m_tagging_misspelled_node_keys->add_field("lastchange", OFTString, 21);
+    m_tagging_misspelled_way_keys->add_field("way_id", OFTString, 10);
+    m_tagging_misspelled_way_keys->add_field("key", OFTString, MAX_STRING_LENGTH);
+    m_tagging_misspelled_way_keys->add_field("error", OFTString, 20);
+    m_tagging_misspelled_way_keys->add_field("otherkey", OFTString, MAX_STRING_LENGTH);
+    m_tagging_misspelled_way_keys->add_field("lastchange", OFTString, 21);
+    m_tagging_nonop_confusion_nodes->add_field("node_id", OFTString, 10);
+    m_tagging_nonop_confusion_nodes->add_field("tags", OFTString, MAX_STRING_LENGTH);
+    m_tagging_nonop_confusion_nodes->add_field("lastchange", OFTString, 21);
+    m_tagging_nonop_confusion_ways->add_field("way_id", OFTString, 10);
+    m_tagging_nonop_confusion_ways->add_field("tags", OFTString, MAX_STRING_LENGTH);
+    m_tagging_nonop_confusion_ways->add_field("lastchange", OFTString, 21);
+    m_tagging_no_feature_tag_nodes->add_field("node_id", OFTString, 10);
+    m_tagging_no_feature_tag_nodes->add_field("tags", OFTString, MAX_STRING_LENGTH);
+    m_tagging_no_feature_tag_nodes->add_field("lastchange", OFTString, 21);
+    m_tagging_no_feature_tag_ways->add_field("way_id", OFTString, 10);
+    m_tagging_no_feature_tag_ways->add_field("tags", OFTString, MAX_STRING_LENGTH);
+    m_tagging_no_feature_tag_ways->add_field("lastchange", OFTString, 21);
+}
+
+void TaggingViewHandler::close() {
+    m_tagging_fixmes_on_nodes.reset();
+    m_tagging_fixmes_on_ways.reset();
+    m_tagging_nodes_with_empty_k.reset();
+    m_tagging_ways_with_empty_k.reset();
+    m_tagging_nodes_with_empty_v.reset();
+    m_tagging_ways_with_empty_v.reset();
+    m_tagging_misspelled_node_keys.reset();
+    m_tagging_misspelled_way_keys.reset();
+    m_tagging_nonop_confusion_nodes.reset();
+    m_tagging_nonop_confusion_ways.reset();
+    m_tagging_no_feature_tag_nodes.reset();
+    m_tagging_no_feature_tag_ways.reset();
+    close_datasets();
 }
 
 void TaggingViewHandler::write_feature_to_simple_layer(gdalcpp::Layer* layer,
@@ -132,9 +148,9 @@ void TaggingViewHandler::write_feature_to_simple_layer(gdalcpp::Layer* layer,
 void TaggingViewHandler::check_fixme(const osmium::OSMObject& object) {
     gdalcpp::Layer* current_layer;
     if (object.type() == osmium::item_type::way) {
-        current_layer = &m_tagging_fixmes_on_ways;
+        current_layer = m_tagging_fixmes_on_ways.get();
     } else if (object.type() == osmium::item_type::node) {
-        current_layer = &m_tagging_fixmes_on_nodes;
+        current_layer = m_tagging_fixmes_on_nodes.get();
     } else {
         return;
     }
@@ -177,9 +193,9 @@ void TaggingViewHandler::check_fixme(const osmium::OSMObject& object) {
 void TaggingViewHandler::empty_value(const osmium::OSMObject& object) {
     gdalcpp::Layer* current_layer;
     if (object.type() == osmium::item_type::way) {
-        current_layer = &m_tagging_ways_with_empty_v;
+        current_layer = m_tagging_ways_with_empty_v.get();
     } else if (object.type() == osmium::item_type::node) {
-        current_layer = &m_tagging_nodes_with_empty_v;
+        current_layer = m_tagging_nodes_with_empty_v.get();
     } else {
         return;
     }
@@ -207,9 +223,9 @@ void TaggingViewHandler::key_with_space(const osmium::OSMObject& object) {
 void TaggingViewHandler::empty_key(const osmium::OSMObject& object) {
     gdalcpp::Layer* current_layer;
     if (object.type() == osmium::item_type::way) {
-        current_layer = &m_tagging_ways_with_empty_k;
+        current_layer = m_tagging_ways_with_empty_k.get();
     } else if (object.type() == osmium::item_type::node) {
-        current_layer = &m_tagging_nodes_with_empty_k;
+        current_layer = m_tagging_nodes_with_empty_k.get();
     } else {
         return;
     }
@@ -264,10 +280,10 @@ void TaggingViewHandler::write_missspelled(const osmium::OSMObject& object,
     std::unique_ptr<OGRGeometry> geometry;
     try {
         if (object.type() == osmium::item_type::way) {
-            current_layer = &m_tagging_misspelled_way_keys;
+            current_layer = m_tagging_misspelled_way_keys.get();
             geometry = m_factory.create_linestring(static_cast<const osmium::Way&>(object));
         } else if (object.type() == osmium::item_type::node) {
-            current_layer = &m_tagging_misspelled_node_keys;
+            current_layer = m_tagging_misspelled_node_keys.get();
             geometry = m_factory.create_point(static_cast<const osmium::Node&>(object));
         } else {
             return;
@@ -317,9 +333,9 @@ bool TaggingViewHandler::is_good_character(const char character) {
 void TaggingViewHandler::hidden_nonop(const osmium::OSMObject& object) {
     gdalcpp::Layer* current_layer;
     if (object.type() == osmium::item_type::way) {
-        current_layer = &m_tagging_nonop_confusion_ways;
+        current_layer = m_tagging_nonop_confusion_ways.get();
     } else if (object.type() == osmium::item_type::node) {
-        current_layer = &m_tagging_nonop_confusion_nodes;
+        current_layer = m_tagging_nonop_confusion_nodes.get();
     } else {
         return;
     }
@@ -508,9 +524,9 @@ void TaggingViewHandler::no_main_tags(const osmium::OSMObject& object) {
     }
     gdalcpp::Layer* current_layer;
     if (object.type() == osmium::item_type::way) {
-        current_layer = &m_tagging_no_feature_tag_ways;
+        current_layer = m_tagging_no_feature_tag_ways.get();
     } else if (object.type() == osmium::item_type::node) {
-        current_layer = &m_tagging_no_feature_tag_nodes;
+        current_layer = m_tagging_no_feature_tag_nodes.get();
     } else {
         return;
     }

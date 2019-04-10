@@ -27,11 +27,11 @@
 
 class PlacesHandler : public AbstractViewHandler {
 
-    gdalcpp::Layer m_points;
-    gdalcpp::Layer m_polygons;
-    gdalcpp::Layer m_errors_points;
-    gdalcpp::Layer m_errors_polygons;
-    gdalcpp::Layer m_cities;
+    std::unique_ptr<gdalcpp::Layer> m_points;
+    std::unique_ptr<gdalcpp::Layer> m_polygons;
+    std::unique_ptr<gdalcpp::Layer> m_errors_points;
+    std::unique_ptr<gdalcpp::Layer> m_errors_polygons;
+    std::unique_ptr<gdalcpp::Layer> m_cities;
 
     /**
      * Check if value of the place tag is well-known.
@@ -98,6 +98,8 @@ public:
             osmium::util::VerboseOutput& verbose_output, int epsg = 3857);
 
     void give_correct_name();
+
+    void close();
 
     void node(const osmium::Node& node);
 

@@ -34,47 +34,60 @@ HighwayViewHandler::HighwayViewHandler(std::string& output_filename, std::string
         m_highway_road(create_layer("highway_road", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
         m_highway_type_unknown(create_layer("highway_type_unknown", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)) {
     // add fields to layers
-    m_highway_lanes.add_field("way_id", OFTString, 10);
-    m_highway_lanes.add_field("lanes", OFTString, 40);
-    m_highway_lanes.add_field("tags", OFTString, MAX_FIELD_LENGTH);
-    m_highway_maxheight.add_field("way_id", OFTString, 10);
-    m_highway_maxheight.add_field("maxheight", OFTString, 40);
-    m_highway_maxheight.add_field("tags", OFTString, MAX_FIELD_LENGTH);
-    m_highway_maxspeed.add_field("way_id", OFTString, 10);
-    m_highway_maxspeed.add_field("maxspeed", OFTString, 40);
-    m_highway_maxspeed.add_field("tags", OFTString, MAX_FIELD_LENGTH);
-    m_highway_name_fixme.add_field("way_id", OFTString, 10);
-    m_highway_name_fixme.add_field("name", OFTString, 20);
-    m_highway_name_fixme.add_field("tags", OFTString, MAX_FIELD_LENGTH);
-    m_highway_name_missing_major.add_field("way_id", OFTString, 10);
-    m_highway_name_missing_major.add_field("highway", OFTString, 20);
-    m_highway_name_missing_major.add_field("tags", OFTString, MAX_FIELD_LENGTH);
-    m_highway_name_missing_minor.add_field("way_id", OFTString, 10);
-    m_highway_name_missing_minor.add_field("highway", OFTString, 20);
-    m_highway_name_missing_minor.add_field("tags", OFTString, MAX_FIELD_LENGTH);
-    m_highway_oneway.add_field("way_id", OFTString, 10);
-    m_highway_oneway.add_field("oneway", OFTString, 40);
-    m_highway_oneway.add_field("tags", OFTString, MAX_FIELD_LENGTH);
-    m_highway_road.add_field("way_id", OFTString, 10);
-    m_highway_road.add_field("tags", OFTString, MAX_FIELD_LENGTH);
-    m_highway_type_unknown.add_field("way_id", OFTString, 10);
-    m_highway_type_unknown.add_field("highway", OFTString, 40);
-    m_highway_type_unknown.add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_highway_lanes->add_field("way_id", OFTString, 10);
+    m_highway_lanes->add_field("lanes", OFTString, 40);
+    m_highway_lanes->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_highway_maxheight->add_field("way_id", OFTString, 10);
+    m_highway_maxheight->add_field("maxheight", OFTString, 40);
+    m_highway_maxheight->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_highway_maxspeed->add_field("way_id", OFTString, 10);
+    m_highway_maxspeed->add_field("maxspeed", OFTString, 40);
+    m_highway_maxspeed->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_highway_name_fixme->add_field("way_id", OFTString, 10);
+    m_highway_name_fixme->add_field("name", OFTString, 20);
+    m_highway_name_fixme->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_highway_name_missing_major->add_field("way_id", OFTString, 10);
+    m_highway_name_missing_major->add_field("highway", OFTString, 20);
+    m_highway_name_missing_major->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_highway_name_missing_minor->add_field("way_id", OFTString, 10);
+    m_highway_name_missing_minor->add_field("highway", OFTString, 20);
+    m_highway_name_missing_minor->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_highway_oneway->add_field("way_id", OFTString, 10);
+    m_highway_oneway->add_field("oneway", OFTString, 40);
+    m_highway_oneway->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_highway_road->add_field("way_id", OFTString, 10);
+    m_highway_road->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_highway_type_unknown->add_field("way_id", OFTString, 10);
+    m_highway_type_unknown->add_field("highway", OFTString, 40);
+    m_highway_type_unknown->add_field("tags", OFTString, MAX_FIELD_LENGTH);
 
     // register checks
-    register_check(lanes_ok, "lanes", &m_highway_lanes);
-    register_check(name_not_fixme, "name", &m_highway_name_fixme);
-    register_check(oneway_ok, "oneway", &m_highway_oneway);
-    register_check(maxheight_ok, "maxheight", &m_highway_maxheight);
-    register_check(maxspeed_ok, "maxspeed", &m_highway_maxspeed);
-    register_check(name_missing_major, "highway", &m_highway_name_missing_major);
-    register_check(name_missing_minor, "highway", &m_highway_name_missing_minor);
-    register_check(highway_road, "", &m_highway_road);
-    register_check(highway_unknown, "highway", &m_highway_type_unknown);
+    register_check(lanes_ok, "lanes", m_highway_lanes.get());
+    register_check(name_not_fixme, "name", m_highway_name_fixme.get());
+    register_check(oneway_ok, "oneway", m_highway_oneway.get());
+    register_check(maxheight_ok, "maxheight", m_highway_maxheight.get());
+    register_check(maxspeed_ok, "maxspeed", m_highway_maxspeed.get());
+    register_check(name_missing_major, "highway", m_highway_name_missing_major.get());
+    register_check(name_missing_minor, "highway", m_highway_name_missing_minor.get());
+    register_check(highway_road, "", m_highway_road.get());
+    register_check(highway_unknown, "highway", m_highway_type_unknown.get());
 }
 
 void HighwayViewHandler::give_correct_name() {
     rename_output_files("highways");
+}
+
+void HighwayViewHandler::close() {
+    m_highway_lanes.reset();
+    m_highway_maxheight.reset();
+    m_highway_maxspeed.reset();
+    m_highway_name_fixme.reset();
+    m_highway_name_missing_major.reset();
+    m_highway_name_missing_minor.reset();
+    m_highway_oneway.reset();
+    m_highway_road.reset();
+    m_highway_type_unknown.reset();
+    close_datasets();
 }
 
 void HighwayViewHandler::register_check(std::function<bool (const osmium::TagList&)> function, std::string key, gdalcpp::Layer* layer) {
