@@ -345,16 +345,14 @@ bool GeometryViewHandler::way_is_degenerated(const osmium::WayNodeList& nodes) {
 }
 
 void GeometryViewHandler::way(const osmium::Way& way) {
-    bool valid_nodes = all_nodes_valid(way.nodes());
-    if (valid_nodes) {
-        if (way.nodes().size() >= 1900) {
-            handle_way_many_nodes(way);
-        }
+    if (!all_nodes_valid(way.nodes())) {
+        return;
+    }
+    if (way.nodes().size() >= 1900) {
+        handle_way_many_nodes(way);
     }
     if (way_is_degenerated(way.nodes())) {
-        if (valid_nodes) {
-            single_node_in_way(way);
-        }
+        single_node_in_way(way);
         // no more checks necessary
         return;
     }

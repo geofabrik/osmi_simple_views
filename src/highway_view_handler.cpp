@@ -346,6 +346,9 @@ bool HighwayViewHandler::highway_unknown(const osmium::TagList& tags) {
 void HighwayViewHandler::check_them_all(const osmium::Way& way) {
     for (size_t i = 0; i < m_layers.size(); ++i) {
         if (!m_checks.at(i)(way.tags())) {
+            if (!all_nodes_valid(way.nodes())) {
+                return;
+            }
             std::string tags_str = tags_string(way.tags(), m_keys.at(i).c_str());
             const char* value = way.get_value_by_key(m_keys.at(i).c_str());
             set_fields(m_layers.at(i), way, m_keys.at(i).c_str(), value, tags_str);

@@ -44,11 +44,14 @@ class AbstractViewHandler : public osmium::handler::Handler, public OGROutputBas
     bool one_layer_per_datasource_only();
 
 protected:
+
     /// ORG dataset
     // This has to be a vector of unique_ptr because a vector of objects themselves fails to
     // compile due to "copy constructor of 'Dataset' is implicitly deleted because field
     // 'm_options' has a deleted copy constructor".
     std::vector<std::unique_ptr<gdalcpp::Dataset>> m_datasets;
+
+    static constexpr double UPPER_LIMIT_LATITUDE = 90.0;
 
     /**
      * Check if all nodes of the way are valid.
@@ -58,6 +61,50 @@ protected:
     void rename_output_files(const std::string& view_name);
 
     void close_datasets();
+
+    inline bool coordinates_valid(const osmium::Location location) {
+#ifdef ONLYMERCATOROUTPUT
+        return location.lat() < UPPER_LIMIT_LATITUDE && location.lat() > -UPPER_LIMIT_LATITUDE;
+#else
+        return m_options.srs != 3857 ||
+                (location.lat() < UPPER_LIMIT_LATITUDE && location.lat() > -UPPER_LIMIT_LATITUDE);
+#endif
+    }
+
+    inline bool coordinates_valid(const osmium::Node& node) {
+        return coordinates_valid(node.location());
+    }
+
+    inline bool coordinates_valid(const osmium::NodeRefList& nl) {
+        for (auto& nr : nl) {
+            if (!coordinates_valid(nr.location())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    inline bool coordinates_valid(const osmium::Way& way) {
+        return coordinates_valid(way.nodes());
+    }
+
+    inline bool coordinates_valid(const osmium::Area& area) {
+        for (auto& outer_ring : area.outer_rings()) {
+            for (auto it = outer_ring.begin(); it != outer_ring.end(); ++it) {
+                if (!coordinates_valid(it->location())) {
+                    return false;
+                }
+            }
+            for (auto& r : area.inner_rings(outer_ring)) {
+                for (auto it = r.begin(); it != r.end(); ++it) {
+                    if (!coordinates_valid(it->location())) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
 
 public:
     AbstractViewHandler() = delete;

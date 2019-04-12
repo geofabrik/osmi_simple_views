@@ -306,7 +306,7 @@ void PlacesHandler::add_error(const osmium::OSMObject& osm_object, const osmium:
 
 void PlacesHandler::node(const osmium::Node& node) {
     const char* place = node.get_value_by_key("place");
-    if (place) {
+    if (place && coordinates_valid(node)) {
         add_feature(m_factory.create_point(node), node, "n", node.id(), place);
         if (!strcmp(place, "city")) {
             add_feature(m_factory.create_point(node), node, "n", node.id(), place, true);
@@ -319,6 +319,9 @@ void PlacesHandler::area(const osmium::Area& area) {
     try {
         std::string geomtype;
         if (place) {
+            if (!coordinates_valid(area)) {
+                return;
+            }
             if (area.from_way()) {
                 geomtype = "w";
                 add_feature(m_factory.create_multipolygon(area), area, geomtype.c_str(), area.orig_id(), place);

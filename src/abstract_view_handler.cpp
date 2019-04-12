@@ -98,6 +98,10 @@ bool AbstractViewHandler::all_nodes_valid(const osmium::WayNodeList& wnl) {
             m_options.verbose_output << "Invalid location for node " << nd_ref.ref() << "\n";
             return false;
         }
+        if (!coordinates_valid(nd_ref.location())) {
+            m_options.verbose_output << "Unprojectable coordinates for node " << nd_ref.ref() << '\n';
+            return false;
+        }
     }
     return true;
 }

@@ -30,6 +30,26 @@ true, true, true>, public OGROutputBase {
 
     std::unique_ptr<gdalcpp::Layer> m_tagging_ways_without_tags;
 
+    static constexpr double UPPER_LIMIT_LATITUDE = 90.0;
+
+    inline bool coordinates_valid(const osmium::Location location) {
+#ifdef ONLYMERCATOROUTPUT
+        return location.lat() < UPPER_LIMIT_LATITUDE && location.lat() > -UPPER_LIMIT_LATITUDE;
+#else
+        return m_options.srs != 3857 ||
+                (location.lat() < UPPER_LIMIT_LATITUDE && location.lat() > -UPPER_LIMIT_LATITUDE);
+#endif
+    }
+
+    inline bool coordinates_valid(const osmium::NodeRefList& nl) {
+        for (auto& nr : nl) {
+            if (!coordinates_valid(nr.location())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 public:
     AnyRelationCollector() = delete;
 

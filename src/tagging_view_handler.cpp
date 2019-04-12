@@ -95,10 +95,19 @@ void TaggingViewHandler::write_feature_to_simple_layer(gdalcpp::Layer* layer,
         const osmium::OSMObject& object, const char* field_name, const char* value) {
     try {
         std::unique_ptr<OGRGeometry> geometry;
+        if (object.type() == osmium::item_type::node) {
+            const osmium::Node& node = static_cast<const osmium::Node&>(object);
+            if (!coordinates_valid(node)) {
+                return;
+            }
+            geometry = m_factory.create_point(node);
+        }
         if (object.type() == osmium::item_type::way) {
-            geometry =m_factory.create_linestring(static_cast<const osmium::Way&>(object));
-        } else if (object.type() == osmium::item_type::node) {
-            geometry = m_factory.create_point(static_cast<const osmium::Node&>(object));
+            const osmium::Way& way = static_cast<const osmium::Way&>(object);
+            if (!coordinates_valid(way)) {
+                return;
+            }
+            geometry = m_factory.create_linestring((way));
         }
         gdalcpp::Feature feature(*layer, std::move(geometry));
         set_basic_fields(feature, object, field_name, value);
