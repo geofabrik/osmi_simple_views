@@ -25,7 +25,8 @@
 
 AbstractViewHandler::AbstractViewHandler(Options& options) :
         OGROutputBase(options),
-        m_datasets() {
+        m_datasets(),
+        m_dataset_names() {
 }
 
 AbstractViewHandler::~AbstractViewHandler() {
@@ -51,7 +52,10 @@ bool AbstractViewHandler::one_layer_per_datasource_only() {
 }
 
 void AbstractViewHandler::close_datasets() {
-    m_datasets.clear();
+    for (auto& d : m_datasets) {
+        m_dataset_names.push_back(d->dataset_name());
+        d.reset();
+    }
 }
 
 std::string AbstractViewHandler::filename_suffix() {
@@ -64,7 +68,7 @@ std::string AbstractViewHandler::filename_suffix() {
 }
 
 void AbstractViewHandler::rename_output_files(const std::string& view_name) {
-    if (m_datasets.size() == 1 && filename_suffix().length()) {
+    if (m_dataset_names.size() == 1 && filename_suffix().length()) {
         // rename output file if there is one output dataset only
         std::string destination_name {m_options.output_directory};
         destination_name += '/';
@@ -73,19 +77,19 @@ void AbstractViewHandler::rename_output_files(const std::string& view_name) {
         if (access(destination_name.c_str(), F_OK) == 0) {
             std::cerr << "ERROR: Cannot rename output file from to " << destination_name << " because file exists already.\n";
         } else {
-            if (rename(m_datasets.front()->dataset_name().c_str(), destination_name.c_str())) {
-                std::cerr << "ERROR: Rename from " << m_datasets.front()->dataset_name() << " to " << destination_name << "failed.\n";
+            if (rename(m_dataset_names.front().c_str(), destination_name.c_str())) {
+                std::cerr << "ERROR: Rename from " << m_dataset_names.front() << " to " << destination_name << "failed.\n";
             }
         }
-    } else if (m_datasets.size() > 1 && filename_suffix().length()) {
-        for (auto& d: m_datasets) {
-            std::string destination_name = d->dataset_name();
+    } else if (m_dataset_names.size() > 1 && filename_suffix().length()) {
+        for (auto& d: m_dataset_names) {
+            std::string destination_name = d;
             destination_name += filename_suffix();
             if (access(destination_name.c_str(), F_OK) == 0) {
                 std::cerr << "ERROR: Cannot rename output file from to " << destination_name << " because file exists already.\n";
             } else {
-                if (rename(d->dataset_name().c_str(), destination_name.c_str())) {
-                    std::cerr << "ERROR: Rename from " << m_datasets.front()->dataset_name() << " to " << destination_name << "failed.\n";
+                if (rename(d.c_str(), destination_name.c_str())) {
+                    std::cerr << "ERROR: Rename from " << m_dataset_names.front() << " to " << destination_name << "failed.\n";
                 }
             }
         }

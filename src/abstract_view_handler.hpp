@@ -51,6 +51,11 @@ protected:
     // 'm_options' has a deleted copy constructor".
     std::vector<std::unique_ptr<gdalcpp::Dataset>> m_datasets;
 
+    /**
+     * Pathes to datasets. This vector is populated before closing a dataset.
+     */
+    std::vector<std::string> m_dataset_names;
+
     static constexpr double UPPER_LIMIT_LATITUDE = 90.0;
 
     /**
