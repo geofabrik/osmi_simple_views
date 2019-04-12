@@ -14,18 +14,17 @@ void HandlerCollection::give_correct_name() {
     }
 }
 
-gdalcpp::Dataset* HandlerCollection::add_handler(ViewType view, std::string& output_filename, std::string& output_format,
-        osmium::util::VerboseOutput& verbose_output, const char* layer_name, int epsg /*= 3857*/) {
+gdalcpp::Dataset* HandlerCollection::add_handler(ViewType view, Options& options, const char* layer_name) {
     std::unique_ptr<AbstractViewHandler> handler;
     gdalcpp::Dataset* dataset_ptr = nullptr;
     if (view == ViewType::geometry) {
-        handler.reset(new GeometryViewHandler(output_filename, output_format, verbose_output, epsg));
+        handler.reset(new GeometryViewHandler(options));
     } else if (view == ViewType::highways) {
-        handler.reset(new HighwayViewHandler(output_filename, output_format, verbose_output, epsg));
+        handler.reset(new HighwayViewHandler(options));
     } else if (view == ViewType::tagging) {
-        handler.reset(new TaggingViewHandler(output_filename, output_format, verbose_output, epsg));
+        handler.reset(new TaggingViewHandler(options));
     } else if (view == ViewType::places) {
-        handler.reset(new PlacesHandler(output_filename, output_format, verbose_output, epsg));
+        handler.reset(new PlacesHandler(options));
         m_places_handler = dynamic_cast<PlacesHandler*>(handler.get());
     } else {
         return nullptr;

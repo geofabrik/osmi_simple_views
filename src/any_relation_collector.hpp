@@ -33,8 +33,7 @@ true, true, true>, public OGROutputBase {
 public:
     AnyRelationCollector() = delete;
 
-    AnyRelationCollector(osmium::util::VerboseOutput& verbose_output, std::string& output_format,
-            int epsg = 3857);
+    AnyRelationCollector(Options& options);
 
     /**
      * This method decides which relations we're interested in, and

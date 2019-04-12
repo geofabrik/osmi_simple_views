@@ -17,17 +17,6 @@
 #include "tagging_view_handler.hpp"
 
 /**
- * Available views
- */
-enum class ViewType : char {
-    none= 0,
-    places= 1,
-    geometry= 2,
-    highways= 3,
-    tagging= 4
-};
-
-/**
  * The handler collection manages all handlers and calls their node, way, relation and area callbacks one
  * after another. This allows us to only instanciate those handlers which are necessary.
  *
@@ -46,10 +35,13 @@ public:
     /**
      * \brief Create and register a new handler.
      *
-     * \returns pointer to the handler being added
+     * \arg view handler to be added
+     * \arg options program options
+     * \arg layer_name name of a dataset to be created. This argument is optional. If it is nullptr, no dataset will be created.
+     *
+     * \returns Pointer to a dataset if layer_name is not nullptr. Ownership of the pointer stays with the handler which is created.
      */
-    gdalcpp::Dataset* add_handler(ViewType view, std::string& output_filename, std::string& output_format,
-            osmium::util::VerboseOutput& verbose_output, const char* layer_name, int epsg = 3857);
+    gdalcpp::Dataset* add_handler(ViewType view, Options& options, const char* layer_name = nullptr);
 
     /**
      * \brief Add a multipolygon collector.

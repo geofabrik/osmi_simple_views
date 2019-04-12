@@ -29,17 +29,16 @@
 #include <vector>
 #include <osmium/geom/haversine.hpp>
 
-GeometryViewHandler::GeometryViewHandler(std::string& output_filename, std::string& output_format,
-        osmium::util::VerboseOutput& verbose_output, int epsg /*= 3857*/) :
-        AbstractViewHandler(output_filename, output_format, verbose_output, epsg),
-        m_geometry_long_ways(create_layer("geometry_long_ways", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_geometry_long_seg_seg(create_layer("geometry_long_seg_seg", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_geometry_long_seg_way(create_layer("geometry_long_seg_way", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_geometry_single_node_in_way(create_layer("geometry_single_node_in_way", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_geometry_duplicate_node_in_way_way(create_layer("geometry_duplicate_node_in_way_way", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_geometry_duplicate_node_in_way_node(create_layer("geometry_duplicate_node_in_way_node", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_geometry_self_intersection_ways(create_layer("geometry_self_intersection_ways", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_geometry_self_intersection_points(create_layer("geometry_self_intersection_points", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)) {
+GeometryViewHandler::GeometryViewHandler(Options& options) :
+        AbstractViewHandler(options),
+        m_geometry_long_ways(create_layer("geometry_long_ways", wkbLineString, get_gdal_default_layer_options())),
+        m_geometry_long_seg_seg(create_layer("geometry_long_seg_seg", wkbLineString, get_gdal_default_layer_options())),
+        m_geometry_long_seg_way(create_layer("geometry_long_seg_way", wkbLineString, get_gdal_default_layer_options())),
+        m_geometry_single_node_in_way(create_layer("geometry_single_node_in_way", wkbPoint, get_gdal_default_layer_options())),
+        m_geometry_duplicate_node_in_way_way(create_layer("geometry_duplicate_node_in_way_way", wkbLineString, get_gdal_default_layer_options())),
+        m_geometry_duplicate_node_in_way_node(create_layer("geometry_duplicate_node_in_way_node", wkbPoint, get_gdal_default_layer_options())),
+        m_geometry_self_intersection_ways(create_layer("geometry_self_intersection_ways", wkbLineString, get_gdal_default_layer_options())),
+        m_geometry_self_intersection_points(create_layer("geometry_self_intersection_points", wkbPoint, get_gdal_default_layer_options())) {
     // add fields to layers
     m_geometry_long_ways->add_field("way_id", OFTString, 10);
     m_geometry_long_ways->add_field("lastchange", OFTString, 21);

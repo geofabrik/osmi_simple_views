@@ -20,37 +20,35 @@
 
 #include "ogr_output_base.hpp"
 
-OGROutputBase::OGROutputBase(osmium::util::VerboseOutput& verbose_output, std::string& output_format,
-        int epsg) :
+OGROutputBase::OGROutputBase(Options& options) :
 #ifndef ONLYMERCATOROUTPUT
-        m_factory(osmium::geom::Projection(epsg)),
+        m_factory(osmium::geom::Projection(options.srs)),
 #endif
-        m_verbose_output(verbose_output),
-        GDAL_DEFAULT_LAYER_OPTIONS(get_gdal_default_layer_options(output_format)) { }
+        m_options(options) { }
 
-std::vector<std::string> OGROutputBase::get_gdal_default_dataset_options(std::string& output_format) {
+std::vector<std::string> OGROutputBase::get_gdal_default_dataset_options() {
     std::vector<std::string> default_options;
     // default layer creation options
-    if (output_format == "SQlite") {
+    if (m_options.output_format == "SQlite") {
         CPLSetConfigOption("OGR_SQLITE_PRAGMA", "journal_mode=OFF,TEMP_STORE=MEMORY,temp_store=memory,LOCKING_MODE=EXCLUSIVE");
         CPLSetConfigOption("OGR_SQLITE_CACHE", "600");
         CPLSetConfigOption("OGR_SQLITE_JOURNAL", "OFF");
         CPLSetConfigOption("OGR_SQLITE_SYNCHRONOUS", "OFF");
         default_options.emplace_back("SPATIALITE=YES");
-    } else if (output_format == "ESRI Shapefile") {
+    } else if (m_options.output_format == "ESRI Shapefile") {
         default_options.emplace_back("SHAPE_ENCODING=UTF8");
     }
 
     return default_options;
 }
 
-std::vector<std::string> OGROutputBase::get_gdal_default_layer_options(std::string& output_format) {
+std::vector<std::string> OGROutputBase::get_gdal_default_layer_options() {
     std::vector<std::string> default_options;
     // default layer creation options
-    if (output_format == "SQlite") {
+    if (m_options.output_format == "SQlite") {
         default_options.emplace_back("SPATIAL_INDEX=NO");
         default_options.emplace_back("COMPRESS_GEOM=NO");
-    } else if (output_format == "ESRI Shapefile") {
+    } else if (m_options.output_format == "ESRI Shapefile") {
         default_options.emplace_back("SHAPE_ENCODING=UTF8");
     }
 

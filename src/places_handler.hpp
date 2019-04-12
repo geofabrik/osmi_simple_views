@@ -94,8 +94,7 @@ class PlacesHandler : public AbstractViewHandler {
 public:
     PlacesHandler() = delete;
 
-    PlacesHandler(std::string& output_filename, std::string& output_format,
-            osmium::util::VerboseOutput& verbose_output, int epsg = 3857);
+    PlacesHandler(Options& options);
 
     void give_correct_name();
 

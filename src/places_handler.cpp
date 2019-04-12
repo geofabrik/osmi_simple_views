@@ -23,14 +23,13 @@
 #include <osmium/index/index.hpp>
 #include <osmium/osm/item_type.hpp>
 
-PlacesHandler::PlacesHandler(std::string& output_filename, std::string& output_format,
-        osmium::util::VerboseOutput& verbose_output, int epsg /*= 3857*/) :
-        AbstractViewHandler(output_filename, output_format, verbose_output, epsg),
-        m_points(create_layer("points", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_polygons(create_layer("polygons", wkbMultiPolygon, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_errors_points(create_layer("errors_points", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_errors_polygons(create_layer("errors_polygons", wkbMultiPolygon, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_cities(create_layer("cities", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)) {
+PlacesHandler::PlacesHandler(Options& options) :
+        AbstractViewHandler(options),
+        m_points(create_layer("points", wkbPoint)),
+        m_polygons(create_layer("polygons", wkbMultiPolygon)),
+        m_errors_points(create_layer("errors_points", wkbPoint)),
+        m_errors_polygons(create_layer("errors_polygons", wkbMultiPolygon)),
+        m_cities(create_layer("cities", wkbPoint)) {
     // add fields to layers
     m_points->add_field("node_id", OFTString, 10);
     m_points->add_field("place", OFTString, 20);
@@ -335,12 +334,12 @@ void PlacesHandler::area(const osmium::Area& area) {
             if (centroid_error == OGRERR_NONE) {
                 add_feature(std::unique_ptr<OGRPoint>(std::move(centroid_point)), area, geomtype.c_str(), area.orig_id(), place, true);
             } else {
-                m_verbose_output << "Error creating centroid for area " << area.id() << ": " << centroid_error << "\n";
+                m_options.verbose_output << "Error creating centroid for area " << area.id() << ": " << centroid_error << "\n";
             }
         }
     } catch (osmium::geometry_error& err) {
-        m_verbose_output << err.what();
+        m_options.verbose_output << err.what();
     } catch (osmium::not_found& err) {
-        m_verbose_output << err.what();
+        m_options.verbose_output << err.what();
     }
 }

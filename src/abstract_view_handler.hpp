@@ -44,9 +44,6 @@ class AbstractViewHandler : public osmium::handler::Handler, public OGROutputBas
     bool one_layer_per_datasource_only();
 
 protected:
-    std::string m_output_directory;
-    std::string& m_output_format;
-    int m_epsg;
     /// ORG dataset
     // This has to be a vector of unique_ptr because a vector of objects themselves fails to
     // compile due to "copy constructor of 'Dataset' is implicitly deleted because field
@@ -65,8 +62,7 @@ protected:
 public:
     AbstractViewHandler() = delete;
 
-    AbstractViewHandler(std::string& output_directory, std::string& output_format,
-            osmium::util::VerboseOutput& verbose_output, int epsg);
+    AbstractViewHandler(Options& options);
 
     /**
      * Add proper file name suffix to the output files. If there is one output dataset only,

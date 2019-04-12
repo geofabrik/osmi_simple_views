@@ -21,9 +21,8 @@
 #include "any_relation_collector.hpp"
 #include "tagging_view_handler.hpp"
 
-AnyRelationCollector::AnyRelationCollector(osmium::util::VerboseOutput& verbose_output, std::string& output_format,
-        int epsg  /*= 3857*/) :
-        OGROutputBase(verbose_output, output_format, epsg) { }
+AnyRelationCollector::AnyRelationCollector(Options& options) :
+        OGROutputBase(options) { }
 
 bool AnyRelationCollector::keep_relation(const osmium::Relation& relation) const {
     // whitelisted route=piste/ski/ferry because both can contain member ways without tags.
@@ -51,7 +50,7 @@ void AnyRelationCollector::way_not_in_any_relation(const osmium::Way& way) {
         TaggingViewHandler::set_basic_fields(feature, way, nullptr, nullptr);
         feature.add_to_layer();
     } catch (osmium::geometry_error& err) {
-        m_verbose_output << err.what() << "\n";
+        m_options.verbose_output << err.what() << "\n";
     }
 }
 
@@ -60,7 +59,7 @@ void AnyRelationCollector::complete_relation(osmium::relations::RelationMeta&) {
 void AnyRelationCollector::create_layer(gdalcpp::Dataset* dataset) {
     m_tagging_ways_without_tags =
             std::unique_ptr<gdalcpp::Layer>(new gdalcpp::Layer(*dataset, "tagging_ways_without_tags",
-            wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS));
+            wkbLineString, get_gdal_default_layer_options()));
 
     m_tagging_ways_without_tags->add_field("way_id", OFTString, 10);
     m_tagging_ways_without_tags->add_field("lastchange", OFTString, 21);

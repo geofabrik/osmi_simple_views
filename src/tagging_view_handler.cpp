@@ -19,21 +19,20 @@
 
 #include "tagging_view_handler.hpp"
 
-TaggingViewHandler::TaggingViewHandler(std::string& output_filename, std::string& output_format,
-        osmium::util::VerboseOutput& verbose_output, int epsg) :
-        AbstractViewHandler(output_filename, output_format, verbose_output, epsg),
-        m_tagging_fixmes_on_nodes(create_layer("tagging_fixmes_on_nodes", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_tagging_fixmes_on_ways(create_layer("tagging_fixmes_on_ways", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_tagging_nodes_with_empty_k(create_layer("tagging_nodes_with_empty_k", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_tagging_ways_with_empty_k(create_layer("tagging_ways_with_empty_k", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_tagging_nodes_with_empty_v(create_layer("tagging_nodes_with_empty_v", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_tagging_ways_with_empty_v(create_layer("tagging_ways_with_empty_v", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_tagging_misspelled_node_keys(create_layer("tagging_misspelled_node_keys", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_tagging_misspelled_way_keys(create_layer("tagging_misspelled_way_keys", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_tagging_nonop_confusion_nodes(create_layer("tagging_nonop_confusion_nodes", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_tagging_nonop_confusion_ways(create_layer("tagging_nonop_confusion_ways", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_tagging_no_feature_tag_nodes(create_layer("tagging_no_feature_tag_nodes", wkbPoint, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_tagging_no_feature_tag_ways(create_layer("tagging_no_feature_tag_ways", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)) {
+TaggingViewHandler::TaggingViewHandler(Options& options) :
+        AbstractViewHandler(options),
+        m_tagging_fixmes_on_nodes(create_layer("tagging_fixmes_on_nodes", wkbPoint)),
+        m_tagging_fixmes_on_ways(create_layer("tagging_fixmes_on_ways", wkbLineString)),
+        m_tagging_nodes_with_empty_k(create_layer("tagging_nodes_with_empty_k", wkbPoint)),
+        m_tagging_ways_with_empty_k(create_layer("tagging_ways_with_empty_k", wkbLineString)),
+        m_tagging_nodes_with_empty_v(create_layer("tagging_nodes_with_empty_v", wkbPoint)),
+        m_tagging_ways_with_empty_v(create_layer("tagging_ways_with_empty_v", wkbLineString)),
+        m_tagging_misspelled_node_keys(create_layer("tagging_misspelled_node_keys", wkbPoint)),
+        m_tagging_misspelled_way_keys(create_layer("tagging_misspelled_way_keys", wkbLineString)),
+        m_tagging_nonop_confusion_nodes(create_layer("tagging_nonop_confusion_nodes", wkbPoint)),
+        m_tagging_nonop_confusion_ways(create_layer("tagging_nonop_confusion_ways", wkbLineString)),
+        m_tagging_no_feature_tag_nodes(create_layer("tagging_no_feature_tag_nodes", wkbPoint)),
+        m_tagging_no_feature_tag_ways(create_layer("tagging_no_feature_tag_ways", wkbLineString)) {
     m_tagging_fixmes_on_nodes->add_field("node_id", OFTString, 10);
     m_tagging_fixmes_on_nodes->add_field("tag", OFTString, MAX_STRING_LENGTH);
     m_tagging_fixmes_on_nodes->add_field("lastchange", OFTString, 21);
@@ -105,7 +104,7 @@ void TaggingViewHandler::write_feature_to_simple_layer(gdalcpp::Layer* layer,
         set_basic_fields(feature, object, field_name, value);
         feature.add_to_layer();
     } catch (osmium::geometry_error& err) {
-        m_verbose_output << err.what() << "\n";
+        m_options.verbose_output << err.what() << "\n";
     }
 }
 
@@ -299,7 +298,7 @@ void TaggingViewHandler::write_missspelled(const osmium::OSMObject& object,
         }
         feature.add_to_layer();
     } catch (osmium::geometry_error& err) {
-        m_verbose_output << err.what() << "\n";
+        m_options.verbose_output << err.what() << "\n";
     }
 }
 

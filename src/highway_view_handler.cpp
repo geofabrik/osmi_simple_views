@@ -21,18 +21,17 @@
 #include "highway_view_handler.hpp"
 
 
-HighwayViewHandler::HighwayViewHandler(std::string& output_filename, std::string& output_format,
-        osmium::util::VerboseOutput& verbose_output, int epsg /*= 3857*/) :
-        AbstractViewHandler(output_filename, output_format, verbose_output, epsg),
-        m_highway_lanes(create_layer("highway_lanes", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_highway_maxheight(create_layer("highway_maxheight", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_highway_maxspeed(create_layer("highway_maxspeed", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_highway_name_fixme(create_layer("highway_name_fixme", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_highway_name_missing_major(create_layer("highway_name_missing_major", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_highway_name_missing_minor(create_layer("highway_name_missing_minor", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_highway_oneway(create_layer("highway_oneway", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_highway_road(create_layer("highway_road", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)),
-        m_highway_type_unknown(create_layer("highway_type_unknown", wkbLineString, GDAL_DEFAULT_LAYER_OPTIONS)) {
+HighwayViewHandler::HighwayViewHandler(Options& options) :
+        AbstractViewHandler(options),
+        m_highway_lanes(create_layer("highway_lanes", wkbLineString)),
+        m_highway_maxheight(create_layer("highway_maxheight", wkbLineString)),
+        m_highway_maxspeed(create_layer("highway_maxspeed", wkbLineString)),
+        m_highway_name_fixme(create_layer("highway_name_fixme", wkbLineString)),
+        m_highway_name_missing_major(create_layer("highway_name_missing_major", wkbLineString)),
+        m_highway_name_missing_minor(create_layer("highway_name_missing_minor", wkbLineString)),
+        m_highway_oneway(create_layer("highway_oneway", wkbLineString)),
+        m_highway_road(create_layer("highway_road", wkbLineString)),
+        m_highway_type_unknown(create_layer("highway_type_unknown", wkbLineString)) {
     // add fields to layers
     m_highway_lanes->add_field("way_id", OFTString, 10);
     m_highway_lanes->add_field("lanes", OFTString, 40);
@@ -182,7 +181,7 @@ void HighwayViewHandler::set_fields(gdalcpp::Layer* layer, const osmium::Way& wa
         }
         feature.add_to_layer();
     } catch (osmium::geometry_error& err) {
-        m_verbose_output << err.what() << "\n";
+        m_options.verbose_output << err.what() << "\n";
     }
 }
 

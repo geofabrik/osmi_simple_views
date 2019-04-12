@@ -33,6 +33,8 @@
 
 #include <osmium/util/verbose_output.hpp>
 
+#include "options.hpp"
+
 /**
  * Provide commont things for working with GDAL. This class does not care for the dataset
  * because the dataset is shared.
@@ -52,10 +54,7 @@ protected:
     osmium::geom::OGRFactory<osmium::geom::Projection> m_factory;
 #endif
 
-    /// reference to output manager for STDERR
-    osmium::util::VerboseOutput& m_verbose_output;
-
-    const std::vector<std::string> GDAL_DEFAULT_LAYER_OPTIONS;
+    Options& m_options;
 
     /// maximum length of a string field
     static constexpr size_t MAX_FIELD_LENGTH = 254;
@@ -70,7 +69,7 @@ protected:
      * \param output_format output format
      * \param gdal_options vector where to add the default options.
      */
-    static std::vector<std::string> get_gdal_default_dataset_options(std::string& output_format);
+    std::vector<std::string> get_gdal_default_dataset_options();
 
     /**
      * \brief Add default options for the to the back of a vector of options.
@@ -82,12 +81,12 @@ protected:
      * \param output_format output format
      * \param gdal_options vector where to add the default options.
      */
-    static std::vector<std::string> get_gdal_default_layer_options(std::string& output_format);
+    std::vector<std::string> get_gdal_default_layer_options();
 
 public:
     OGROutputBase() = delete;
 
-    OGROutputBase(osmium::util::VerboseOutput& verbose_output, std::string& output_format, int epsg);
+    OGROutputBase(Options& options);
 };
 
 #endif /* SRC_OGR_OUTPUT_BASE_HPP_ */

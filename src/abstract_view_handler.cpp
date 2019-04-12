@@ -23,12 +23,8 @@
 #include <unistd.h>
 #include <locale>
 
-AbstractViewHandler::AbstractViewHandler(std::string& output_directory, std::string& output_format,
-        osmium::util::VerboseOutput& verbose_output, int epsg) :
-        m_output_directory(output_directory),
-        m_output_format(output_format),
-        m_epsg(epsg),
-        OGROutputBase(verbose_output, output_format, epsg),
+AbstractViewHandler::AbstractViewHandler(Options& options) :
+        OGROutputBase(options),
         m_datasets() {
 }
 
@@ -50,8 +46,8 @@ bool case_insensitive_comp_left(const std::string& a, const std::string& b) {
 }
 
 bool AbstractViewHandler::one_layer_per_datasource_only() {
-    return case_insensitive_comp_left(m_output_format, "geojson")
-        || case_insensitive_comp_left(m_output_format, "esri shapefile");
+    return case_insensitive_comp_left(m_options.output_format, "geojson")
+        || case_insensitive_comp_left(m_options.output_format, "esri shapefile");
 }
 
 void AbstractViewHandler::close_datasets() {
@@ -59,9 +55,9 @@ void AbstractViewHandler::close_datasets() {
 }
 
 std::string AbstractViewHandler::filename_suffix() {
-    if (case_insensitive_comp_left(m_output_format, "geojson")) {
+    if (case_insensitive_comp_left(m_options.output_format, "geojson")) {
         return ".json";
-    } else if (case_insensitive_comp_left(m_output_format, "sqlite")) {
+    } else if (case_insensitive_comp_left(m_options.output_format, "sqlite")) {
         return ".db";
     }
     return "";
@@ -70,7 +66,7 @@ std::string AbstractViewHandler::filename_suffix() {
 void AbstractViewHandler::rename_output_files(const std::string& view_name) {
     if (m_datasets.size() == 1 && filename_suffix().length()) {
         // rename output file if there is one output dataset only
-        std::string destination_name {m_output_directory};
+        std::string destination_name {m_options.output_directory};
         destination_name += '/';
         destination_name += view_name;
         destination_name += filename_suffix();
@@ -99,7 +95,7 @@ void AbstractViewHandler::rename_output_files(const std::string& view_name) {
 bool AbstractViewHandler::all_nodes_valid(const osmium::WayNodeList& wnl) {
     for (const osmium::NodeRef& nd_ref : wnl) {
         if (!nd_ref.location().valid()) {
-            m_verbose_output << "Invalid location for node " << nd_ref.ref() << "\n";
+            m_options.verbose_output << "Invalid location for node " << nd_ref.ref() << "\n";
             return false;
         }
     }
@@ -108,10 +104,10 @@ bool AbstractViewHandler::all_nodes_valid(const osmium::WayNodeList& wnl) {
 
 void AbstractViewHandler::ensure_writeable_dataset(const char* layer_name) {
     if (m_datasets.empty() || one_layer_per_datasource_only()) {
-        std::string output_filename = m_output_directory;
+        std::string output_filename = m_options.output_directory;
         output_filename += '/';
         output_filename += layer_name;
-        std::unique_ptr<gdalcpp::Dataset> ds {new gdalcpp::Dataset(m_output_format, output_filename, gdalcpp::SRS(m_epsg), get_gdal_default_dataset_options(m_output_format))};
+        std::unique_ptr<gdalcpp::Dataset> ds {new gdalcpp::Dataset(m_options.output_format, output_filename, gdalcpp::SRS(m_options.srs), get_gdal_default_dataset_options())};
         m_datasets.push_back(std::move(ds));
         m_datasets.back()->enable_auto_transactions(10000);
     }
