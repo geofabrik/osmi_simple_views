@@ -152,6 +152,9 @@ bool PlacesHandler::place_value_ok(const char* value) {
     if (!strcmp(value, "isolated_dwelling")) {
         return true;
     }
+    if (!strcmp(value, "square")) {
+        return true;
+    }
     return false;
 }
 
