@@ -36,23 +36,23 @@
 #include "options.hpp"
 
 /**
+ * If ONLYMERCATOROUTPUT is defined, output coordinates are always Web
+ * Mercator coordinates. If it is not defined, we will transform them if
+ * the output SRS is different from the input SRS (4326).
+ */
+#ifdef ONLYMERCATOROUTPUT
+    using ogr_factory_type = osmium::geom::OGRFactory<osmium::geom::MercatorProjection>;
+#else
+    using ogr_factory_type = osmium::geom::OGRFactory<osmium::geom::Projection>;
+#endif
+
+/**
  * Provide commont things for working with GDAL. This class does not care for the dataset
  * because the dataset is shared.
  */
 class OGROutputBase {
 protected:
-    /**
-     * If ONLYMERCATOROUTPUT is defined, output coordinates are always Web
-     * Mercator coordinates. If it is not defined, we will transform them if
-     * the output SRS is different from the input SRS (4326).
-     */
-#ifdef ONLYMERCATOROUTPUT
-    /// factory to build OGR geometries in Web Mercator projection
-    osmium::geom::OGRFactory<osmium::geom::MercatorProjection> m_factory;
-#else
-    /// factory to build OGR geometries with a coordinate transformation if necessary
-    osmium::geom::OGRFactory<osmium::geom::Projection> m_factory;
-#endif
+    ogr_factory_type m_factory;
 
     Options& m_options;
 

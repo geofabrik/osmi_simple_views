@@ -39,13 +39,16 @@ class HighwayViewHandler : public AbstractViewHandler {
     std::unique_ptr<gdalcpp::Layer> m_highway_lanes;
     /// layer for ways with strang maxheight values
     std::unique_ptr<gdalcpp::Layer> m_highway_maxheight;
+    std::unique_ptr<gdalcpp::Layer> m_highway_maxweight;
+    std::unique_ptr<gdalcpp::Layer> m_highway_maxlength;
     std::unique_ptr<gdalcpp::Layer> m_highway_maxspeed;
     std::unique_ptr<gdalcpp::Layer> m_highway_name_fixme;
     std::unique_ptr<gdalcpp::Layer> m_highway_name_missing_major;
     std::unique_ptr<gdalcpp::Layer> m_highway_name_missing_minor;
     std::unique_ptr<gdalcpp::Layer> m_highway_oneway;
     std::unique_ptr<gdalcpp::Layer> m_highway_road;
-    std::unique_ptr<gdalcpp::Layer> m_highway_type_unknown;
+    std::unique_ptr<gdalcpp::Layer> m_highway_unknown_node;
+    std::unique_ptr<gdalcpp::Layer> m_highway_unknown_way;
 
 
     /// param vector of functions returning false if a tag is malformed.
@@ -72,14 +75,38 @@ class HighwayViewHandler : public AbstractViewHandler {
      * This method sets `way_id` and `tags` automatically.
      *
      * \param layer layer the feature should be added to
-     * \param way reference to OSM object
+     * \param object reference to OSM object
      * \param third_field_name name of the third field to be set (nullptr if it does
      * not exist or should not be set)
      * \param third_field_value value of the third field to be set (nullptr if it does
      * not exist of should not be set)
      * \param other_tags string containing concatenated tags to be written into the field
      * `tags`
+     * \param geom_func function returning unique pointer to geometry to be written to the output
+     * layer
+     *
+     * \tparam class like Node or Way (from Osmium)
      */
+    template <typename TOsm>
+    void set_fields(gdalcpp::Layer* layer, const TOsm& object, const char* third_field_name,
+            const char* third_field_value, std::string& other_tags,
+            std::function<std::unique_ptr<OGRGeometry>(const TOsm&, ogr_factory_type&)> geom_func,
+            const osmium::object_id_type id, const char* id_field_name) {
+        try {
+            gdalcpp::Feature feature(*layer, geom_func(object, m_factory));
+            static char idbuffer[20];
+            sprintf(idbuffer, "%ld", id);
+            feature.set_field(id_field_name, idbuffer);
+            feature.set_field("tags", other_tags.c_str());
+            if (third_field_name && third_field_value) {
+                feature.set_field(third_field_name, third_field_value);
+            }
+            feature.add_to_layer();
+        } catch (osmium::geometry_error& err) {
+            m_options.verbose_output << err.what() << "\n";
+        }
+    }
+
     void set_fields(gdalcpp::Layer* layer, const osmium::Way& way, const char* third_field_name,
             const char* third_field_value, std::string& other_tags);
 
@@ -98,7 +125,13 @@ class HighwayViewHandler : public AbstractViewHandler {
 
     static bool maxspeed_ok(const osmium::TagList& tags);
 
+    static bool check_length_value(const char* value);
+
     static bool maxheight_ok(const osmium::TagList& tags);
+
+    static bool maxweight_ok(const osmium::TagList& tags);
+
+    static bool maxlength_ok(const osmium::TagList& tags);
 
     static bool name_missing_major(const osmium::TagList& tags);
 
@@ -106,7 +139,9 @@ class HighwayViewHandler : public AbstractViewHandler {
 
     static bool highway_road(const osmium::TagList& tags);
 
-    static bool highway_unknown(const osmium::TagList& tags);
+    void highway_unknown_node(const osmium::Node& node);
+
+    void highway_unknown_way(const osmium::Way& way);
 
 
     /**
@@ -132,9 +167,10 @@ public:
 
     void close();
 
+    void node(const osmium::Node& node);
+
     void way(const osmium::Way& way);
 
-    void node(const osmium::Node&) {};
     void relation(const osmium::Relation&) {};
     void area(const osmium::Area&) {};
 

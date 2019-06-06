@@ -25,13 +25,16 @@ HighwayViewHandler::HighwayViewHandler(Options& options) :
         AbstractViewHandler(options),
         m_highway_lanes(create_layer("highway_lanes", wkbLineString)),
         m_highway_maxheight(create_layer("highway_maxheight", wkbLineString)),
+        m_highway_maxweight(create_layer("highway_maxweight", wkbLineString)),
+        m_highway_maxlength(create_layer("highway_maxlength", wkbLineString)),
         m_highway_maxspeed(create_layer("highway_maxspeed", wkbLineString)),
         m_highway_name_fixme(create_layer("highway_name_fixme", wkbLineString)),
         m_highway_name_missing_major(create_layer("highway_name_missing_major", wkbLineString)),
         m_highway_name_missing_minor(create_layer("highway_name_missing_minor", wkbLineString)),
         m_highway_oneway(create_layer("highway_oneway", wkbLineString)),
         m_highway_road(create_layer("highway_road", wkbLineString)),
-        m_highway_type_unknown(create_layer("highway_type_unknown", wkbLineString)) {
+        m_highway_unknown_node(create_layer("highway_unknown_node", wkbPoint)),
+        m_highway_unknown_way(create_layer("highway_unknown_way", wkbLineString)) {
     // add fields to layers
     m_highway_lanes->add_field("way_id", OFTString, 10);
     m_highway_lanes->add_field("lanes", OFTString, 40);
@@ -39,6 +42,12 @@ HighwayViewHandler::HighwayViewHandler(Options& options) :
     m_highway_maxheight->add_field("way_id", OFTString, 10);
     m_highway_maxheight->add_field("maxheight", OFTString, 40);
     m_highway_maxheight->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_highway_maxweight->add_field("way_id", OFTString, 10);
+    m_highway_maxweight->add_field("maxweight", OFTString, 40);
+    m_highway_maxweight->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_highway_maxlength->add_field("way_id", OFTString, 10);
+    m_highway_maxlength->add_field("maxlength", OFTString, 40);
+    m_highway_maxlength->add_field("tags", OFTString, MAX_FIELD_LENGTH);
     m_highway_maxspeed->add_field("way_id", OFTString, 10);
     m_highway_maxspeed->add_field("maxspeed", OFTString, 40);
     m_highway_maxspeed->add_field("tags", OFTString, MAX_FIELD_LENGTH);
@@ -56,20 +65,24 @@ HighwayViewHandler::HighwayViewHandler(Options& options) :
     m_highway_oneway->add_field("tags", OFTString, MAX_FIELD_LENGTH);
     m_highway_road->add_field("way_id", OFTString, 10);
     m_highway_road->add_field("tags", OFTString, MAX_FIELD_LENGTH);
-    m_highway_type_unknown->add_field("way_id", OFTString, 10);
-    m_highway_type_unknown->add_field("highway", OFTString, 40);
-    m_highway_type_unknown->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_highway_unknown_node->add_field("node_id", OFTString, 10);
+    m_highway_unknown_node->add_field("highway", OFTString, 40);
+    m_highway_unknown_node->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_highway_unknown_way->add_field("way_id", OFTString, 10);
+    m_highway_unknown_way->add_field("highway", OFTString, 40);
+    m_highway_unknown_way->add_field("tags", OFTString, MAX_FIELD_LENGTH);
 
     // register checks
     register_check(lanes_ok, "lanes", m_highway_lanes.get());
     register_check(name_not_fixme, "name", m_highway_name_fixme.get());
     register_check(oneway_ok, "oneway", m_highway_oneway.get());
     register_check(maxheight_ok, "maxheight", m_highway_maxheight.get());
+    register_check(maxweight_ok, "maxweight", m_highway_maxweight.get());
+    register_check(maxlength_ok, "maxlength", m_highway_maxlength.get());
     register_check(maxspeed_ok, "maxspeed", m_highway_maxspeed.get());
     register_check(name_missing_major, "highway", m_highway_name_missing_major.get());
     register_check(name_missing_minor, "highway", m_highway_name_missing_minor.get());
     register_check(highway_road, "", m_highway_road.get());
-    register_check(highway_unknown, "highway", m_highway_type_unknown.get());
 }
 
 void HighwayViewHandler::give_correct_name() {
@@ -85,7 +98,8 @@ void HighwayViewHandler::close() {
     m_highway_name_missing_minor.reset();
     m_highway_oneway.reset();
     m_highway_road.reset();
-    m_highway_type_unknown.reset();
+    m_highway_unknown_node.reset();
+    m_highway_unknown_way.reset();
     close_datasets();
 }
 
@@ -170,19 +184,11 @@ bool HighwayViewHandler::is_valid_const_speed(const char* maxspeed_value) {
 
 void HighwayViewHandler::set_fields(gdalcpp::Layer* layer, const osmium::Way& way, const char* third_field_name,
         const char* third_field_value, std::string& other_tags) {
-    try {
-        gdalcpp::Feature feature(*layer, m_factory.create_linestring(way));
-        static char idbuffer[20];
-        sprintf(idbuffer, "%ld", way.id());
-        feature.set_field("way_id", idbuffer);
-        feature.set_field("tags", other_tags.c_str());
-        if (third_field_name && third_field_value) {
-            feature.set_field(third_field_name, third_field_value);
-        }
-        feature.add_to_layer();
-    } catch (osmium::geometry_error& err) {
-        m_options.verbose_output << err.what() << "\n";
-    }
+    set_fields<osmium::Way>(
+            layer, way, third_field_name, third_field_value, other_tags,
+            [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+            way.id(), "way_id"
+    );
 }
 
 bool HighwayViewHandler::lanes_ok(const osmium::TagList& tags) {
@@ -245,22 +251,21 @@ bool HighwayViewHandler::maxspeed_ok(const osmium::TagList& tags) {
     return is_valid_const_speed(maxspeed_value);
 }
 
-bool HighwayViewHandler::maxheight_ok(const osmium::TagList& tags) {
-    const char* maxheight_value = tags.get_value_by_key("maxheight");
-    if (!maxheight_value) {
+bool HighwayViewHandler::check_length_value(const char* value) {
+    if (!value) {
         return true;
     }
-    if (!strcmp(maxheight_value, "none") || !strcmp(maxheight_value, "default") || !strcmp(maxheight_value, "physical")) {
+    if (!strcmp(value, "none") || !strcmp(value, "default") || !strcmp(value, "physical")) {
         return true;
     }
     char* rest;
     // try parsing as metric
-    double maxheight_m = std::strtod(maxheight_value, &rest);
+    double maxheight_m = std::strtod(value, &rest);
     if (maxheight_m > 0 && *rest == 0) {
         return true;
     }
     // try parsing as imperial
-    long int maxheight_read = std::strtol(maxheight_value, &rest, 10);
+    long int maxheight_read = std::strtol(value, &rest, 10);
     if (*rest) { // something behind the number
         if (*rest == '\'' && maxheight_read > 0) {
             ++rest; // move one character to the right
@@ -284,6 +289,53 @@ bool HighwayViewHandler::maxheight_ok(const osmium::TagList& tags) {
     // If th integer is not followed by a ', it is no imperical unit.
     return false;
 }
+
+bool HighwayViewHandler::maxheight_ok(const osmium::TagList& tags) {
+    const char* maxheight_value = tags.get_value_by_key("maxheight");
+    return check_length_value(maxheight_value);
+}
+
+bool HighwayViewHandler::maxlength_ok(const osmium::TagList& tags) {
+    const char* maxlength_value = tags.get_value_by_key("maxlength");
+    return check_length_value(maxlength_value);
+}
+
+bool HighwayViewHandler::maxweight_ok(const osmium::TagList& tags) {
+    const char* maxweight_value = tags.get_value_by_key("maxweight");
+    if (!maxweight_value || !strcmp(maxweight_value, "unsigned")) {
+        return true;
+    }
+    char* rest;
+    // try parsing as metric
+    double maxweight_metric = std::strtod(maxweight_value, &rest);
+    // check for too large values
+    if (maxweight_metric > 0 && *rest == 0 && maxweight_metric < 90) {
+        return true;
+    }
+    // try parsing as imperial
+    long int maxweight_read = std::strtol(maxweight_value, &rest, 10);
+    if (*rest) { // something behind the number
+        if (*rest == ' ' && maxweight_read > 0) {
+            ++rest; // move one character to the right
+            if (!strcmp(rest, "t") && maxweight_read < 90) { // metric tonne
+                return true;
+            }
+            if (!strcmp(rest, "st") && maxweight_read < 90 * 0.9071847) {
+                return true;
+            }
+            if (!strcmp(rest, "lt") && maxweight_read < 90 * 1.016047) {
+                return true;
+            }
+            if (!strcmp(rest, "kg") && maxweight_read < 90000) {
+                return true;
+            }
+        }
+    }
+    // This shouldn't happen and we consider this as an error.
+    // If th integer is not followed by a ', it is no imperical unit.
+    return false;
+}
+
 
 bool HighwayViewHandler::name_missing_major(const osmium::TagList& tags) {
     const char* name = tags.get_value_by_key("name");
@@ -325,8 +377,36 @@ bool HighwayViewHandler::highway_road(const osmium::TagList& tags) {
     return true;
 }
 
-bool HighwayViewHandler::highway_unknown(const osmium::TagList& tags) {
-    const char* highway = tags.get_value_by_key("highway");
+void HighwayViewHandler::highway_unknown_node(const osmium::Node& node) {
+    const char* highway = node.get_value_by_key("highway");
+    if (!highway) {
+        return;
+    }
+    if (!strcmp(highway, "bus_stop") || !strcmp(highway, "motorway_junction")
+            || !strcmp(highway, "services") || !strcmp(highway, "checkpoint")
+            || !strcmp(highway, "construction") || !strcmp(highway, "turning_circle")
+            || !strcmp(highway, "rest_area") || !strcmp(highway, "crossing")
+            || !strcmp(highway, "traffic_signals") || !strcmp(highway, "street_lamp")
+            || !strcmp(highway, "stop") || !strcmp(highway, "give_way")
+            || !strcmp(highway, "milestone") || !strcmp(highway, "turning_loop")
+            || !strcmp(highway, "mini_roundabout") || !strcmp(highway, "speed_camera")
+            || !strcmp(highway, "emergency_access_point") || !strcmp(highway, "elevator")
+            || !strcmp(highway, "passing_place") || !strcmp(highway, "traffic_mirror")
+            || !strcmp(highway, "emergency_bay") || !strcmp(highway, "ford")
+            || !strcmp(highway, "speed_display") || !strcmp(highway, "proposed")) {
+        return;
+    }
+    std::string tags_str = tags_string(node.tags(), "highway");
+    set_fields<osmium::Node>(m_highway_unknown_node.get(), node, "highway", highway, tags_str,
+            [](const osmium::Node& node, ogr_factory_type& factory) {return factory.create_point(node);},
+            node.id(), "node_id");
+}
+
+void HighwayViewHandler::highway_unknown_way(const osmium::Way& way) {
+    const char* highway = way.get_value_by_key("highway");
+    if (!highway) {
+        return;
+    }
     if (!strcmp(highway, "motorway") || !strcmp(highway, "motorway_link") || !strcmp(highway, "trunk")
             || !strcmp(highway, "trunk_link") || !strcmp(highway, "primary") || !strcmp(highway, "primary_link")
             || !strcmp(highway, "secondary") || !strcmp(highway, "secondary_link") || !strcmp(highway, "tertiary")
@@ -337,10 +417,16 @@ bool HighwayViewHandler::highway_unknown(const osmium::TagList& tags) {
             || !strcmp(highway, "steps") || !strcmp(highway, "raceway") || !strcmp(highway, "bus_guideway")
             || !strcmp(highway, "construction") || !strcmp(highway, "disused") || !strcmp(highway, "abandoned")
             || !strcmp(highway, "proposed") || !strcmp(highway, "platform") || !strcmp(highway, "road")
-            || !strcmp(highway, "elevator")) {
-        return true;
+            || !strcmp(highway, "elevator") || !strcmp(highway, "corridor") || !strcmp(highway, "no")) {
+        return;
     }
-    return false;
+    if (way.is_closed() && (!strcmp(highway, "services") || !strcmp(highway, "rest_area") || !strcmp(highway, "traffic_island"))) {
+        return;
+    }
+    std::string tags_str = tags_string(way.tags(), "highway");
+    set_fields<osmium::Way>(m_highway_unknown_way.get(), way, "highway", highway, tags_str,
+            [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+            way.id(), "way_id");
 }
 
 void HighwayViewHandler::check_them_all(const osmium::Way& way) {
@@ -359,5 +445,10 @@ void HighwayViewHandler::check_them_all(const osmium::Way& way) {
 void HighwayViewHandler::way(const osmium::Way& way) {
     if (way.get_value_by_key("highway")) {
         check_them_all(way);
+        highway_unknown_way(way);
     }
+}
+
+void HighwayViewHandler::node(const osmium::Node& node) {
+    highway_unknown_node(node);
 }
