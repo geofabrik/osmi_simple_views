@@ -38,6 +38,7 @@ HighwayViewHandler::HighwayViewHandler(Options& options) :
     // add fields to layers
     m_highway_lanes->add_field("way_id", OFTString, 10);
     m_highway_lanes->add_field("lanes", OFTString, 40);
+    m_highway_lanes->add_field("error", OFTString, 80);
     m_highway_lanes->add_field("tags", OFTString, MAX_FIELD_LENGTH);
     m_highway_maxheight->add_field("way_id", OFTString, 10);
     m_highway_maxheight->add_field("maxheight", OFTString, 40);
@@ -73,7 +74,6 @@ HighwayViewHandler::HighwayViewHandler(Options& options) :
     m_highway_unknown_way->add_field("tags", OFTString, MAX_FIELD_LENGTH);
 
     // register checks
-    register_check(lanes_ok, "lanes", m_highway_lanes.get());
     register_check(name_not_fixme, "name", m_highway_name_fixme.get());
     register_check(oneway_ok, "oneway", m_highway_oneway.get());
     register_check(maxheight_ok, "maxheight", m_highway_maxheight.get());
@@ -191,17 +191,249 @@ void HighwayViewHandler::set_fields(gdalcpp::Layer* layer, const osmium::Way& wa
     );
 }
 
-bool HighwayViewHandler::lanes_ok(const osmium::TagList& tags) {
-    const char* lanes_value = tags.get_value_by_key("lanes");
+int HighwayViewHandler::check_lanes_value_and_write_error(const osmium::Way& way, const char* key) {
+    const char* lanes_value = way.get_value_by_key(key);
     if (!lanes_value) {
-        return true;
+        return 0;
     }
     char* rest;
     long int lanes_read = std::strtol(lanes_value, &rest, 10);
     if (*rest || lanes_read <= 0 || lanes_read > 16) {
+        std::string tags_str = tags_string(way.tags(), key);
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", lanes_value, tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "invalid number"
+        );
+        return -1;
+    }
+    return lanes_read;
+}
+
+bool HighwayViewHandler::all_oneway(const osmium::TagList& tags) {
+    const char* oneway = tags.get_value_by_key("oneway");
+    if (!oneway || strcmp(oneway, "yes")) {
+        return false;
+    }
+    // check for keys starting with "oneway:"
+    for (const auto& t : tags) {
+        if (!strncmp(t.key(), "oneway:", 7) && !strcmp(t.value(), "no")) {
+            return false;
+        }
+    }
+    return true;
+}
+
+int HighwayViewHandler::pipe_separated_items_count(const char* value) {
+    if (!value) {
+        return 0;
+    }
+    int count = 1;
+    for (const char* ptr = value; *ptr != 0; ++ptr) {
+        if (*ptr == '|') {
+            ++count;
+        }
+    }
+    return count;
+}
+
+bool HighwayViewHandler::check_valid_turns(const char* turns) {
+    const std::vector<std::pair<const std::string, const size_t>> valid_turns = {
+            {"left", 4},
+            {"through", 7},
+            {"right", 5},
+            {"slight_left", 11},
+            {"slight_right", 12},
+            {"sharp_left", 10},
+            {"sharp_right", 11},
+            {"reverse", 7},
+            {"merge_to_left", 13},
+            {"merge_to_right", 14},
+            {"none", 4}
+    };
+    if (!turns) {
+        return true;
+    }
+    const char* start = turns;
+    const char* end = strchr(start, '\0');
+    if (end - start < 4) {
+        return false;
+    }
+    while (start < end) {
+        const char* sep = strchr(start, '|');
+        const char* sep_semicolon = strchr(start, ';');
+        if (!sep && !sep_semicolon) {
+            sep = end;
+        } else if ((sep && sep_semicolon && sep_semicolon < sep) || !sep) {
+            sep = sep_semicolon;
+        }
+        bool found = false;
+        size_t item_length = sep - start;
+        for (auto vp : valid_turns) {
+            if (item_length == vp.second && !strncmp(start, vp.first.c_str(), vp.second)) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            return false;
+        }
+        if (sep == end) {
+            return true;
+        }
+        start = sep + 1;
+    }
+    // The last character in the string is a separator.
+    if (start >= end) {
         return false;
     }
     return true;
+}
+
+void HighwayViewHandler::check_lanes_tags(const osmium::Way& way) {
+    int lanes = check_lanes_value_and_write_error(way, "lanes");
+    if (lanes == -1) {
+        return;
+    }
+    // If any of these checks fail, further checks don't make sense.
+    int lanes_fwd = check_lanes_value_and_write_error(way, "lanes:forward");
+    if (lanes_fwd == -1) {
+        return;
+    }
+    int lanes_bkwd = check_lanes_value_and_write_error(way, "lanes:backward");
+    if (lanes_bkwd == -1) {
+        return;
+    }
+    // lanes:forward=* and lanes:backward=* without lanes=*
+    if (lanes_fwd > 0 && lanes_bkwd > 0 && lanes == 0) {
+        std::string tags_str = selective_tags_str<2>(way.tags(), '|', {"lanes:forward", "lanes:backward"});
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", "NOT SET", tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "lanes:forward=* and lanes:backward=* without lanes=*"
+        );
+        return;
+    }
+    // check if the values make sense at all
+    if (lanes_fwd > 0 && lanes_bkwd > 0 && lanes != lanes_fwd + lanes_bkwd) {
+        std::string tags_str = selective_tags_str<2>(way.tags(), '|', {"lanes:forward", "lanes:backward"});
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "forward+backward != both"
+        );
+        return;
+    }
+    // direction values on oneways
+    bool pure_oneway = all_oneway(way.tags());
+    if ((lanes_fwd > 0 || lanes_bkwd > 0) && pure_oneway) {
+        std::string tags_str = selective_tags_str<3>(way.tags(), '|', {"lanes:forward", "lanes:backward", "oneway"});
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "direction dependent value given although road is oneway"
+        );
+        return;
+    }
+    // check if turn:lanes is present on bidirectional ways
+    std::string all_tags_str = tags_string(way.tags(), "highway");
+    if (way.tags().has_key("turn:lanes") && !pure_oneway) {
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "turn:lanes on bidirectional way"
+        );
+        return;
+    }
+    if ((way.tags().has_key("turn:lanes:forward") || way.tags().has_key("turn:lanes:forward")) && pure_oneway) {
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "unneccessary direction-dependent turn:lanes on oneway"
+        );
+        return;
+    }
+    // number of lanes vs. turn:lanes
+    const char* turn_lanes_value = way.get_value_by_key("turn:lanes");
+    int turn_lanes_count = pipe_separated_items_count(turn_lanes_value);
+    if (turn_lanes_count > 0 && lanes == 0) {
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "turn:lanes without lanes=*"
+        );
+        return;
+    }
+    if (turn_lanes_count > 0 && turn_lanes_count < lanes) {
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "turn:lanes contains too few lanes"
+        );
+        return;
+    }
+    if (!check_valid_turns(turn_lanes_value)) {
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "turn:lanes contains invalid directions"
+        );
+        return;
+    }
+    // forward
+    const char* turn_lanes_value_fwd = way.get_value_by_key("turn:lanes:forward");
+    int turn_lanes_count_fwd = pipe_separated_items_count(turn_lanes_value_fwd);
+    if (turn_lanes_count_fwd > 0 && lanes_fwd == 0) {
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "turn:lanes:forward without lanes:forward=*"
+        );
+        return;
+    }
+    if (turn_lanes_count_fwd > 0 && turn_lanes_count_fwd < lanes_fwd) {
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "turn:lanes:forward contains too few lanes"
+        );
+        return;
+    }
+    if (!check_valid_turns(turn_lanes_value_fwd)) {
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "turn:lanes:forward contains invalid directions"
+        );
+        return;
+    }
+    // backward
+    const char* turn_lanes_value_bkwd = way.get_value_by_key("turn:lanes:backward");
+    int turn_lanes_count_bkwd = pipe_separated_items_count(turn_lanes_value_bkwd);
+    if (turn_lanes_count_bkwd > 0 && lanes_bkwd == 0) {
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "turn:lanes:backward without lanes:backward=*"
+        );
+        return;
+    }
+    if (turn_lanes_count_bkwd > 0 && turn_lanes_count_bkwd < lanes_bkwd) {
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "turn:lanes:backward contains too few lanes"
+        );
+        return;
+    }
+    if (!check_valid_turns(turn_lanes_value_bkwd)) {
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "turn:lanes:backward contains invalid directions"
+        );
+        return;
+    }
 }
 
 bool HighwayViewHandler::name_not_fixme(const osmium::TagList& tags) {
@@ -446,6 +678,7 @@ void HighwayViewHandler::way(const osmium::Way& way) {
     if (way.get_value_by_key("highway")) {
         check_them_all(way);
         highway_unknown_way(way);
+        check_lanes_tags(way);
     }
 }
 

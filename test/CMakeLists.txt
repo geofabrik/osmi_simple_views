@@ -21,3 +21,9 @@ target_link_libraries(test_tagging_view testlib ${OSMIUM_LIBRARIES} ${Boost_LIBR
 add_test(NAME test_tagging_view
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND test_tagging_view)
+
+add_executable(test_highway_view t/test_highway_view.cpp ../src/highway_view_handler.cpp ../src/abstract_view_handler.cpp ../src/ogr_output_base.cpp)
+target_link_libraries(test_highway_view testlib ${OSMIUM_LIBRARIES} ${Boost_LIBRARIES})
+add_test(NAME test_highway_view
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND test_highway_view)

@@ -20,6 +20,7 @@
 #ifndef SRC_ABSTRACT_VIEW_HANDLER_HPP_
 #define SRC_ABSTRACT_VIEW_HANDLER_HPP_
 
+#include <array>
 #include <gdalcpp.hpp>
 #include <osmium/handler.hpp>
 #include <osmium/osm/way.hpp>
@@ -143,6 +144,27 @@ public:
     gdalcpp::Dataset* get_dataset_pointer(const char* layer_name);
 
     std::unique_ptr<gdalcpp::Layer> create_layer(const char* layer_name, OGRwkbGeometryType type, const std::vector<std::string>& options = {});
+
+    template <size_t TKeyCount>
+    std::string selective_tags_str(const osmium::TagList& tags, const char separator, std::array<const char*, TKeyCount> keys) {
+        std::string tag_str;
+        for (auto k : keys) {
+            const char* value = tags.get_value_by_key(k);
+            if (!value) {
+                continue;
+            }
+            size_t add_length = strlen(value) + strlen(value) + 2;
+            if (add_length < 50 && tag_str.length() + add_length < MAX_FIELD_LENGTH) {
+                tag_str += k;
+                tag_str += '=';
+                tag_str += value;
+                tag_str += separator;
+            }
+        }
+        // remove last | from tag_str
+        tag_str.pop_back();
+        return tag_str;
+    }
 
     /**
      * Build a string containing tags (length of key and value below 48 characters)

@@ -91,7 +91,8 @@ class HighwayViewHandler : public AbstractViewHandler {
     void set_fields(gdalcpp::Layer* layer, const TOsm& object, const char* third_field_name,
             const char* third_field_value, std::string& other_tags,
             std::function<std::unique_ptr<OGRGeometry>(const TOsm&, ogr_factory_type&)> geom_func,
-            const osmium::object_id_type id, const char* id_field_name) {
+            const osmium::object_id_type id, const char* id_field_name, const char* key4 = nullptr,
+            const char* field4 = nullptr) {
         try {
             gdalcpp::Feature feature(*layer, geom_func(object, m_factory));
             static char idbuffer[20];
@@ -100,6 +101,9 @@ class HighwayViewHandler : public AbstractViewHandler {
             feature.set_field("tags", other_tags.c_str());
             if (third_field_name && third_field_value) {
                 feature.set_field(third_field_name, third_field_value);
+            }
+            if (key4 && field4) {
+                feature.set_field(key4, field4);
             }
             feature.add_to_layer();
         } catch (osmium::geometry_error& err) {
@@ -119,7 +123,7 @@ class HighwayViewHandler : public AbstractViewHandler {
      */
     static bool name_not_fixme(const osmium::TagList& tags);
 
-    static bool lanes_ok(const osmium::TagList& tags);
+    void check_lanes_tags(const osmium::Way& way);
 
     static bool oneway_ok(const osmium::TagList& tags);
 
@@ -160,6 +164,12 @@ class HighwayViewHandler : public AbstractViewHandler {
      */
     void register_check(std::function<bool (const osmium::TagList&)> function, std::string key, gdalcpp::Layer* layer);
 
+    int check_lanes_value_and_write_error(const osmium::Way& way, const char* key);
+
+    bool all_oneway(const osmium::TagList& tags);
+
+    int pipe_separated_items_count(const char* value);
+
 public:
     HighwayViewHandler(Options& options);
 
@@ -175,6 +185,8 @@ public:
     void area(const osmium::Area&) {};
 
     std::string name();
+
+    static bool check_valid_turns(const char* turns);
 };
 
 
