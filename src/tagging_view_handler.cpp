@@ -403,7 +403,7 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
             return true;
         } else if (!strcmp(t.key(), "amenity")) {
             return true;
-        } else if (!strcmp(t.key(), "shop")) {
+        } else if (!strcmp(t.key(), "shop") && strcmp(t.value(), "yes")) {
             return true;
         } else if (!strcmp(t.key(), "natural")) {
             return true;
