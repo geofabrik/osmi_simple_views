@@ -625,7 +625,8 @@ void HighwayViewHandler::highway_unknown_node(const osmium::Node& node) {
             || !strcmp(highway, "emergency_access_point") || !strcmp(highway, "elevator")
             || !strcmp(highway, "passing_place") || !strcmp(highway, "traffic_mirror")
             || !strcmp(highway, "emergency_bay") || !strcmp(highway, "ford")
-            || !strcmp(highway, "speed_display") || !strcmp(highway, "proposed")) {
+            || !strcmp(highway, "speed_display") || !strcmp(highway, "proposed")
+	    || !strcmp(highway, "platform")) {
         return;
     }
     std::string tags_str = tags_string(node.tags(), "highway");
@@ -649,7 +650,8 @@ void HighwayViewHandler::highway_unknown_way(const osmium::Way& way) {
             || !strcmp(highway, "steps") || !strcmp(highway, "raceway") || !strcmp(highway, "bus_guideway")
             || !strcmp(highway, "construction") || !strcmp(highway, "disused") || !strcmp(highway, "abandoned")
             || !strcmp(highway, "proposed") || !strcmp(highway, "platform") || !strcmp(highway, "road")
-            || !strcmp(highway, "elevator") || !strcmp(highway, "corridor") || !strcmp(highway, "no")) {
+            || !strcmp(highway, "elevator") || !strcmp(highway, "corridor") || !strcmp(highway, "no")
+	    || !strcmp(highway, "emergency_bay") || !strcmp(highway, "razed")) {
         return;
     }
     if (way.is_closed() && (!strcmp(highway, "services") || !strcmp(highway, "rest_area") || !strcmp(highway, "traffic_island"))) {
