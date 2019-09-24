@@ -62,9 +62,11 @@ v2.x not the old Osmium v1.x!
 ```sh
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
+
+If you want to compile this programme for development purposes, please run `cmake` with the `-DCMAKE_BUILD_TYPE=Debug` flag.
 
 ## Usage
 
