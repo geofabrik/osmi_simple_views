@@ -53,14 +53,22 @@ TEST_CASE("test valid turn:lane values") {
         REQUIRE(check_turn("none|none|slight_right") == true);
     }
 
+    SECTION("valid multiple values with skipped none values") {
+        REQUIRE(check_turn("left|") == true);
+        REQUIRE(check_turn("||right") == true);
+        REQUIRE(check_turn("left||right") == true);
+        REQUIRE(check_turn("") == false);
+        REQUIRE(check_turn("||") == false);
+    }
+
     SECTION("invalid multiple values") {
         REQUIRE(check_turn("left|throuXgh") == false);
         REQUIRE(check_turn("throuXgh|through|right") == false);
         REQUIRE(check_turn("through|throXugh|slight_right|right") == false);
-        REQUIRE(check_turn("none||slight_right") == false);
-        REQUIRE(check_turn("|through|slight_right|right") == false);
-        REQUIRE(check_turn("through|through|slight_right|") == false);
-        REQUIRE(check_turn("through|through||") == false);
+        REQUIRE(check_turn("none||slight_right") == true);
+        REQUIRE(check_turn("|through|slight_right|right") == true);
+        REQUIRE(check_turn("through|through|slight_right|") == true);
+        REQUIRE(check_turn("through|through||") == true);
     }
 
     SECTION("values with semicolons") {
@@ -85,7 +93,7 @@ TEST_CASE("test valid turn:lane values") {
         REQUIRE(check_turn("left|through;back|right|right") == false);
         REQUIRE(check_turn("left|through;;slight_Dright;right|right") == false);
         REQUIRE(check_turn("left|through;slight_right|riDght") == false);
-        REQUIRE(check_turn("none||slight_right;right") == false);
+        REQUIRE(check_turn("none||slight_right;right") == true);
         REQUIRE(check_turn("none|slight_right;right;;") == false);
         REQUIRE(check_turn("none|;|") == false);
     }

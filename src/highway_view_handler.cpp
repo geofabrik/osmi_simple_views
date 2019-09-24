@@ -199,11 +199,13 @@ int HighwayViewHandler::check_lanes_value_and_write_error(const osmium::Way& way
     char* rest;
     long int lanes_read = std::strtol(lanes_value, &rest, 10);
     if (*rest || lanes_read <= 0 || lanes_read > 16) {
-        std::string tags_str = tags_string(way.tags(), key);
+        std::string tags_str = tags_string(way.tags(), "lanes");
+        std::string error_msg = "invalid number ";
+        error_msg += key;
         set_fields<osmium::Way>(
-                m_highway_lanes.get(), way, "lanes", lanes_value, tags_str,
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), tags_str,
                 [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
-                way.id(), "way_id", "error", "invalid number"
+                way.id(), "way_id", "error", error_msg.c_str()
         );
         return -1;
     }
@@ -275,6 +277,12 @@ bool HighwayViewHandler::check_valid_turns(const char* turns) {
                 break;
             }
         }
+        if (item_length == 0
+                && ((start > turns && *(start - 1) == '|') || start == turns)
+                && (*sep == '\0' || *sep == '|')) {
+            // shortcut for direction value "none"
+            found = true;
+        }
         if (!found) {
             return false;
         }
@@ -282,10 +290,6 @@ bool HighwayViewHandler::check_valid_turns(const char* turns) {
             return true;
         }
         start = sep + 1;
-    }
-    // The last character in the string is a separator.
-    if (start >= end) {
-        return false;
     }
     return true;
 }
