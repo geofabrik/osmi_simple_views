@@ -214,7 +214,8 @@ int HighwayViewHandler::check_lanes_value_and_write_error(const osmium::Way& way
 
 bool HighwayViewHandler::all_oneway(const osmium::TagList& tags) {
     const char* oneway = tags.get_value_by_key("oneway");
-    if (!oneway || strcmp(oneway, "yes")) {
+    const char* junction = tags.get_value_by_key("junction");
+    if ((!oneway || strcmp(oneway, "yes")) && (!junction || strcmp(junction, "roundabout"))) {
         return false;
     }
     // check for keys starting with "oneway:"
