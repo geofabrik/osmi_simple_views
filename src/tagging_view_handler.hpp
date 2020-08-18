@@ -38,6 +38,8 @@ class TaggingViewHandler : public AbstractViewHandler {
     std::unique_ptr<gdalcpp::Layer> m_tagging_nonop_confusion_ways;
     std::unique_ptr<gdalcpp::Layer> m_tagging_no_feature_tag_nodes;
     std::unique_ptr<gdalcpp::Layer> m_tagging_no_feature_tag_ways;
+    std::unique_ptr<gdalcpp::Layer> m_tagging_long_text_nodes;
+    std::unique_ptr<gdalcpp::Layer> m_tagging_long_text_ways;
 
     /**
      * Write a feature to on of the layers which only have the fields
@@ -51,9 +53,12 @@ class TaggingViewHandler : public AbstractViewHandler {
      * \param value value of tag field If field_name is a nullptr, nothing will
      * be written. Use `field_name=nullptr` for layers which do not have any
      * additional fields.
+     * \param other_field_name Another field to be set.
+     * \param other_value Value to be written to "other_field_name".
      */
     void write_feature_to_simple_layer(gdalcpp::Layer* layer,
-            const osmium::OSMObject& object, const char* field_name, const char* value);
+            const osmium::OSMObject& object, const char* field_name, const char* value,
+            const char* other_field_name = nullptr, const char* other_value = nullptr);
 
     /**
      * Write an object with a found spelling error to the output file.
@@ -135,6 +140,11 @@ class TaggingViewHandler : public AbstractViewHandler {
     void no_main_tags(const osmium::OSMObject& object);
 
     /**
+     * Check if an object has a note or description tag longer than NON_SUSPICIOUS_MAX_LENGTH characters.
+     */
+    void long_text(const osmium::OSMObject& object);
+
+    /**
      * Check if a tag has a "feature" key, i.e. it has a key which describes what it is.
      */
     static bool has_feature_key(const osmium::TagList& tags);
@@ -176,6 +186,11 @@ public:
      */
     static void set_basic_fields(gdalcpp::Feature& feature, const osmium::OSMObject& object,
             const char* field_name, const char* value);
+
+    /**
+     * Check whether the provided key has a value longer than NON_SUSPICIOUS_MAX_LENGTH characters.
+     */
+    static bool is_strlen_suspicious(const char* key, const osmium::TagList& tags, const size_t limit);
 
     void relation(const osmium::Relation&) {};
     void area(const osmium::Area&) {};

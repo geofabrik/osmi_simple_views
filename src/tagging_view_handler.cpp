@@ -32,7 +32,9 @@ TaggingViewHandler::TaggingViewHandler(Options& options) :
         m_tagging_nonop_confusion_nodes(create_layer("tagging_nonop_confusion_nodes", wkbPoint)),
         m_tagging_nonop_confusion_ways(create_layer("tagging_nonop_confusion_ways", wkbLineString)),
         m_tagging_no_feature_tag_nodes(create_layer("tagging_no_feature_tag_nodes", wkbPoint)),
-        m_tagging_no_feature_tag_ways(create_layer("tagging_no_feature_tag_ways", wkbLineString)) {
+        m_tagging_no_feature_tag_ways(create_layer("tagging_no_feature_tag_ways", wkbLineString)),
+        m_tagging_long_text_nodes(create_layer("tagging_long_text_nodes", wkbPoint)),
+        m_tagging_long_text_ways(create_layer("tagging_long_text_ways", wkbLineString)) {
     m_tagging_fixmes_on_nodes->add_field("node_id", OFTString, 10);
     m_tagging_fixmes_on_nodes->add_field("tag", OFTString, MAX_STRING_LENGTH);
     m_tagging_fixmes_on_nodes->add_field("lastchange", OFTString, 21);
@@ -73,6 +75,14 @@ TaggingViewHandler::TaggingViewHandler(Options& options) :
     m_tagging_no_feature_tag_ways->add_field("way_id", OFTString, 10);
     m_tagging_no_feature_tag_ways->add_field("tags", OFTString, MAX_STRING_LENGTH);
     m_tagging_no_feature_tag_ways->add_field("lastchange", OFTString, 21);
+    m_tagging_long_text_nodes->add_field("node_id", OFTString, 10);
+    m_tagging_long_text_nodes->add_field("tags", OFTString, MAX_STRING_LENGTH);
+    m_tagging_long_text_nodes->add_field("lastchange", OFTString, 21);
+    m_tagging_long_text_nodes->add_field("text", OFTString, MAX_STRING_LENGTH);
+    m_tagging_long_text_ways->add_field("way_id", OFTString, 10);
+    m_tagging_long_text_ways->add_field("tags", OFTString, MAX_STRING_LENGTH);
+    m_tagging_long_text_ways->add_field("lastchange", OFTString, 21);
+    m_tagging_long_text_ways->add_field("text", OFTString, MAX_STRING_LENGTH);
 }
 
 void TaggingViewHandler::close() {
@@ -88,11 +98,14 @@ void TaggingViewHandler::close() {
     m_tagging_nonop_confusion_ways.reset();
     m_tagging_no_feature_tag_nodes.reset();
     m_tagging_no_feature_tag_ways.reset();
+    m_tagging_long_text_nodes.reset();
+    m_tagging_long_text_ways.reset();
     close_datasets();
 }
 
 void TaggingViewHandler::write_feature_to_simple_layer(gdalcpp::Layer* layer,
-        const osmium::OSMObject& object, const char* field_name, const char* value) {
+        const osmium::OSMObject& object, const char* field_name, const char* value,
+        const char* other_field_name, const char* other_value) {
     try {
         std::unique_ptr<OGRGeometry> geometry;
         if (object.type() == osmium::item_type::node) {
@@ -111,6 +124,9 @@ void TaggingViewHandler::write_feature_to_simple_layer(gdalcpp::Layer* layer,
         }
         gdalcpp::Feature feature(*layer, std::move(geometry));
         set_basic_fields(feature, object, field_name, value);
+        if (other_field_name && other_value) {
+            feature.set_field(other_field_name, other_value);
+        }
         feature.add_to_layer();
     } catch (osmium::geometry_error& err) {
         m_options.verbose_output << err.what() << "\n";
@@ -543,6 +559,43 @@ void TaggingViewHandler::no_main_tags(const osmium::OSMObject& object) {
     }
 }
 
+bool TaggingViewHandler::is_strlen_suspicious(const char* key, const osmium::TagList& tags, const size_t limit) {
+    const char* value = tags.get_value_by_key(key);
+    if (!value) {
+        return false;
+    }
+    size_t length = strlen(value);
+    if (length <= limit) {
+        return false;
+    }
+    // count follow bytes (0b10xxxxxx)
+    int follow_bytes = 0;
+    const char* ptr = value;
+    for (; *ptr != 0; ++ptr) {
+        follow_bytes += static_cast<int>(((*ptr & 0x80) == 0x80));
+    }
+    return (length - follow_bytes > limit);
+}
+
+void TaggingViewHandler::long_text(const osmium::OSMObject& object) {
+    gdalcpp::Layer* current_layer;
+    if (object.type() == osmium::item_type::way) {
+        current_layer = m_tagging_long_text_ways.get();
+    } else if (object.type() == osmium::item_type::node) {
+        current_layer = m_tagging_long_text_nodes.get();
+    } else {
+        return;
+    }
+
+    if (is_strlen_suspicious("note", object.tags(), 150)) {
+        write_feature_to_simple_layer(current_layer, object, "tags", tags_string(object.tags(), "note").c_str(), "text", object.get_value_by_key("note"));
+    } else if (is_strlen_suspicious("description", object.tags(), 150)) {
+        write_feature_to_simple_layer(current_layer, object, "tags", tags_string(object.tags(), "description").c_str(), "text", object.get_value_by_key("description"));
+    } else if (is_strlen_suspicious("name", object.tags(), 80)) {
+        write_feature_to_simple_layer(current_layer, object, "tags", tags_string(object.tags(), "name").c_str(), "text", object.get_value_by_key("description"));
+    }
+}
+
 void TaggingViewHandler::handle_object(const osmium::OSMObject& object) {
     empty_value(object);
     check_fixme(object);
@@ -551,6 +604,7 @@ void TaggingViewHandler::handle_object(const osmium::OSMObject& object) {
     check_key_length(object);
     hidden_nonop(object);
     no_main_tags(object);
+    long_text(object);
 }
 
 void TaggingViewHandler::give_correct_name() {
