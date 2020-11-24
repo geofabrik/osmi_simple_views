@@ -1,5 +1,3 @@
-enable_testing()
-
 message(STATUS "Configuring unit tests")
 
 include(CMakeParseArguments)
