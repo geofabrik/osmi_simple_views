@@ -106,6 +106,8 @@ if(Osmium_USE_OGR)
     set(Osmium_USE_GDAL TRUE)
 endif()
 
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+
 #----------------------------------------------------------------------
 # Component 'pbf'
 if(Osmium_USE_PBF)
@@ -117,7 +119,7 @@ if(Osmium_USE_PBF)
     if(ZLIB_FOUND AND Threads_FOUND AND PROTOZERO_FOUND)
         list(APPEND OSMIUM_PBF_LIBRARIES
             ${ZLIB_LIBRARIES}
-            ${CMAKE_THREAD_LIBS_INIT}
+            Threads::Threads
         )
         list(APPEND OSMIUM_INCLUDE_DIRS
             ${ZLIB_INCLUDE_DIR}
@@ -142,7 +144,7 @@ if(Osmium_USE_XML)
             ${EXPAT_LIBRARIES}
             ${BZIP2_LIBRARIES}
             ${ZLIB_LIBRARIES}
-            ${CMAKE_THREAD_LIBS_INIT}
+            Threads::Threads
         )
         list(APPEND OSMIUM_INCLUDE_DIRS
             ${EXPAT_INCLUDE_DIR}
