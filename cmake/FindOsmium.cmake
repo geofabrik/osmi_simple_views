@@ -118,11 +118,10 @@ if(Osmium_USE_PBF)
     list(APPEND OSMIUM_EXTRA_FIND_VARS ZLIB_FOUND Threads_FOUND PROTOZERO_INCLUDE_DIR)
     if(ZLIB_FOUND AND Threads_FOUND AND PROTOZERO_FOUND)
         list(APPEND OSMIUM_PBF_LIBRARIES
-            ${ZLIB_LIBRARIES}
+            ZLIB::ZLIB
             Threads::Threads
         )
         list(APPEND OSMIUM_INCLUDE_DIRS
-            ${ZLIB_INCLUDE_DIR}
             ${PROTOZERO_INCLUDE_DIR}
         )
     else()
@@ -143,13 +142,12 @@ if(Osmium_USE_XML)
         list(APPEND OSMIUM_XML_LIBRARIES
             ${EXPAT_LIBRARIES}
             ${BZIP2_LIBRARIES}
-            ${ZLIB_LIBRARIES}
             Threads::Threads
+            ZLIB::ZLIB
         )
         list(APPEND OSMIUM_INCLUDE_DIRS
             ${EXPAT_INCLUDE_DIR}
             ${BZIP2_INCLUDE_DIR}
-            ${ZLIB_INCLUDE_DIR}
         )
     else()
         message(WARNING "Osmium: Can not find some libraries for XML input/output, please install them or configure the paths.")
