@@ -43,13 +43,11 @@ find_path(PROTOZERO_INCLUDE_DIR protozero/version.hpp
 )
 
 # Check version number
-if(Protozero_FIND_VERSION)
-    file(STRINGS "${PROTOZERO_INCLUDE_DIR}/protozero/version.hpp" _version_define REGEX "#define PROTOZERO_VERSION_STRING")
-    if(_version_define MATCHES "#define PROTOZERO_VERSION_STRING \"([0-9.]+)\"")
-        set(_version "${CMAKE_MATCH_1}")
-    else()
-        set(_version "unknown")
-    endif()
+file(STRINGS "${PROTOZERO_INCLUDE_DIR}/protozero/version.hpp" _version_define REGEX "#define PROTOZERO_VERSION_STRING")
+if(_version_define MATCHES "#define PROTOZERO_VERSION_STRING \"([0-9.]+)\"")
+    set(_version "${CMAKE_MATCH_1}")
+else()
+    set(_version "unknown")
 endif()
 
 #set(PROTOZERO_INCLUDE_DIRS "${PROTOZERO_INCLUDE_DIR}")
