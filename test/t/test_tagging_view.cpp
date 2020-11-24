@@ -48,13 +48,13 @@ TEST_CASE("is_a_x_key_key") {
         REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base) == true);
     }
 
-    SECTION("highway") {
-        const char* key = "short_name:ru";
+    SECTION("name") {
+        const char* key = "name";
         REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base) == true);
     }
 
     SECTION("highway") {
-        const char* key = "short_named:ru";
+        const char* key = "highway";
         REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base) == false);
     }
 }
