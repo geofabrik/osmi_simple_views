@@ -17,15 +17,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(osmi_adminbounds)
 
-set(OSMI_SIMPLE_VIEWS_VERSION_MAJOR 0)
-set(OSMI_SIMPLE_VIEWS_VERSION_MINOR 0)
-set(OSMI_SIMPLE_VIEWS_VERSION_PATCH 1)
-
-set(OSMI_SIMPLE_VIEWS_VERSION
-    ${OSMI_SIMPLE_VIEWS_VERSION_MAJOR}.${OSMI_SIMPLE_VIEWS_VERSION_MINOR}.${OSMI_SIMPLE_VIEWS_VERSION_PATCH})
-
-set(AUTHOR "Michael Reichert <michael.reichert@geofabrik.de>")
-
 
 #-----------------------------------------------------------------------------
 #
