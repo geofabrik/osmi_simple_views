@@ -483,6 +483,7 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
             const auto keys = { "historic", "razed", "demolished",
                                 "abandoned", "disused", "construction",
                                 "proposed", "temporary", "TMC",
+                                "removed",
                               };
             for (auto &&k : keys) {
                 if (is_a_x_key_key(t.key(), k)) {
