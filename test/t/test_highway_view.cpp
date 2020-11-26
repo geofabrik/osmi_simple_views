@@ -27,74 +27,74 @@ bool check_turn(const char* value) {
 TEST_CASE("test valid turn:lane values") {
 
     SECTION("single values") {
-        REQUIRE(check_turn("left") == true);
-        REQUIRE(check_turn("right") == true);
-        REQUIRE(check_turn("through") == true);
-        REQUIRE(check_turn("slight_left") == true);
-        REQUIRE(check_turn("slight_right") == true);
+        REQUIRE(check_turn("left"));
+        REQUIRE(check_turn("right"));
+        REQUIRE(check_turn("through"));
+        REQUIRE(check_turn("slight_left"));
+        REQUIRE(check_turn("slight_right"));
     }
 
     SECTION("single invalid values") {
-        REQUIRE(check_turn(" left") == false);
-        REQUIRE(check_turn("right ") == false);
-        REQUIRE(check_turn("thr ough") == false);
-        REQUIRE(check_turn(" slight_left") == false);
-        REQUIRE(check_turn("slidght_right") == false);
-        REQUIRE(check_turn("") == false);
-        REQUIRE(check_turn("d") == false);
-        REQUIRE(check_turn(" ") == false);
-        REQUIRE(check_turn("     ") == false);
+        REQUIRE_FALSE(check_turn(" left"));
+        REQUIRE_FALSE(check_turn("right "));
+        REQUIRE_FALSE(check_turn("thr ough"));
+        REQUIRE_FALSE(check_turn(" slight_left"));
+        REQUIRE_FALSE(check_turn("slidght_right"));
+        REQUIRE_FALSE(check_turn(""));
+        REQUIRE_FALSE(check_turn("d"));
+        REQUIRE_FALSE(check_turn(" "));
+        REQUIRE_FALSE(check_turn("     "));
     }
 
     SECTION("valid multiple values") {
-        REQUIRE(check_turn("left|through") == true);
-        REQUIRE(check_turn("through|through|right") == true);
-        REQUIRE(check_turn("through|through|slight_right|right") == true);
-        REQUIRE(check_turn("none|none|slight_right") == true);
+        REQUIRE(check_turn("left|through"));
+        REQUIRE(check_turn("through|through|right"));
+        REQUIRE(check_turn("through|through|slight_right|right"));
+        REQUIRE(check_turn("none|none|slight_right"));
     }
 
     SECTION("valid multiple values with skipped none values") {
-        REQUIRE(check_turn("left|") == true);
-        REQUIRE(check_turn("||right") == true);
-        REQUIRE(check_turn("left||right") == true);
-        REQUIRE(check_turn("") == false);
-        REQUIRE(check_turn("||") == false);
+        REQUIRE(check_turn("left|"));
+        REQUIRE(check_turn("||right"));
+        REQUIRE(check_turn("left||right"));
+        REQUIRE_FALSE(check_turn(""));
+        REQUIRE_FALSE(check_turn("||"));
     }
 
     SECTION("invalid multiple values") {
-        REQUIRE(check_turn("left|throuXgh") == false);
-        REQUIRE(check_turn("throuXgh|through|right") == false);
-        REQUIRE(check_turn("through|throXugh|slight_right|right") == false);
-        REQUIRE(check_turn("none||slight_right") == true);
-        REQUIRE(check_turn("|through|slight_right|right") == true);
-        REQUIRE(check_turn("through|through|slight_right|") == true);
-        REQUIRE(check_turn("through|through||") == true);
+        REQUIRE_FALSE(check_turn("left|throuXgh"));
+        REQUIRE_FALSE(check_turn("throuXgh|through|right"));
+        REQUIRE_FALSE(check_turn("through|throXugh|slight_right|right"));
+        REQUIRE(check_turn("none||slight_right"));
+        REQUIRE(check_turn("|through|slight_right|right"));
+        REQUIRE(check_turn("through|through|slight_right|"));
+        REQUIRE(check_turn("through|through||"));
     }
 
     SECTION("values with semicolons") {
-        REQUIRE(check_turn("left;through;right") == true);
-        REQUIRE(check_turn("left;through") == true);
-        REQUIRE(check_turn("left;through|right") == true);
-        REQUIRE(check_turn("left|through;slight_right") == true);
-        REQUIRE(check_turn("left|through|through;slight_right") == true);
-        REQUIRE(check_turn("left|through;slight_right|right|right") == true);
-        REQUIRE(check_turn("left|through;slight_right;right|right") == true);
-        REQUIRE(check_turn("left|through;slight_right|right") == true);
-        REQUIRE(check_turn("none|none|slight_right;right") == true);
+        REQUIRE(check_turn("left;through;right"));
+        REQUIRE(check_turn("left;through"));
+        REQUIRE(check_turn("left;through|right"));
+        REQUIRE(check_turn("left|through;slight_right"));
+        REQUIRE(check_turn("left|through|through;slight_right"));
+        REQUIRE(check_turn("left|through;slight_right|right|right"));
+        REQUIRE(check_turn("left|through;slight_right;right|right"));
+        REQUIRE(check_turn("left|through;slight_right|right"));
+        REQUIRE(check_turn("none|none|slight_right;right"));
     }
 
     SECTION("invalid values with semicolons") {
-        REQUIRE(check_turn("left;through;rEght") == false);
-        REQUIRE(check_turn("left;throuXh") == false);
-        REQUIRE(check_turn("leDt;through|right") == false);
-        REQUIRE(check_turn("|leDt;through|right") == false);
-        REQUIRE(check_turn(";left;through|right") == false);
-        REQUIRE(check_turn("left|tDhrough|through;slight_right") == false);
-        REQUIRE(check_turn("left|through;back|right|right") == false);
-        REQUIRE(check_turn("left|through;;slight_Dright;right|right") == false);
-        REQUIRE(check_turn("left|through;slight_right|riDght") == false);
-        REQUIRE(check_turn("none||slight_right;right") == true);
-        REQUIRE(check_turn("none|slight_right;right;;") == false);
-        REQUIRE(check_turn("none|;|") == false);
+        REQUIRE_FALSE(check_turn("left;through;rEght"));
+        REQUIRE_FALSE(check_turn("left;throuXh"));
+        REQUIRE_FALSE(check_turn("leDt;through|right"));
+        REQUIRE_FALSE(check_turn("|leDt;through|right"));
+        REQUIRE_FALSE(check_turn(";left;through|right"));
+        REQUIRE_FALSE(check_turn("left|tDhrough|through;slight_right"));
+        REQUIRE_FALSE(check_turn("left|through;back|right|right"));
+        REQUIRE_FALSE(check_turn("left|through;;slight_Dright;right|right"));
+        REQUIRE_FALSE(check_turn("left|through;slight_right|riDght"));
+        REQUIRE(check_turn("none||slight_right;right"));
+        REQUIRE_FALSE(check_turn("none|slight_right;right;;"));
+        REQUIRE_FALSE(check_turn("none|;|"));
     }
 }

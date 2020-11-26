@@ -25,36 +25,36 @@ TEST_CASE("is_a_x_key_key") {
 
     SECTION("short_name") {
         const char* key = "short_name";
-        REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base) == true);
+        REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base));
     }
 
     SECTION("official_name") {
         const char* key = "official_name";
-        REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base) == true);
+        REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base));
     }
 
     SECTION("short_name:ru") {
         const char* key = "short_name:ru";
-        REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base) == true);
+        REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base));
     }
 
     SECTION("named_entity") {
         const char* key = "named_entity";
-        REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base) == false);
+        REQUIRE_FALSE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base));
     }
 
     SECTION("railway:name") {
         const char* key = "railway:name";
-        REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base) == true);
+        REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base));
     }
 
     SECTION("name") {
         const char* key = "name";
-        REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base) == true);
+        REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base));
     }
 
     SECTION("highway") {
         const char* key = "highway";
-        REQUIRE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base) == false);
+        REQUIRE_FALSE(TaggingViewHandler::is_a_x_key_key(key, whitelist_base));
     }
 }
