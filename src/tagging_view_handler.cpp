@@ -479,25 +479,22 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
             return true;
         } else if (!strcmp(t.key(), "university")) {
             return true;
-        } else if (is_a_x_key_key(t.key(), "historic")) {
-            return true;
-        } else if (is_a_x_key_key(t.key(), "razed")) {
-            return true;
-        } else if (is_a_x_key_key(t.key(), "demolished")) {
-            return true;
-        } else if (is_a_x_key_key(t.key(), "abandoned")) {
-            return true;
-        } else if (is_a_x_key_key(t.key(), "disused")) {
-            return true;
-        } else if (is_a_x_key_key(t.key(), "construction")) {
-            return true;
-        } else if (is_a_x_key_key(t.key(), "proposed")) {
-            return true;
-        } else if (is_a_x_key_key(t.key(), "temporary")) {
-            return true;
-        } else if (is_a_x_key_key(t.key(), "TMC")) {
-            return true;
-        } else if (!strcmp(t.key(), "pipeline")) {
+        } else {
+            const auto keys = { "historic", "razed", "demolished",
+                                "abandoned", "disused", "construction",
+                                "proposed", "temporary", "TMC",
+                              };
+            for (auto &&k : keys) {
+                if (is_a_x_key_key(t.key(), k)) {
+                    // razed=yes is not considered a feature key
+                    if (strcmp(t.value(), "yes") || strcmp(t.key(), k)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        if (!strcmp(t.key(), "pipeline")) {
             return true;
         } else if (!strcmp(t.key(), "club")) {
             return true;
