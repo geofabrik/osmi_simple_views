@@ -15,7 +15,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #
 #-----------------------------------------------------------------------------
 
-project(osmi_adminbounds CXX)
+project(osmi_simple_views CXX)
 
 
 #-----------------------------------------------------------------------------
