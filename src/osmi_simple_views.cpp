@@ -152,10 +152,11 @@ int main(int argc, char* argv[]) {
     const auto& map_factory = osmium::index::MapFactory<osmium::unsigned_object_id_type, osmium::Location>::instance();
     auto location_index = map_factory.create_map(options.location_index_type);
     location_handler_type location_handler(*location_index);
+    location_handler.ignore_errors();
 
     osmium::area::Assembler::config_type assembler_config;
     osmium::area::MultipolygonCollector<osmium::area::Assembler> collector(assembler_config);
-    HandlerCollection handlers;
+    HandlerCollection handlers {options};
     {
         // This section enclosed by curly braces ensures that any_collector is destroyed and does
         // not use its pointer to a dataset of the TaggingViewHandler when the
@@ -185,9 +186,9 @@ int main(int argc, char* argv[]) {
         osmium::io::Reader reader2(input_filename, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way);
         for (auto vt : options.views) {
             if (vt == ViewType::tagging) {
-                any_collector.create_layer(handlers.add_handler(vt, options, "tagging_ways_without_tags"));
+                any_collector.create_layer(handlers.add_handler(vt, "tagging_ways_without_tags"));
             } else {
-                handlers.add_handler(vt, options, nullptr);
+                handlers.add_handler(vt, nullptr);
             }
             if (vt == ViewType::places) {
                 handlers.add_multipolygon_collector(collector);

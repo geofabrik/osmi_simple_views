@@ -13,6 +13,7 @@
 
 #include "highway_view_handler.hpp"
 #include "geometry_view_handler.hpp"
+#include "options.hpp"
 #include "places_handler.hpp"
 #include "tagging_view_handler.hpp"
 
@@ -24,11 +25,13 @@
  * be derived from AbstractViewHandler.
  */
 class HandlerCollection : public osmium::handler::Handler {
+    Options& m_options;
     std::vector<std::unique_ptr<AbstractViewHandler>> m_handlers;
     PlacesHandler* m_places_handler;
     osmium::area::MultipolygonCollector<osmium::area::Assembler>::HandlerPass2* m_mp_collector_handler2 = nullptr;
 
 public:
+    HandlerCollection(Options& options);
 
     void give_correct_name();
 
@@ -41,7 +44,7 @@ public:
      *
      * \returns Pointer to a dataset if layer_name is not nullptr. Ownership of the pointer stays with the handler which is created.
      */
-    gdalcpp::Dataset* add_handler(ViewType view, Options& options, const char* layer_name = nullptr);
+    gdalcpp::Dataset* add_handler(ViewType view, const char* layer_name = nullptr);
 
     /**
      * \brief Add a multipolygon collector.
