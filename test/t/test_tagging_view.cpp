@@ -20,6 +20,26 @@
 
 #include <tagging_view_handler.hpp>
 
+TEST_CASE("test detection of long strings") {
+
+    SECTION("ASCII") {
+        REQUIRE(TaggingViewHandler::char_length_utf8("abcdefghijkl") == 12);
+        REQUIRE(TaggingViewHandler::char_length_utf8("abcdef01ijkl") == 12);
+        REQUIRE(TaggingViewHandler::char_length_utf8("abef01ijkl") == 10);
+    }
+
+    SECTION("Umlauts") {
+        REQUIRE(TaggingViewHandler::char_length_utf8("äbcdefghijkl") == 12);
+        REQUIRE(TaggingViewHandler::char_length_utf8("lmnöpqrstvwx") == 12);
+        REQUIRE(TaggingViewHandler::char_length_utf8("nöpqrstvwx") == 10);
+        REQUIRE(TaggingViewHandler::char_length_utf8("nö") == 2);
+    }
+
+    SECTION("Encodings with more than two bytes") {
+        REQUIRE(TaggingViewHandler::char_length_utf8("カールスルーエ") == 7);
+    }
+}
+
 TEST_CASE("is_a_x_key_key") {
     const char* whitelist_base = "name";
 

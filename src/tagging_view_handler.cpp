@@ -1,5 +1,5 @@
 /*
- *  © 2017 Geofabrik GmbH
+ *  © 2017–2020 Geofabrik GmbH
  *
  *  This file is part of osmi_simple_views.
  *
@@ -559,22 +559,19 @@ void TaggingViewHandler::no_main_tags(const osmium::OSMObject& object) {
     }
 }
 
-bool TaggingViewHandler::is_strlen_suspicious(const char* key, const osmium::TagList& tags, const size_t limit) {
-    const char* value = tags.get_value_by_key(key);
+size_t TaggingViewHandler::char_length_utf8(const char* value) {
     if (!value) {
         return false;
     }
-    size_t length = strlen(value);
-    if (length <= limit) {
-        return false;
-    }
-    // count follow bytes (0b10xxxxxx)
+    // We count char length with respect to UTF-8, so we need to count follow bytes (0b10xxxxxx).
     int follow_bytes = 0;
+    size_t length = 0;
     const char* ptr = value;
     for (; *ptr != 0; ++ptr) {
-        follow_bytes += static_cast<int>(((*ptr & 0x80) == 0x80));
+        ++length;
+        follow_bytes += static_cast<int>((((*ptr & 0xc0) ^ 0x70) == 0xf0));
     }
-    return (length - follow_bytes > limit);
+    return length - follow_bytes;
 }
 
 void TaggingViewHandler::long_text(const osmium::OSMObject& object) {
@@ -587,12 +584,20 @@ void TaggingViewHandler::long_text(const osmium::OSMObject& object) {
         return;
     }
 
-    if (is_strlen_suspicious("note", object.tags(), 150)) {
-        write_feature_to_simple_layer(current_layer, object, "tags", tags_string(object.tags(), "note").c_str(), "text", object.get_value_by_key("note"));
-    } else if (is_strlen_suspicious("description", object.tags(), 150)) {
-        write_feature_to_simple_layer(current_layer, object, "tags", tags_string(object.tags(), "description").c_str(), "text", object.get_value_by_key("description"));
-    } else if (is_strlen_suspicious("name", object.tags(), 80)) {
-        write_feature_to_simple_layer(current_layer, object, "tags", tags_string(object.tags(), "name").c_str(), "text", object.get_value_by_key("description"));
+    for (const osmium::Tag& t : object.tags()) {
+        const auto keys = { "note", "description"};
+        for (auto&& k : keys) {
+            if (is_a_x_key_key(t.key(), k)) {
+                if (char_length_utf8(t.value()) > 150) {
+                    write_feature_to_simple_layer(current_layer, object, "tags", tags_string(object.tags(), t.key()).c_str(), "text", t.value());
+                }
+            }
+        }
+        if (is_a_x_key_key(t.key(), "name")) {
+            if (char_length_utf8(t.value()) > 150) {
+                write_feature_to_simple_layer(current_layer, object, "tags", tags_string(object.tags(), t.key()).c_str(), "text", t.value());
+            }
+        }
     }
 }
 

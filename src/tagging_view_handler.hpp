@@ -188,9 +188,9 @@ public:
             const char* field_name, const char* value);
 
     /**
-     * Check whether the provided key has a value longer than NON_SUSPICIOUS_MAX_LENGTH characters.
+     * Get length of a string with respect to multi-byte UTF-8 characters.
      */
-    static bool is_strlen_suspicious(const char* key, const osmium::TagList& tags, const size_t limit);
+    static size_t char_length_utf8(const char* value);
 
     void relation(const osmium::Relation&) {};
     void area(const osmium::Area&) {};
