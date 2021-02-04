@@ -633,7 +633,7 @@ void HighwayViewHandler::highway_unknown_node(const osmium::Node& node) {
             || !strcmp(highway, "passing_place") || !strcmp(highway, "traffic_mirror")
             || !strcmp(highway, "emergency_bay") || !strcmp(highway, "ford")
             || !strcmp(highway, "speed_display") || !strcmp(highway, "proposed")
-	    || !strcmp(highway, "platform")) {
+	    || !strcmp(highway, "platform") || !strcmp(highway, "toll_gantry")) {
         return;
     }
     std::string tags_str = tags_string(node.tags(), "highway");
