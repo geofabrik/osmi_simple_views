@@ -516,6 +516,8 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
             return true;
         } else if (!strcmp(t.key(), "attraction")) {
             return true;
+        } else if (!strcmp(t.key(), "advertising")) {
+            return true;
         }
     }
     return false;
