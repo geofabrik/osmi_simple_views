@@ -523,12 +523,19 @@ bool HighwayViewHandler::check_length_value(const char* value) {
         }
     }
     // This shouldn't happen and we consider this as an error.
-    // If th integer is not followed by a ', it is no imperical unit.
+    // If the integer is not followed by a ', it is no imperical unit.
     return false;
 }
 
 bool HighwayViewHandler::maxheight_ok(const osmium::TagList& tags) {
     const char* maxheight_value = tags.get_value_by_key("maxheight");
+    // There are a couple of valid non-numeric maxheight values.
+    if (maxheight_value && (
+        !strcmp(maxheight_value, "none")
+        || !strcmp(maxheight_value, "default")
+        || !strcmp(maxheight_value, "below_default"))) {
+        return true;
+    }
     return check_length_value(maxheight_value);
 }
 
