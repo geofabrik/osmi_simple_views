@@ -78,11 +78,11 @@ if(CMAKE_BUILD_TYPE STREQUAL "Dev")
     add_definitions(${OSMIUM_WARNING_OPTIONS})
 endif()
 
-# Force RelWithDebInfo build type if none was given
+# Force MinSizeRel build type if none was given
 if(CMAKE_BUILD_TYPE)
     set(build_type ${CMAKE_BUILD_TYPE})
 else()
-    set(build_type "RelWithDebInfo")
+    set(build_type "MinSizeRel")
 endif()
 
 set(CMAKE_BUILD_TYPE ${build_type}
