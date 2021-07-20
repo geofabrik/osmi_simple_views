@@ -129,8 +129,6 @@ class HighwayViewHandler : public AbstractViewHandler {
 
     static bool maxspeed_ok(const osmium::TagList& tags);
 
-    static bool check_length_value(const char* value);
-
     static bool maxheight_ok(const osmium::TagList& tags);
 
     static bool maxweight_ok(const osmium::TagList& tags);
@@ -186,7 +184,11 @@ public:
 
     std::string name();
 
+    static bool check_length_value(const char* value);
+
     static bool check_valid_turns(const char* turns);
+
+    static bool check_maxweight(const char* maxweight_value);
 };
 
 

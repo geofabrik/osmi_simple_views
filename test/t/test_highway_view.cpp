@@ -24,6 +24,55 @@ bool check_turn(const char* value) {
     return HighwayViewHandler::check_valid_turns(value);
 }
 
+bool check_length(const char* value) {
+    return HighwayViewHandler::check_length_value(value);
+}
+
+bool check_maxweight(const char* value) {
+    return HighwayViewHandler::check_maxweight(value);
+}
+
+TEST_CASE("test maxweight parsing") {
+    REQUIRE(check_maxweight(nullptr));
+    REQUIRE(check_maxweight(""));
+    REQUIRE(check_maxweight("4"));
+    REQUIRE(check_maxweight("48"));
+    REQUIRE(check_maxweight("7.5"));
+    REQUIRE(check_maxweight("4 t"));
+    REQUIRE(check_maxweight("48 t"));
+    REQUIRE(check_maxweight("7.5 t"));
+    REQUIRE_FALSE(check_maxweight("4t"));
+    REQUIRE_FALSE(check_maxweight("48t"));
+    REQUIRE_FALSE(check_maxweight("7.5t"));
+    REQUIRE(check_maxweight("48 st"));
+    REQUIRE(check_maxweight("7.5 lt"));
+    REQUIRE(check_maxweight("480 kg"));
+    REQUIRE_FALSE(check_maxweight("7,5 lt"));
+    REQUIRE_FALSE(check_maxweight("5,5 t"));
+    REQUIRE_FALSE(check_maxweight("5,5t"));
+    REQUIRE_FALSE(check_maxweight("5.5 "));
+    REQUIRE_FALSE(check_maxweight("5.5 9"));
+    REQUIRE_FALSE(check_maxweight("5.5 9"));
+    REQUIRE_FALSE(check_maxweight("7.5;16"));
+}
+
+TEST_CASE("test length parsing") {
+    REQUIRE(check_length(nullptr));
+    REQUIRE(check_length(""));
+    REQUIRE(check_length("4"));
+    REQUIRE(check_length("3.8"));
+    REQUIRE_FALSE(check_length("3,8"));
+    REQUIRE(check_length("4 m"));
+    REQUIRE(check_length("3.8 m"));
+    REQUIRE(check_length("12'5\""));
+    REQUIRE_FALSE(check_length("12.3'5\""));
+    REQUIRE_FALSE(check_length("12' 5\""));
+    REQUIRE_FALSE(check_length("12'5''"));
+    REQUIRE_FALSE(check_length("12'5"));
+    REQUIRE_FALSE(check_length("12 ft"));
+    REQUIRE(check_length("12'"));
+}
+
 TEST_CASE("test valid turn:lane values") {
 
     SECTION("single values") {

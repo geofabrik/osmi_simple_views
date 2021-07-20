@@ -489,7 +489,7 @@ bool HighwayViewHandler::maxspeed_ok(const osmium::TagList& tags) {
 }
 
 bool HighwayViewHandler::check_length_value(const char* value) {
-    if (!value) {
+    if (!value || *value == 0) {
         return true;
     }
     if (!strcmp(value, "none") || !strcmp(value, "default") || !strcmp(value, "physical")) {
@@ -498,7 +498,7 @@ bool HighwayViewHandler::check_length_value(const char* value) {
     char* rest;
     // try parsing as metric
     double maxheight_m = std::strtod(value, &rest);
-    if (maxheight_m > 0 && *rest == 0) {
+    if (maxheight_m > 0 && (*rest == 0 || !strcmp(rest, " m"))) {
         return true;
     }
     // try parsing as imperial
@@ -509,7 +509,7 @@ bool HighwayViewHandler::check_length_value(const char* value) {
             if (isdigit(*rest)) {
                 char* rest2;
                 double maxheight_read2 = std::strtod(rest, &rest2);
-                if (maxheight_read2 > 0 || *rest2 == '"') {
+                if (maxheight_read2 > 0 && *rest2 == '"') {
                     return true;
                 }
                 return false;
@@ -546,18 +546,21 @@ bool HighwayViewHandler::maxlength_ok(const osmium::TagList& tags) {
 
 bool HighwayViewHandler::maxweight_ok(const osmium::TagList& tags) {
     const char* maxweight_value = tags.get_value_by_key("maxweight");
-    if (!maxweight_value || !strcmp(maxweight_value, "unsigned")) {
+    return check_maxweight(maxweight_value);
+}
+
+bool HighwayViewHandler::check_maxweight(const char* maxweight_value) {
+    if (!maxweight_value || *maxweight_value == 0 || !strcmp(maxweight_value, "unsigned")) {
         return true;
     }
     char* rest;
     // try parsing as metric
-    double maxweight_metric = std::strtod(maxweight_value, &rest);
+    double maxweight_read = std::strtod(maxweight_value, &rest);
     // check for too large values
-    if (maxweight_metric > 0 && *rest == 0 && maxweight_metric < 90) {
+    if (maxweight_read > 0 && *rest == 0 && maxweight_read < 90) {
         return true;
     }
     // try parsing as imperial
-    long int maxweight_read = std::strtol(maxweight_value, &rest, 10);
     if (*rest) { // something behind the number
         if (*rest == ' ' && maxweight_read > 0) {
             ++rest; // move one character to the right
