@@ -33,6 +33,7 @@ HighwayViewHandler::HighwayViewHandler(Options& options) :
         m_highway_name_missing_minor(create_layer("highway_name_missing_minor", wkbLineString)),
         m_highway_oneway(create_layer("highway_oneway", wkbLineString)),
         m_highway_road(create_layer("highway_road", wkbLineString)),
+        m_highway_long_ref(create_layer("highway_long_ref", wkbLineString)),
         m_highway_unknown_node(create_layer("highway_unknown_node", wkbPoint)),
         m_highway_unknown_way(create_layer("highway_unknown_way", wkbLineString)) {
     // add fields to layers
@@ -66,6 +67,9 @@ HighwayViewHandler::HighwayViewHandler(Options& options) :
     m_highway_oneway->add_field("tags", OFTString, MAX_FIELD_LENGTH);
     m_highway_road->add_field("way_id", OFTString, 10);
     m_highway_road->add_field("tags", OFTString, MAX_FIELD_LENGTH);
+    m_highway_long_ref->add_field("way_id", OFTString, 10);
+    m_highway_long_ref->add_field("ref", OFTString, MAX_FIELD_LENGTH);
+    m_highway_long_ref->add_field("tags", OFTString, MAX_FIELD_LENGTH);
     m_highway_unknown_node->add_field("node_id", OFTString, 10);
     m_highway_unknown_node->add_field("highway", OFTString, 40);
     m_highway_unknown_node->add_field("tags", OFTString, MAX_FIELD_LENGTH);
@@ -83,6 +87,7 @@ HighwayViewHandler::HighwayViewHandler(Options& options) :
     register_check(name_missing_major, "highway", m_highway_name_missing_major.get());
     register_check(name_missing_minor, "highway", m_highway_name_missing_minor.get());
     register_check(highway_road, "", m_highway_road.get());
+    register_check(highway_long_ref, "ref", m_highway_long_ref.get());
 }
 
 void HighwayViewHandler::give_correct_name() {
@@ -98,6 +103,7 @@ void HighwayViewHandler::close() {
     m_highway_name_missing_minor.reset();
     m_highway_oneway.reset();
     m_highway_road.reset();
+    m_highway_long_ref.reset();
     m_highway_unknown_node.reset();
     m_highway_unknown_way.reset();
     close_datasets();
@@ -624,6 +630,21 @@ bool HighwayViewHandler::highway_road(const osmium::TagList& tags) {
         return false;
     }
     return true;
+}
+
+bool HighwayViewHandler::highway_long_ref(const osmium::TagList& tags) {
+    const char* ref = tags.get_value_by_key("ref");
+    if (!ref) {
+        return true;
+    }
+    int len = 0;
+    int semicola = 0;
+    const char* ptr = ref;
+    for (; *ptr != 0; ++ptr) {
+        semicola += (*ptr == ';');
+        ++len;
+    }
+    return len - semicola < 15;
 }
 
 void HighwayViewHandler::highway_unknown_node(const osmium::Node& node) {

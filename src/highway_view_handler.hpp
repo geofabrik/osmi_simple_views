@@ -47,6 +47,7 @@ class HighwayViewHandler : public AbstractViewHandler {
     std::unique_ptr<gdalcpp::Layer> m_highway_name_missing_minor;
     std::unique_ptr<gdalcpp::Layer> m_highway_oneway;
     std::unique_ptr<gdalcpp::Layer> m_highway_road;
+    std::unique_ptr<gdalcpp::Layer> m_highway_long_ref;
     std::unique_ptr<gdalcpp::Layer> m_highway_unknown_node;
     std::unique_ptr<gdalcpp::Layer> m_highway_unknown_way;
 
@@ -140,6 +141,8 @@ class HighwayViewHandler : public AbstractViewHandler {
     static bool name_missing_minor(const osmium::TagList& tags);
 
     static bool highway_road(const osmium::TagList& tags);
+
+    static bool highway_long_ref(const osmium::TagList& tags);
 
     void highway_unknown_node(const osmium::Node& node);
 
