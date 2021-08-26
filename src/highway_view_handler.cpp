@@ -644,7 +644,7 @@ bool HighwayViewHandler::highway_long_ref(const osmium::TagList& tags) {
         semicola += (*ptr == ';');
         ++len;
     }
-    return len - semicola < 15;
+    return len - semicola < 18;
 }
 
 void HighwayViewHandler::highway_unknown_node(const osmium::Node& node) {
