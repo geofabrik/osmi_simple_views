@@ -690,7 +690,7 @@ void HighwayViewHandler::highway_unknown_way(const osmium::Way& way) {
             || !strcmp(highway, "construction") || !strcmp(highway, "disused") || !strcmp(highway, "abandoned")
             || !strcmp(highway, "proposed") || !strcmp(highway, "platform") || !strcmp(highway, "road")
             || !strcmp(highway, "elevator") || !strcmp(highway, "corridor") || !strcmp(highway, "no")
-            || !strcmp(highway, "emergency_bay") || !strcmp(highway, "razed")) {
+            || !strcmp(highway, "emergency_bay") || !strcmp(highway, "razed") || !strcmp(highway, "busway")) {
         return;
     }
     if (way.is_closed() && (!strcmp(highway, "services") || !strcmp(highway, "rest_area") || !strcmp(highway, "traffic_island"))) {
