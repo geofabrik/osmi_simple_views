@@ -191,7 +191,7 @@ void GeometryViewHandler::duplicated_node_in_way(const osmium::Way& way) {
             if (!multiple_errors) {
                 gdalcpp::Feature way_feature(*m_geometry_duplicate_node_in_way_way, m_factory.create_linestring(way));
                 way_feature.set_field("way_id", idbuffer);
-                way_feature.set_field("node_id", idbuffer);
+                way_feature.set_field("node_id", idbuffer2);
                 way_feature.set_field("tags", tags_string(way.tags()).c_str());
                 std::string the_timestamp (way.timestamp().to_iso());
                 way_feature.set_field("lastchange", the_timestamp.c_str());
