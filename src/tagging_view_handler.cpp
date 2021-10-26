@@ -475,6 +475,8 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
             return true;
         } else if (!strcmp(t.key(), "seamark:type")) {
             return true;
+        } else if (!strcmp(t.key(), "reference_point")) {
+            return true;
         } else if (!strcmp(t.key(), "waterway:sign")) {
             return true;
         } else if (!strcmp(t.key(), "university")) {
