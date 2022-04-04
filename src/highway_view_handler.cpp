@@ -464,10 +464,14 @@ bool HighwayViewHandler::name_not_fixme(const osmium::TagList& tags) {
 
 bool HighwayViewHandler::oneway_ok(const osmium::TagList& tags) {
     const char* oneway_value = tags.get_value_by_key("oneway");
+    return check_oneway(oneway_value);
+}
+
+bool HighwayViewHandler::check_oneway(const char* oneway_value) {
     if (!oneway_value) {
         return true;
     }
-    if (!strcmp(oneway_value, "yes") || !strcmp(oneway_value, "no") || !strcmp(oneway_value, "-1")) {
+    if (!strcmp(oneway_value, "yes") || !strcmp(oneway_value, "no") || !strcmp(oneway_value, "-1") || !strcmp(oneway_value, "alternating")) {
         return true;
     }
     return false;

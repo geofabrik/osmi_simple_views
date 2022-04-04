@@ -192,6 +192,8 @@ public:
     static bool check_valid_turns(const char* turns);
 
     static bool check_maxweight(const char* maxweight_value);
+
+    static bool check_oneway(const char* oneway_value);
 };
 
 

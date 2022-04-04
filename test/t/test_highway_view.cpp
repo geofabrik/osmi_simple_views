@@ -32,6 +32,22 @@ bool check_maxweight(const char* value) {
     return HighwayViewHandler::check_maxweight(value);
 }
 
+bool check_oneway(const char* value) {
+    return HighwayViewHandler::check_oneway(value);
+}
+
+TEST_CASE("test oneway") {
+    REQUIRE(check_oneway(nullptr));
+    REQUIRE(check_oneway("yes"));
+    REQUIRE(check_oneway("no"));
+    REQUIRE(check_oneway("-1"));
+    REQUIRE(check_oneway("alternating"));
+    REQUIRE_FALSE(check_oneway("YES"));
+    REQUIRE_FALSE(check_oneway("0"));
+    REQUIRE_FALSE(check_oneway("false"));
+    REQUIRE_FALSE(check_oneway("alternate"));
+}
+
 TEST_CASE("test maxweight parsing") {
     REQUIRE(check_maxweight(nullptr));
     REQUIRE(check_maxweight(""));
