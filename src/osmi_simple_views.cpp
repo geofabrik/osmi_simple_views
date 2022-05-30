@@ -44,13 +44,16 @@ void print_help(char* arg0) {
               << "  -h, --help           This help message.\n" \
               << "  -f, --format         Output format (default: SQlite)\n" \
               << "  -i, --index          Set index type for location index (default: sparse_mem_array)\n";
-#ifndef ONLYMERCATOROUTPUT
-    std::cerr << "  -s EPSG, --srs=ESPG  Output projection (EPSG code) (default: 3857)\n";
-#endif
     std::cerr << "  -t TYPE, --type=TYPE View to be produced (tagging, highways, places, geometry).\n" \
               << "                       Use `-t view1 -t view2` if you want to produce files of\n" \
               << "                       multiple views.\n" \
               << "  -v, --verbose        Verbose output\n";
+    std::cerr << "\n"
+#ifdef ONLYMERCATOROUTPUT
+              << "Output is written in EPSG:3857 (Web Mercator).\n";
+#else
+              << "Output is written in EPSG:4326 (geographic coordinates, WGS84).\n";
+#endif
 }
 
 int main(int argc, char* argv[]) {

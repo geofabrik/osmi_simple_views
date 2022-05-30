@@ -27,8 +27,8 @@
 
 #ifdef ONLYMERCATOROUTPUT
     #include <osmium/geom/mercator_projection.hpp>
-#else
-    #include <osmium/geom/projection.hpp>
+//#else
+//    #include <osmium/geom/projection.hpp>
 #endif
 
 #include <osmium/util/verbose_output.hpp>
@@ -43,7 +43,7 @@
 #ifdef ONLYMERCATOROUTPUT
     using ogr_factory_type = osmium::geom::OGRFactory<osmium::geom::MercatorProjection>;
 #else
-    using ogr_factory_type = osmium::geom::OGRFactory<osmium::geom::Projection>;
+    using ogr_factory_type = osmium::geom::OGRFactory<>;
 #endif
 
 /**

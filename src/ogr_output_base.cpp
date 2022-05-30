@@ -21,9 +21,6 @@
 #include "ogr_output_base.hpp"
 
 OGROutputBase::OGROutputBase(Options& options) :
-#ifndef ONLYMERCATOROUTPUT
-        m_factory(osmium::geom::Projection(options.srs)),
-#endif
         m_options(options) { }
 
 std::vector<std::string> OGROutputBase::get_gdal_default_dataset_options() {
