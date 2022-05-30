@@ -121,13 +121,6 @@ class TaggingViewHandler : public AbstractViewHandler {
     static bool has_important_core_tag(const osmium::TagList& tags);
 
     /**
-     * Check if a value is "no" or "false".
-     *
-     * \return true if it is so or value is a nullptr
-     */
-    static bool value_is_false(const char* value);
-
-    /**
      * Check if the given key is a key which intends to indicate non-operational use:
      *
      * disused, abandoned, razed, dismantled, proposed, construction
@@ -191,6 +184,20 @@ public:
      * Get length of a string with respect to multi-byte UTF-8 characters.
      */
     static size_t char_length_utf8(const char* value);
+
+    /**
+     * Check if value of construction=* is valid.
+     *
+     * This function will return true for construction=minor/wideing or the value being a nullptr.
+     */
+    static bool valid_construction(const char* value);
+
+    /**
+     * Check if a value is "no" or "false".
+     *
+     * \return true if it is so or value is a nullptr
+     */
+    static bool value_is_false(const char* value);
 
     void relation(const osmium::Relation&) {};
     void area(const osmium::Area&) {};

@@ -372,8 +372,12 @@ void TaggingViewHandler::hidden_nonop(const osmium::OSMObject& object) {
     const char* dismantled = object.get_value_by_key("dismantled");
     const char* construction = object.get_value_by_key("construction");
     const char* proposed = object.get_value_by_key("proposed");
+    if (!value_is_false(construction) && !valid_construction(construction)) {
+        write_feature_to_simple_layer(current_layer, object, "tags", tags_string(object.tags(), nullptr).c_str());
+        return;
+    }
     if (!value_is_false(disused) || !value_is_false(abandoned) || !value_is_false(razed)
-            || !value_is_false(dismantled) || !value_is_false(construction) || !value_is_false(proposed)) {
+            || !value_is_false(dismantled) || !value_is_false(proposed)) {
         write_feature_to_simple_layer(current_layer, object, "tags", tags_string(object.tags(), nullptr).c_str());
     }
 }
@@ -396,6 +400,10 @@ bool TaggingViewHandler::has_important_core_tag(const osmium::TagList& tags) {
         return true;
     }
     return false;
+}
+
+bool TaggingViewHandler::valid_construction(const char* value) {
+    return !value || (value && (!strcmp(value, "minor") || !strcmp(value, "widening")));
 }
 
 bool TaggingViewHandler::value_is_false(const char* value) {

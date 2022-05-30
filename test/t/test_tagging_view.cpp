@@ -20,6 +20,24 @@
 
 #include <tagging_view_handler.hpp>
 
+TEST_CASE("valid construction") {
+    REQUIRE(TaggingViewHandler::valid_construction("minor"));
+    REQUIRE(TaggingViewHandler::valid_construction("widening"));
+    REQUIRE_FALSE(TaggingViewHandler::valid_construction("x"));
+    REQUIRE_FALSE(TaggingViewHandler::valid_construction("motorway"));
+    REQUIRE(TaggingViewHandler::valid_construction(nullptr));
+    REQUIRE_FALSE(TaggingViewHandler::valid_construction("major"));
+}
+
+TEST_CASE("value_is_false") {
+    REQUIRE(TaggingViewHandler::value_is_false("no"));
+    REQUIRE(TaggingViewHandler::value_is_false("false"));
+    REQUIRE(TaggingViewHandler::value_is_false(nullptr));
+    REQUIRE_FALSE(TaggingViewHandler::value_is_false("true"));
+    REQUIRE_FALSE(TaggingViewHandler::value_is_false("yes"));
+    REQUIRE_FALSE(TaggingViewHandler::value_is_false("x"));
+}
+
 TEST_CASE("test detection of long strings") {
 
     SECTION("ASCII") {
