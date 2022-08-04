@@ -55,6 +55,8 @@ public:
 
     AnyRelationCollector(Options& options);
 
+    static constexpr const char* layer_name = "tagging_ways_without_tags";
+
     /**
      * This method decides which relations we're interested in, and
      * instructs Osmium to collect their members for us.

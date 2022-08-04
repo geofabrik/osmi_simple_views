@@ -141,6 +141,8 @@ void TaggingViewHandler::write_feature_to_simple_layer(gdalcpp::Layer* layer,
         feature.set_field("way_id", idbuffer);
     } else if (object.type() == osmium::item_type::node) {
         feature.set_field("node_id", idbuffer);
+    } else if (object.type() == osmium::item_type::relation) {
+        feature.set_field("rel_id", idbuffer);
     }
     if (field_name && value) {
         // shorten value if too long

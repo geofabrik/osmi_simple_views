@@ -30,9 +30,11 @@
 #include <osmium/index/map/sparse_mem_array.hpp>
 #include <osmium/handler/node_locations_for_ways.hpp>
 #include <osmium/io/any_input.hpp>
+#include <osmium/relations/manager_util.hpp>
 #include <osmium/visitor.hpp>
 
 #include "any_relation_collector.hpp"
+#include "highway_relation_manager.hpp"
 #include "handler_collection.hpp"
 
 using index_type = osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>;
@@ -166,6 +168,7 @@ int main(int argc, char* argv[]) {
         // TaggingViewHandler::close is called.
         int pass_count = 1;
         AnyRelationCollector any_collector(options);
+        HighwayRelationManager highway_collector(options);
 
         // additional passes for views which use relations
         for (auto vt : options.views) {
@@ -176,10 +179,17 @@ int main(int argc, char* argv[]) {
                 options.verbose_output << "Pass " << pass_count << " done\n";
                 ++pass_count;
             } else if (vt == ViewType::tagging) {
-                options.verbose_output << "Pass " << pass_count << " (Relations) ...\n";
+                options.verbose_output << "Pass " << pass_count << " (Relations (Tagging view)) ...\n";
                 osmium::io::Reader reader1(input_filename, osmium::osm_entity_bits::relation);
                 any_collector.read_relations(reader1);
                 reader1.close();
+                options.verbose_output << "Pass " << pass_count << " done\n";
+                ++pass_count;
+            } else if (vt == ViewType::highways) {
+                options.verbose_output << "Pass " << pass_count << " (Relations (Highways view)) ...\n";
+                osmium::io::File input_file(input_filename);
+                highway_collector.enable();
+                osmium::relations::read_relations(input_file, highway_collector);
                 options.verbose_output << "Pass " << pass_count << " done\n";
                 ++pass_count;
             }
@@ -189,7 +199,9 @@ int main(int argc, char* argv[]) {
         osmium::io::Reader reader2(input_filename, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way);
         for (auto vt : options.views) {
             if (vt == ViewType::tagging) {
-                any_collector.create_layer(handlers.add_handler(vt, "tagging_ways_without_tags"));
+                any_collector.create_layer(handlers.add_handler(vt, any_collector.layer_name));
+            } else if (vt == ViewType::highways) {
+                highway_collector.create_layer(handlers.add_handler(vt, highway_collector.layer_name));
             } else {
                 handlers.add_handler(vt, nullptr);
             }
@@ -198,9 +210,14 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        osmium::apply(reader2, location_handler, handlers, any_collector.handler());
+        osmium::apply(reader2, location_handler, handlers, any_collector.handler(), highway_collector.handler());
         reader2.close();
         options.verbose_output << "Pass " << pass_count << " done\n";
+        if (std::find(options.views.begin(), options.views.end(), ViewType::highways) != options.views.end()) {
+            highway_collector.for_each_incomplete_relation([&](const osmium::relations::RelationHandle& handle){
+                highway_collector.process_relation(*handle);
+            });
+        }
     }
     handlers.give_correct_name();
 

@@ -58,7 +58,7 @@ void AnyRelationCollector::complete_relation(osmium::relations::RelationMeta&) {
 
 void AnyRelationCollector::create_layer(gdalcpp::Dataset* dataset) {
     m_tagging_ways_without_tags =
-            std::unique_ptr<gdalcpp::Layer>(new gdalcpp::Layer(*dataset, "tagging_ways_without_tags",
+            std::unique_ptr<gdalcpp::Layer>(new gdalcpp::Layer(*dataset, layer_name,
             wkbLineString, get_gdal_default_layer_options()));
 
     m_tagging_ways_without_tags->add_field("way_id", OFTString, 10);

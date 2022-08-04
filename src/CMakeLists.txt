@@ -15,6 +15,8 @@ set(SOURCES
 	abstract_view_handler.hpp
 	highway_view_handler.cpp
 	highway_view_handler.hpp
+	highway_relation_manager.cpp
+	highway_relation_manager.hpp
 	tagging_view_handler.cpp
 	tagging_view_handler.hpp
 	ogr_output_base.cpp

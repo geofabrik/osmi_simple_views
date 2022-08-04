@@ -24,8 +24,6 @@
 
 class TaggingViewHandler : public AbstractViewHandler {
 
-    static constexpr size_t MAX_STRING_LENGTH = 254;
-
     std::unique_ptr<gdalcpp::Layer> m_tagging_fixmes_on_nodes;
     std::unique_ptr<gdalcpp::Layer> m_tagging_fixmes_on_ways;
     std::unique_ptr<gdalcpp::Layer> m_tagging_nodes_with_empty_k;
@@ -153,6 +151,8 @@ public:
     TaggingViewHandler() = delete;
 
     explicit TaggingViewHandler(Options& options);
+
+    static constexpr size_t MAX_STRING_LENGTH = 254;
 
     void give_correct_name();
 
