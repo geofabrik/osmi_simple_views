@@ -35,7 +35,13 @@ struct charptr_comp {
 };
 
 class HighwayViewHandler : public AbstractViewHandler {
+    /// layer for roads with abandoned:highway=*
+    std::unique_ptr<gdalcpp::Layer> m_highway_abandoned;
+    /// layer for roads with highway=proposed/construction/disused/abandoned without tag specifying road class
+    std::unique_ptr<gdalcpp::Layer> m_highway_multiple_lifecycle_states;
     /// layer for ways with lanes=* value which is not an unsigned integer
+    std::unique_ptr<gdalcpp::Layer> m_highway_incomplete_nonop;
+    /// layer for roads tagged with multiple lifecycle states
     std::unique_ptr<gdalcpp::Layer> m_highway_lanes;
     /// layer for ways with strang maxheight values
     std::unique_ptr<gdalcpp::Layer> m_highway_maxheight;
@@ -144,9 +150,13 @@ class HighwayViewHandler : public AbstractViewHandler {
 
     static bool highway_long_ref(const osmium::TagList& tags);
 
+    void abandoned_highway(const osmium::Way& way);
+
     void highway_unknown_node(const osmium::Node& node);
 
     void highway_unknown_way(const osmium::Way& way);
+
+    void highway_multiple_lifecycle_states(const osmium::Way& way);
 
 
     /**

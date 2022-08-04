@@ -19,10 +19,14 @@
 
 
 #include "highway_view_handler.hpp"
+#include <limits>
 
 
 HighwayViewHandler::HighwayViewHandler(Options& options) :
         AbstractViewHandler(options),
+        m_highway_abandoned(create_layer("highway_abandoned", wkbLineString)),
+        m_highway_multiple_lifecycle_states(create_layer("highway_multiple_lifecycles", wkbLineString)),
+        m_highway_incomplete_nonop(create_layer("highway_incomplete_nonop", wkbLineString)),
         m_highway_lanes(create_layer("highway_lanes", wkbLineString)),
         m_highway_maxheight(create_layer("highway_maxheight", wkbLineString)),
         m_highway_maxweight(create_layer("highway_maxweight", wkbLineString)),
@@ -37,6 +41,15 @@ HighwayViewHandler::HighwayViewHandler(Options& options) :
         m_highway_unknown_node(create_layer("highway_unknown_node", wkbPoint)),
         m_highway_unknown_way(create_layer("highway_unknown_way", wkbLineString)) {
     // add fields to layers
+    m_highway_abandoned->add_field("way_id", OFTString, 10);
+    m_highway_abandoned->add_field("tags", OFTString, 40);
+    m_highway_abandoned->add_field("abandoned:highway", OFTString, 60);
+    m_highway_multiple_lifecycle_states->add_field("way_id", OFTString, 10);
+    m_highway_multiple_lifecycle_states->add_field("tags", OFTString, 40);
+    m_highway_multiple_lifecycle_states->add_field("error", OFTString, 60);
+    m_highway_incomplete_nonop->add_field("way_id", OFTString, 10);
+    m_highway_incomplete_nonop->add_field("tags", OFTString, 40);
+    m_highway_incomplete_nonop->add_field("error", OFTString, 60);
     m_highway_lanes->add_field("way_id", OFTString, 10);
     m_highway_lanes->add_field("lanes", OFTString, 40);
     m_highway_lanes->add_field("error", OFTString, 80);
@@ -106,6 +119,9 @@ void HighwayViewHandler::close() {
     m_highway_long_ref.reset();
     m_highway_unknown_node.reset();
     m_highway_unknown_way.reset();
+    m_highway_multiple_lifecycle_states.reset();
+    m_highway_incomplete_nonop.reset();
+    m_highway_abandoned.reset();
     close_datasets();
 }
 
@@ -651,6 +667,16 @@ bool HighwayViewHandler::highway_long_ref(const osmium::TagList& tags) {
     return len - semicola < 18;
 }
 
+void HighwayViewHandler::abandoned_highway(const osmium::Way& way) {
+    const char* abandoned_highway = way.get_value_by_key("abandoned:highway");
+    if (abandoned_highway) {
+        std::string tags_str = tags_string(way.tags(), "abandoned:highway");
+        set_fields<osmium::Way>(m_highway_abandoned.get(), way, "abandoned:highway", abandoned_highway, tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id");
+    }
+}
+
 void HighwayViewHandler::highway_unknown_node(const osmium::Node& node) {
     const char* highway = node.get_value_by_key("highway");
     if (!highway) {
@@ -706,6 +732,85 @@ void HighwayViewHandler::highway_unknown_way(const osmium::Way& way) {
             way.id(), "way_id");
 }
 
+void HighwayViewHandler::highway_multiple_lifecycle_states(const osmium::Way& way) {
+    const char* disused = way.get_value_by_key("disused");
+    const char* disused_highway = way.get_value_by_key("disused:highway");
+    const char* abandoned = way.get_value_by_key("abandoned");
+    const char* abandoned_highway = way.get_value_by_key("abandoned:highway");
+    const char* proposed = way.get_value_by_key("proposed");
+    const char* proposed_highway = way.get_value_by_key("proposed:highway");
+    const char* construction = way.get_value_by_key("construction");
+    // special handling for construction=minor which is a valid tag for highways in use
+    if (construction && !strcmp(construction, "minor")) {
+        construction = nullptr;
+    }
+    const char* construction_highway = way.get_value_by_key("construction:highway");
+    const char* highway = way.get_value_by_key("highway");
+    if (!disused) {
+        disused = disused_highway;
+    }
+    if (!abandoned) {
+        abandoned = abandoned_highway;
+    }
+    if (!proposed) {
+        proposed = proposed_highway;
+    }
+    if (!construction) {
+        construction = construction_highway;
+    }
+    constexpr size_t number = 4;
+    std::array<const char*, number> values = {construction, proposed, abandoned, disused,};
+    std::array<std::string, number> keys = {"construction", "proposed", "abandoned", "disused"};
+    constexpr size_t key_not_found = std::numeric_limits<size_t>::max();
+    size_t last_found_key_idx = key_not_found;
+    for (size_t i = 0; i < number; ++i) {
+        if (values.at(i)) {
+            std::string& key = keys.at(i);
+            if (last_found_key_idx != key_not_found) {
+                std::string tags_str = tags_string(way.tags(), nullptr);
+                std::string error_msg {keys.at(last_found_key_idx)};
+                error_msg.push_back('+');
+                error_msg.append(key);
+                set_fields<osmium::Way>(m_highway_multiple_lifecycle_states.get(), way, "error", error_msg.c_str(), tags_str,
+                        [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                        way.id(), "way_id");
+                return;
+            } else {
+                last_found_key_idx = i;
+            }
+        }
+    }
+    if (last_found_key_idx != key_not_found && strcmp(highway, keys.at(last_found_key_idx).c_str())) {
+        std::string tags_str = tags_string(way.tags(), nullptr);
+        std::string& key = keys.at(last_found_key_idx);
+        std::string error_msg {key};
+        error_msg.append(" without highway=");
+        error_msg.append(key);
+        set_fields<osmium::Way>(m_highway_incomplete_nonop.get(), way, "error", error_msg.c_str(), tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id");
+        return;
+    }
+    // highway=construction/disused/proposed/abandoned without matching key specifying road class
+    if (last_found_key_idx == key_not_found && highway) {
+        for (size_t i = 0; i < number; ++i) {
+            std::string& key = keys.at(i);
+            if (!strcmp(highway, key.c_str())) {
+                std::string tags_str = tags_string(way.tags(), highway);
+                std::string error_msg = "highway=";
+                error_msg.append(key);
+                error_msg.append(" without ");
+                error_msg.append(key);
+                error_msg.append("=*");
+                set_fields<osmium::Way>(m_highway_incomplete_nonop.get(), way, "error", error_msg.c_str(), tags_str,
+                        [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                        way.id(), "way_id");
+                return;
+            }
+        }
+    }
+}
+
 void HighwayViewHandler::check_them_all(const osmium::Way& way) {
     for (size_t i = 0; i < m_layers.size(); ++i) {
         if (!m_checks.at(i)(way.tags())) {
@@ -723,7 +828,10 @@ void HighwayViewHandler::way(const osmium::Way& way) {
     if (way.get_value_by_key("highway")) {
         check_them_all(way);
         highway_unknown_way(way);
+        highway_multiple_lifecycle_states(way);
         check_lanes_tags(way);
+    } else {
+        abandoned_highway(way);
     }
 }
 
