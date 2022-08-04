@@ -27,7 +27,11 @@ struct Options {
     std::string location_index_type = "sparse_mem_array";
     std::string output_format = "SQlite";
     std::string output_directory = "";
-    int srs = 3857;
+#ifdef ONLYMERCATOROUTPUT
+    const int srs = 3857;
+#else
+    const int srs = 4326;
+#endif
     osmium::util::VerboseOutput verbose_output {false};
 };
 

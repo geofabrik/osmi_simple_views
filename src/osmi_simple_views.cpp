@@ -64,7 +64,6 @@ int main(int argc, char* argv[]) {
         {"help",   no_argument, 0, 'h'},
         {"format", required_argument, 0, 'f'},
         {"index", required_argument, 0, 'i'},
-        {"srs", required_argument, 0, 's'},
         {"type",   required_argument, 0, 't'},
         {"verbose",   no_argument, 0, 'v'},
         {0, 0, 0, 0}
@@ -73,7 +72,7 @@ int main(int argc, char* argv[]) {
     Options options;
 
     while (true) {
-        int c = getopt_long(argc, argv, "hf:i:s:t:v", long_options, 0);
+        int c = getopt_long(argc, argv, "hf:i:t:v", long_options, 0);
         if (c == -1) {
             break;
         }
@@ -97,21 +96,6 @@ int main(int argc, char* argv[]) {
                     print_help(argv[0]);
                     exit(1);
                 }
-                break;
-            case 's':
-#ifdef ONLYMERCATOROUTPUT
-                std::cerr << "ERROR: Usage of output projections other than " \
-                        "EPSG:3857 is not compiled into this binary.\n";
-                print_help(argv[0]);
-                exit(1);
-#else
-                if (optarg) {
-                    options.srs = atoi(optarg);
-                } else {
-                    print_help(argv[0]);
-                    exit(1);
-                }
-#endif
                 break;
             case 't':
                 if (!strcmp(optarg, "tagging")) {
