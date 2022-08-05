@@ -25,6 +25,9 @@
 HighwayViewHandler::HighwayViewHandler(Options& options) :
         AbstractViewHandler(options),
         m_highway_abandoned(create_layer("highway_abandoned", wkbLineString)),
+        m_highway_disused(create_layer("highway_disused", wkbLineString)),
+        m_highway_construction(create_layer("highway_construction", wkbLineString)),
+        m_highway_proposed(create_layer("highway_proposed", wkbLineString)),
         m_highway_multiple_lifecycle_states(create_layer("highway_multiple_lifecycles", wkbLineString)),
         m_highway_incomplete_nonop(create_layer("highway_incomplete_nonop", wkbLineString)),
         m_highway_lanes(create_layer("highway_lanes", wkbLineString)),
@@ -44,6 +47,15 @@ HighwayViewHandler::HighwayViewHandler(Options& options) :
     m_highway_abandoned->add_field("way_id", OFTString, 10);
     m_highway_abandoned->add_field("tags", OFTString, 40);
     m_highway_abandoned->add_field("abandoned:highway", OFTString, 60);
+    m_highway_disused->add_field("way_id", OFTString, 10);
+    m_highway_disused->add_field("tags", OFTString, 40);
+    m_highway_disused->add_field("disused:highway", OFTString, 60);
+    m_highway_construction->add_field("way_id", OFTString, 10);
+    m_highway_construction->add_field("tags", OFTString, 40);
+    m_highway_construction->add_field("construction:highway", OFTString, 60);
+    m_highway_proposed->add_field("way_id", OFTString, 10);
+    m_highway_proposed->add_field("tags", OFTString, 40);
+    m_highway_proposed->add_field("proposed:highway", OFTString, 60);
     m_highway_multiple_lifecycle_states->add_field("way_id", OFTString, 10);
     m_highway_multiple_lifecycle_states->add_field("tags", OFTString, 40);
     m_highway_multiple_lifecycle_states->add_field("error", OFTString, 60);
@@ -122,6 +134,9 @@ void HighwayViewHandler::close() {
     m_highway_multiple_lifecycle_states.reset();
     m_highway_incomplete_nonop.reset();
     m_highway_abandoned.reset();
+    m_highway_disused.reset();
+    m_highway_construction.reset();
+    m_highway_proposed.reset();
     close_datasets();
 }
 
@@ -667,11 +682,16 @@ bool HighwayViewHandler::highway_long_ref(const osmium::TagList& tags) {
     return len - semicola < 18;
 }
 
-void HighwayViewHandler::abandoned_highway(const osmium::Way& way) {
-    const char* abandoned_highway = way.get_value_by_key("abandoned:highway");
-    if (abandoned_highway) {
-        std::string tags_str = tags_string(way.tags(), "abandoned:highway");
-        set_fields<osmium::Way>(m_highway_abandoned.get(), way, "abandoned:highway", abandoned_highway, tags_str,
+void HighwayViewHandler::ways_with_key(const osmium::Way& way, gdalcpp::Layer* layer, const char* key, const char* alternative_key) {
+    const char* value = way.get_value_by_key(key);
+    const char* found_key = key;
+    if (!value && alternative_key) {
+        value = way.get_value_by_key(alternative_key);
+        found_key = alternative_key;
+    }
+    if (value) {
+        std::string tags_str = tags_string(way.tags(), found_key);
+        set_fields<osmium::Way>(layer, way, key, value, tags_str,
                 [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
                 way.id(), "way_id");
     }
@@ -830,8 +850,15 @@ void HighwayViewHandler::way(const osmium::Way& way) {
         highway_unknown_way(way);
         highway_multiple_lifecycle_states(way);
         check_lanes_tags(way);
+        ways_with_key(way, m_highway_abandoned.get(), "abandoned:highway", "abandoned");
+        ways_with_key(way, m_highway_disused.get(), "disused:highway", "disused");
+        ways_with_key(way, m_highway_construction.get(), "construction:highway", "construction");
+        ways_with_key(way, m_highway_proposed.get(), "proposed:highway", "proposed");
     } else {
-        abandoned_highway(way);
+        ways_with_key(way, m_highway_abandoned.get(), "abandoned:highway");
+        ways_with_key(way, m_highway_disused.get(), "disused:highway");
+        ways_with_key(way, m_highway_construction.get(), "construction:highway");
+        ways_with_key(way, m_highway_proposed.get(), "proposed:highway");
     }
 }
 

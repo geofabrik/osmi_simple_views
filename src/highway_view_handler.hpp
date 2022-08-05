@@ -37,6 +37,12 @@ struct charptr_comp {
 class HighwayViewHandler : public AbstractViewHandler {
     /// layer for roads with abandoned:highway=*
     std::unique_ptr<gdalcpp::Layer> m_highway_abandoned;
+    /// layer for roads with disused:highway=*
+    std::unique_ptr<gdalcpp::Layer> m_highway_disused;
+    /// layer for roads with construction:highway=*
+    std::unique_ptr<gdalcpp::Layer> m_highway_construction;
+    /// layer for roads with proposed:highway=*
+    std::unique_ptr<gdalcpp::Layer> m_highway_proposed;
     /// layer for roads with highway=proposed/construction/disused/abandoned without tag specifying road class
     std::unique_ptr<gdalcpp::Layer> m_highway_multiple_lifecycle_states;
     /// layer for ways with lanes=* value which is not an unsigned integer
@@ -150,7 +156,12 @@ class HighwayViewHandler : public AbstractViewHandler {
 
     static bool highway_long_ref(const osmium::TagList& tags);
 
-    void abandoned_highway(const osmium::Way& way);
+    /**
+     * Write way to specified layer if provided key is set.
+     *
+     * alternative_key is used if key is not set.
+     */
+    void ways_with_key(const osmium::Way& way, gdalcpp::Layer* layer, const char* key, const char* alternative_key = nullptr);
 
     void highway_unknown_node(const osmium::Node& node);
 
