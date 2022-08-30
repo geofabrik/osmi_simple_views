@@ -45,22 +45,22 @@ HighwayViewHandler::HighwayViewHandler(Options& options) :
         m_highway_unknown_way(create_layer("highway_unknown_way", wkbLineString)) {
     // add fields to layers
     m_highway_abandoned->add_field("way_id", OFTString, 10);
-    m_highway_abandoned->add_field("tags", OFTString, 40);
+    m_highway_abandoned->add_field("tags", OFTString, MAX_FIELD_LENGTH);
     m_highway_abandoned->add_field("abandoned:highway", OFTString, 60);
     m_highway_disused->add_field("way_id", OFTString, 10);
-    m_highway_disused->add_field("tags", OFTString, 40);
+    m_highway_disused->add_field("tags", OFTString, MAX_FIELD_LENGTH);
     m_highway_disused->add_field("disused:highway", OFTString, 60);
     m_highway_construction->add_field("way_id", OFTString, 10);
-    m_highway_construction->add_field("tags", OFTString, 40);
+    m_highway_construction->add_field("tags", OFTString, MAX_FIELD_LENGTH);
     m_highway_construction->add_field("construction:highway", OFTString, 60);
     m_highway_proposed->add_field("way_id", OFTString, 10);
-    m_highway_proposed->add_field("tags", OFTString, 40);
+    m_highway_proposed->add_field("tags", OFTString, MAX_FIELD_LENGTH);
     m_highway_proposed->add_field("proposed:highway", OFTString, 60);
     m_highway_multiple_lifecycle_states->add_field("way_id", OFTString, 10);
-    m_highway_multiple_lifecycle_states->add_field("tags", OFTString, 40);
+    m_highway_multiple_lifecycle_states->add_field("tags", OFTString, MAX_FIELD_LENGTH);
     m_highway_multiple_lifecycle_states->add_field("error", OFTString, 60);
     m_highway_incomplete_nonop->add_field("way_id", OFTString, 10);
-    m_highway_incomplete_nonop->add_field("tags", OFTString, 40);
+    m_highway_incomplete_nonop->add_field("tags", OFTString, MAX_FIELD_LENGTH);
     m_highway_incomplete_nonop->add_field("error", OFTString, 60);
     m_highway_lanes->add_field("way_id", OFTString, 10);
     m_highway_lanes->add_field("lanes", OFTString, 40);
