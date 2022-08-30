@@ -167,6 +167,32 @@ public:
     }
 
     /**
+     * Build a string of all tags of an object except the provided ones.
+     */
+    template <size_t TKeyCount>
+    std::string tags_string(const osmium::TagList& tags, const char separator,
+            std::array<const char*, TKeyCount> excluded_keys) {
+        std::string tag_str;
+        for (const auto& tag : tags) {
+            const char* key = tag.key();
+            if (std::any_of(excluded_keys.begin(), excluded_keys.end(), [&key](const char* arr_val){return !strcmp(arr_val, key);})) {
+                continue;
+            }
+            const char* value = tag.value();
+            size_t add_length = strlen(value) + strlen(value) + 2;
+            if (add_length < 50 && tag_str.length() + add_length < MAX_FIELD_LENGTH) {
+                tag_str += key;
+                tag_str += '=';
+                tag_str += value;
+                tag_str += separator;
+            }
+        }
+        // remove last | from tag_str
+        tag_str.pop_back();
+        return tag_str;
+    }
+
+    /**
      * Build a string containing tags (length of key and value below 48 characters)
      * to be inserted into a "tag" column. The returned string is shorter than
      * MAX_FIELD_LENGTH characters. No keys or values will be truncated.

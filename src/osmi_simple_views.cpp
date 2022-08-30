@@ -104,10 +104,12 @@ int main(int argc, char* argv[]) {
                     options.views.push_back(ViewType::geometry);
                 } else if (!strcmp(optarg, "highways")) {
                     options.views.push_back(ViewType::highways);
+                } else if (!strcmp(optarg, "sac_scale")) {
+                    options.views.push_back(ViewType::sac_scale);
                 } else if (!strcmp(optarg, "places")) {
                     options.views.push_back(ViewType::places);
                 } else {
-                    std::cerr << "ERROR: -t must be one of tagging, geometry, highways, places\n";
+                    std::cerr << "ERROR: -t must be one of tagging, geometry, highways, highway_properties, places\n";
                     print_help(argv[0]);
                     exit(1);
                 }

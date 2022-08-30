@@ -24,6 +24,8 @@ gdalcpp::Dataset* HandlerCollection::add_handler(ViewType view, const char* laye
         handler.reset(new GeometryViewHandler(m_options));
     } else if (view == ViewType::highways) {
         handler.reset(new HighwayViewHandler(m_options));
+    } else if (view == ViewType::sac_scale) {
+        handler.reset(new SacScaleViewHandler(m_options));
     } else if (view == ViewType::tagging) {
         handler.reset(new TaggingViewHandler(m_options));
     } else if (view == ViewType::places) {

@@ -18,6 +18,7 @@
 #include "tagging_view_handler.hpp"
 #include "any_relation_collector.hpp"
 #include "highway_relation_manager.hpp"
+#include "sac_scale_view_handler.hpp"
 
 /**
  * The handler collection manages all handlers and calls their node, way, relation and area callbacks one
