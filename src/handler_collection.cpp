@@ -39,6 +39,14 @@ gdalcpp::Dataset* HandlerCollection::add_handler(ViewType view, const char* laye
     return dataset_ptr;
 }
 
+void HandlerCollection::set_any_relation_collector_pass2(AnyRelationCollector& collector) {
+    any_relation_collector_pass2 = &(collector.handler());
+}
+
+void HandlerCollection::set_highway_relation_manager_pass2(HighwayRelationManager& manager) {
+    highway_relation_collector_pass2 = &(manager.handler());
+}
+
 void HandlerCollection::add_multipolygon_collector(osmium::area::MultipolygonCollector<osmium::area::Assembler>& collector) {
     PlacesHandler& pl = *m_places_handler;
     m_mp_collector_handler2 = &(collector.handler([&pl](const osmium::memory::Buffer& area_buffer) {
@@ -53,6 +61,12 @@ void HandlerCollection::node(const osmium::Node& node) {
     if (m_mp_collector_handler2) {
         m_mp_collector_handler2->node(node);
     }
+    if (any_relation_collector_pass2) {
+        any_relation_collector_pass2->node(node);
+    }
+    if (highway_relation_collector_pass2) {
+        highway_relation_collector_pass2->node(node);
+    }
 }
 
 void HandlerCollection::way(const osmium::Way& way) {
@@ -62,6 +76,12 @@ void HandlerCollection::way(const osmium::Way& way) {
         }
         if (m_mp_collector_handler2) {
             m_mp_collector_handler2->way(way);
+        }
+        if (any_relation_collector_pass2) {
+            any_relation_collector_pass2->way(way);
+        }
+        if (highway_relation_collector_pass2) {
+            highway_relation_collector_pass2->way(way);
         }
     } catch (osmium::invalid_location& err) {
         m_options.verbose_output << err.what() << '\n';
@@ -76,6 +96,12 @@ void HandlerCollection::relation(const osmium::Relation& relation) {
         if (m_mp_collector_handler2) {
             m_mp_collector_handler2->relation(relation);
         }
+        if (any_relation_collector_pass2) {
+            any_relation_collector_pass2->relation(relation);
+        }
+        if (highway_relation_collector_pass2) {
+            highway_relation_collector_pass2->relation(relation);
+        }
     } catch (osmium::invalid_location& err) {
         m_options.verbose_output << err.what() << '\n';
     }
@@ -88,5 +114,21 @@ void HandlerCollection::area(const osmium::Area& area) {
         }
     } catch (osmium::invalid_location& err) {
         m_options.verbose_output << err.what() << '\n';
+    }
+}
+
+
+void HandlerCollection::flush() {
+    for (std::unique_ptr<AbstractViewHandler>& handler : m_handlers) {
+        handler->flush();
+    }
+    if (m_mp_collector_handler2) {
+        m_mp_collector_handler2->flush();
+    }
+    if (any_relation_collector_pass2) {
+        any_relation_collector_pass2->flush();
+    }
+    if (highway_relation_collector_pass2) {
+        highway_relation_collector_pass2->flush();
     }
 }

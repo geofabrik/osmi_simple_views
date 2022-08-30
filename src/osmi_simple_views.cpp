@@ -184,8 +184,10 @@ int main(int argc, char* argv[]) {
         for (auto vt : options.views) {
             if (vt == ViewType::tagging) {
                 any_collector.create_layer(handlers.add_handler(vt, any_collector.layer_name));
+                handlers.set_any_relation_collector_pass2(any_collector);
             } else if (vt == ViewType::highways) {
                 highway_collector.create_layer(handlers.add_handler(vt, highway_collector.layer_name));
+                handlers.set_highway_relation_manager_pass2(highway_collector);
             } else {
                 handlers.add_handler(vt, nullptr);
             }
@@ -194,7 +196,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        osmium::apply(reader2, location_handler, handlers, any_collector.handler(), highway_collector.handler());
+        osmium::apply(reader2, location_handler, handlers);
         reader2.close();
         options.verbose_output << "Pass " << pass_count << " done\n";
         if (std::find(options.views.begin(), options.views.end(), ViewType::highways) != options.views.end()) {
