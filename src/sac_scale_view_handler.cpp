@@ -57,7 +57,7 @@ SacScaleViewHandler::SacScaleViewHandler(Options& options) :
 }
 
 void SacScaleViewHandler::give_correct_name() {
-    rename_output_files("highway_properties");
+    rename_output_files("sac_scale");
 }
 
 void SacScaleViewHandler::close() {
