@@ -14,9 +14,9 @@ const std::array<const char*, 6> valid_sac_scales = {"hiking", "mountain_hiking"
 const std::array<const char*, 4> valid_highways = {"path", "footway", "track", "steps"};
 
 /// Surfaces which are unlikely with SAC scale T1 and T2
-const std::array<const char*, 18> good_surface_values = {"paved", "asphalt", "concrete",
+const std::array<const char*, 17> good_surface_values = {"paved", "asphalt", "concrete",
         "concrete:lanes", "concrete:plates", "paving_stones", "sett", "cobblestone", "compacted",
-        "grass_paver", "metal", "tartan", "clay", "artificial_turf", "unhewn_cobblestone",
+        "grass_paver", "tartan", "clay", "artificial_turf", "unhewn_cobblestone",
         "woodchips", "brick", "chipseal"};
 
 /// Surfaces which can be accepted without a sac_scale=* tag.
