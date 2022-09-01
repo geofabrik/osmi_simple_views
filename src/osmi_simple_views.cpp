@@ -46,7 +46,8 @@ void print_help(char* arg0) {
               << "  -h, --help           This help message.\n" \
               << "  -f, --format         Output format (default: SQlite)\n" \
               << "  -i, --index          Set index type for location index (default: sparse_mem_array)\n";
-    std::cerr << "  -t TYPE, --type=TYPE View to be produced (tagging, highways, places, geometry).\n" \
+    std::cerr << "  -t TYPE, --type=TYPE View to be produced (tagging, highways, places, geometry,\n" \
+                 "                       sac_scale).\n" \
               << "                       Use `-t view1 -t view2` if you want to produce files of\n" \
               << "                       multiple views.\n" \
               << "  -v, --verbose        Verbose output\n";
