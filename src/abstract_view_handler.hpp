@@ -162,7 +162,9 @@ public:
             }
         }
         // remove last | from tag_str
-        tag_str.pop_back();
+        if (!tag_str.empty()) {
+            tag_str.pop_back();
+        }
         return tag_str;
     }
 
