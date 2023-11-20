@@ -528,6 +528,8 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
             return true;
         } else if (!strcmp(t.key(), "advertising")) {
             return true;
+        } else if (!strcmp(t.key(), "police")) {
+            return true;
         } else if (!strcmp(t.key(), "cemetery")) {
             return !strcmp(t.value(), "sector") || !strcmp(t.value(), "grave");
         }
