@@ -372,6 +372,16 @@ void HighwayViewHandler::check_lanes_tags(const osmium::Way& way) {
         );
         return;
     }
+    // If any lanes:*=* is present, warn if lanes=* is missing
+    if (lanes != lanes_sum && lanes_sum > 0) {
+        std::string tags_str = selective_tags_str<3>(way.tags(), '|', {"lanes:forward", "lanes:backward", "lanes:both_ways"});
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "lanes:forward=*, lanes:backward=* or lanes:both_ways=* without lanes=*"
+        );
+        return;
+    }
     // direction values on oneways
     bool pure_oneway = all_oneway(way.tags());
     if ((lanes_tag_count > 0) && pure_oneway) {
