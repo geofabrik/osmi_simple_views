@@ -489,6 +489,8 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
             return true;
         } else if (!strcmp(t.key(), "university")) {
             return true;
+        } else if (!strcmp(t.key(), "marker")) {
+            return true;
         } else {
             const auto keys = { "historic", "razed", "demolished",
                                 "abandoned", "disused", "construction",
