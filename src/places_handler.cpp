@@ -134,6 +134,9 @@ bool PlacesHandler::place_value_ok(const char* value) {
     if (!strcmp(value, "farm")) {
         return true;
     }
+    if (!strcmp(value, "allotments")) {
+        return true;
+    }
     if (!strcmp(value, "subdivision")) {
         return true;
     }
