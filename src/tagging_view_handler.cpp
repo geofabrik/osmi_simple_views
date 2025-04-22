@@ -491,6 +491,8 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
             return true;
         } else if (!strcmp(t.key(), "marker")) {
             return true;
+        } else if (!strcmp(t.key(), "airmark") && !strcmp(t.value(), "beacon")) {
+            return true;
         } else {
             const auto keys = { "historic", "razed", "demolished",
                                 "abandoned", "disused", "construction",
