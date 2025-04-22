@@ -42,6 +42,11 @@ backend. This service provides the map and a GetFeatureInfo API call used by
 the frontend.
 
 
+## Documentation for mappers
+
+Documentation for mappers explaining the contents of all layers and views is available [on the OpenStreetMap wiki](https://wiki.openstreetmap.org/wiki/OSM_Inspector#Views).
+
+
 ## Dependencies
 
 * C++11 compiler
