@@ -481,6 +481,8 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags, const osmi
             return true;
         } else if (!strcmp(t.key(), "traffic_sign")) {
             return true;
+        } else if (type != osmium::item_type::node && !strcmp(t.key(), "area:highway")) {
+            return true;
         } else if (!strcmp(t.key(), "xmas:feature")) {
             return true;
         } else if (!strcmp(t.key(), "seamark:type")) {
