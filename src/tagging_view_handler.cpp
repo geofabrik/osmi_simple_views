@@ -429,7 +429,7 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
             return true;
         } else if (!strcmp(t.key(), "amenity")) {
             return true;
-        } else if (!strcmp(t.key(), "shop") && strcmp(t.value(), "yes")) {
+        } else if (!strcmp(t.key(), "shop")) {
             return true;
         } else if (!strcmp(t.key(), "natural")) {
             return true;
@@ -515,8 +515,7 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
             return true;
         } else if (!strcmp(t.key(), "junction")) {
             return true;
-        } else if (!strcmp(t.key(), "office") && (strcmp(t.value(), "yes"))) {
-            // office=yes is no real feature tag, "yes" is is a value for lazy users, newbies and SEO spammers.
+        } else if (!strcmp(t.key(), "office")) {
             return true;
         } else if (!strcmp(t.key(), "piste:type")) {
             return true;
