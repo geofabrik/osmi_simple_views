@@ -138,7 +138,7 @@ class TaggingViewHandler : public AbstractViewHandler {
     /**
      * Check if a tag has a "feature" key, i.e. it has a key which describes what it is.
      */
-    static bool has_feature_key(const osmium::TagList& tags);
+    static bool has_feature_key(const osmium::TagList& tags, const osmium::item_type type);
 
     static bool has_non_feature_key(const osmium::TagList& tags);
 

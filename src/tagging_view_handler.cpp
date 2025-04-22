@@ -417,7 +417,7 @@ bool TaggingViewHandler::is_nonop(const char* key) {
             || !strcmp(key, "dismantled") || !strcmp(key, "construction") || !strcmp(key, "proposed");
 }
 
-bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
+bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags, const osmium::item_type type) {
     for (const osmium::Tag& t : tags) {
         if (!strcmp(t.key(), "building")) {
             return true;
@@ -535,6 +535,8 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags) {
             return true;
         } else if (!strcmp(t.key(), "cemetery")) {
             return !strcmp(t.value(), "sector") || !strcmp(t.value(), "grave");
+        } else if (type == osmium::item_type::node && !strcmp(t.key(), "network:type")) {
+            return true;
         }
     }
     return false;
@@ -562,7 +564,7 @@ bool TaggingViewHandler::has_non_feature_key(const osmium::TagList& tags) {
 }
 
 void TaggingViewHandler::no_main_tags(const osmium::OSMObject& object) {
-    if (has_feature_key(object.tags())) {
+    if (has_feature_key(object.tags(), object.type())) {
         return;
     }
     gdalcpp::Layer* current_layer;
