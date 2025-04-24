@@ -37,9 +37,11 @@ TaggingViewHandler::TaggingViewHandler(Options& options) :
         m_tagging_long_text_ways(create_layer("tagging_long_text_ways", wkbLineString)) {
     m_tagging_fixmes_on_nodes->add_field("node_id", OFTString, 10);
     m_tagging_fixmes_on_nodes->add_field("tag", OFTString, MAX_STRING_LENGTH);
+    m_tagging_fixmes_on_nodes->add_field("other_tags", OFTString, MAX_STRING_LENGTH);
     m_tagging_fixmes_on_nodes->add_field("lastchange", OFTString, 21);
     m_tagging_fixmes_on_ways->add_field("way_id", OFTString, 10);
     m_tagging_fixmes_on_ways->add_field("tag", OFTString, MAX_STRING_LENGTH);
+    m_tagging_fixmes_on_ways->add_field("other_tags", OFTString, MAX_STRING_LENGTH);
     m_tagging_fixmes_on_ways->add_field("lastchange", OFTString, 21);
     m_tagging_nodes_with_empty_k->add_field("node_id", OFTString, 10);
     m_tagging_nodes_with_empty_k->add_field("value", OFTString, MAX_STRING_LENGTH);
@@ -170,6 +172,19 @@ void TaggingViewHandler::write_feature_to_simple_layer(gdalcpp::Layer* layer,
     feature.set_field("lastchange", timestamp.c_str());
 }
 
+bool TaggingViewHandler::add_fixme(gdalcpp::Layer* fixme_layer,
+        const osmium::OSMObject& object, const std::string& key) {
+    const char* tag_value = object.tags().get_value_by_key(key.c_str());
+    if (tag_value) {
+        std::string tag = key + "=" + tag_value;
+        std::string other_tags = tags_string(object.tags(), key.c_str());
+        write_feature_to_simple_layer(fixme_layer, object, "tag", tag.c_str(),
+                "other_tags", other_tags.c_str());
+        return true;
+    }
+    return false;
+}
+
 
 void TaggingViewHandler::check_fixme(const osmium::OSMObject& object) {
     gdalcpp::Layer* current_layer;
@@ -180,25 +195,13 @@ void TaggingViewHandler::check_fixme(const osmium::OSMObject& object) {
     } else {
         return;
     }
-    const char* fixme = object.tags().get_value_by_key("fixme");
-    if (fixme) {
-        std::string tag = "fixme=";
-        tag += fixme;
-        write_feature_to_simple_layer(current_layer, object, "tag", tag.c_str());
+    if (add_fixme(current_layer, object, "fixme")) {
         return;
     }
-    const char* fixme_uppercase = object.tags().get_value_by_key("FIXME");
-    if (fixme_uppercase) {
-        std::string tag = "FIXME=";
-        tag += fixme_uppercase;
-        write_feature_to_simple_layer(current_layer, object, "tag", tag.c_str());
+    if (add_fixme(current_layer, object, "FIXME")) {
         return;
     }
-    const char* todo = object.tags().get_value_by_key("todo");
-    if (todo) {
-        std::string tag = "todo=";
-        tag += todo;
-        write_feature_to_simple_layer(current_layer, object, "tag", tag.c_str());
+    if (add_fixme(current_layer, object, "todo")) {
         return;
     }
     for (const osmium::Tag& t : object.tags()) {
@@ -210,7 +213,9 @@ void TaggingViewHandler::check_fixme(const osmium::OSMObject& object) {
             std::string tag = t.key();
             tag += "=";
             tag += tag_value;
-            write_feature_to_simple_layer(current_layer, object, "tag", tag.c_str());
+            std::string other_tags = tags_string(object.tags(), t.key());
+            write_feature_to_simple_layer(current_layer, object, "tag", tag.c_str(),
+                    "other_tags", other_tags.c_str());
             return;
         }
     }

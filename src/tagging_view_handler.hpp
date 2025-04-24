@@ -65,6 +65,13 @@ class TaggingViewHandler : public AbstractViewHandler {
             const char* key, const char* error, const char* otherkey);
 
     /**
+     * Check if the requested key is set and write the object to the provided layer
+     * for fixme=* features.
+     */
+    bool add_fixme(gdalcpp::Layer* fixme_layer,
+            const osmium::OSMObject& object, const std::string& key);
+
+    /**
      * Check if an object has one of the following keys: fixme=*, FIXME=* or todo=*.
      *
      * \param object object to be checked
