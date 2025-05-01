@@ -232,7 +232,7 @@ void PlacesHandler::add_feature(std::unique_ptr<OGRGeometry>&& geometry, const o
         long int population = std::strtol(popstr, &rest, 10);
         if (*rest) {
             add_error(osm_object, id, geomtype, "characters after population number", popstr);
-        } else if (population < 20000000000 && population > 0) {
+        } else if (population < 20000000000 && population >= 0) {
             feature.set_field("population", static_cast<int>(population));
             check_population(osm_object, id, geomtype, place_value, population);
         } else {
