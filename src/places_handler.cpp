@@ -231,7 +231,7 @@ void PlacesHandler::add_feature(std::unique_ptr<OGRGeometry>&& geometry, const o
         char* rest;
         long int population = std::strtol(popstr, &rest, 10);
         if (*rest) {
-            add_error(osm_object, id, geomtype, "popuation contains non-digits", popstr);
+            add_error(osm_object, id, geomtype, "population contains non-digits", popstr);
         } else if (population < 20000000000 && population >= 0) {
             feature.set_field("population", static_cast<int>(population));
             check_population(osm_object, id, geomtype, place_value, population);
