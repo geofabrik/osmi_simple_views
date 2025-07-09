@@ -541,7 +541,9 @@ bool TaggingViewHandler::has_feature_key(const osmium::TagList& tags, const osmi
         } else if (!strcmp(t.key(), "police")) {
             return true;
         } else if (!strcmp(t.key(), "cemetery")) {
-            return !strcmp(t.value(), "sector") || !strcmp(t.value(), "grave");
+            if (!strcmp(t.value(), "sector") || !strcmp(t.value(), "grave")) {
+                return true;
+            }
         } else if (type == osmium::item_type::node && !strcmp(t.key(), "network:type")) {
             return true;
         }
