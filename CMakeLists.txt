@@ -32,10 +32,10 @@ include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
 
 #-----------------------------------------------------------------------------
 #
-#  Decide which C++ version to use (Minimum/default: C++11).
+#  Decide which C++ version to use (Minimum/default: C++14).
 #
 #-----------------------------------------------------------------------------
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 
