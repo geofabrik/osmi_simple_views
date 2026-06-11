@@ -35,6 +35,7 @@
 
 #include "any_relation_collector.hpp"
 #include "highway_relation_manager.hpp"
+#include "turn_restrictions_manager.hpp"
 #include "handler_collection.hpp"
 
 using index_type = osmium::index::map::Map<osmium::unsigned_object_id_type, osmium::Location>;
@@ -105,6 +106,8 @@ int main(int argc, char* argv[]) {
                     options.views.push_back(ViewType::geometry);
                 } else if (!strcmp(optarg, "highways")) {
                     options.views.push_back(ViewType::highways);
+                } else if (!strcmp(optarg, "turn_restrictions")) {
+                    options.views.push_back(ViewType::turn_restrictions);
                 } else if (!strcmp(optarg, "sac_scale")) {
                     options.views.push_back(ViewType::sac_scale);
                 } else if (!strcmp(optarg, "places")) {
@@ -156,6 +159,7 @@ int main(int argc, char* argv[]) {
         int pass_count = 1;
         AnyRelationCollector any_collector(options);
         HighwayRelationManager highway_collector(options);
+        TurnRestrictionsManager restrictions_manager(options);
 
         // additional passes for views which use relations
         for (auto vt : options.views) {
@@ -176,6 +180,13 @@ int main(int argc, char* argv[]) {
                 options.verbose_output << "Pass " << pass_count << " (Relations (Highways view)) ...\n";
                 osmium::io::File input_file(input_filename);
                 highway_collector.enable();
+                osmium::relations::read_relations(input_file, highway_collector);
+                options.verbose_output << "Pass " << pass_count << " done\n";
+                ++pass_count;
+            } else if (vt == ViewType::turn_restrictions) {
+                options.verbose_output << "Pass " << pass_count << " (Relations (Turn restictions view)) ...\n";
+                osmium::io::File input_file(input_filename);
+                restrictions_manager.enable();
                 osmium::relations::read_relations(input_file, highway_collector);
                 options.verbose_output << "Pass " << pass_count << " done\n";
                 ++pass_count;

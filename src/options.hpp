@@ -17,7 +17,8 @@ enum class ViewType : char {
     geometry= 2,
     highways= 3,
     tagging = 4,
-    sac_scale = 5
+    sac_scale = 5,
+    turn_restrictions = 6
 };
 
 /**
