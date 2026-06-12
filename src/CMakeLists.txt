@@ -27,6 +27,10 @@ set(SOURCES
 	any_relation_collector.hpp
 	handler_collection.cpp
 	handler_collection.hpp
+	turn_restrictions_manager.cpp
+	turn_restrictions_manager.hpp
+	turn_restriction.cpp
+	turn_restriction.hpp
 )
 
 add_executable(osmi_simple_views ${SOURCES})

@@ -18,6 +18,7 @@
 #include "tagging_view_handler.hpp"
 #include "any_relation_collector.hpp"
 #include "highway_relation_manager.hpp"
+#include "turn_restrictions_manager.hpp"
 #include "sac_scale_view_handler.hpp"
 
 /**
@@ -34,6 +35,7 @@ class HandlerCollection : public osmium::handler::Handler {
     osmium::area::MultipolygonCollector<osmium::area::Assembler>::HandlerPass2* m_mp_collector_handler2 = nullptr;
     AnyRelationCollector::HandlerPass2* any_relation_collector_pass2 = nullptr;
     osmium::relations::SecondPassHandler<osmium::relations::RelationsManager<HighwayRelationManager, false, true, false> >* highway_relation_collector_pass2 = nullptr;
+    osmium::relations::SecondPassHandler<osmium::relations::RelationsManager<TurnRestrictionsManager, false, true, false> >* turn_restrictions_manager_pass2 = nullptr;
 
 public:
     HandlerCollection(Options& options);
@@ -54,6 +56,8 @@ public:
     void set_any_relation_collector_pass2(AnyRelationCollector& collector);
 
     void set_highway_relation_manager_pass2(HighwayRelationManager& manager);
+
+    void set_turn_restrictions_manager_pass2(TurnRestrictionsManager& manager);
 
     /**
      * \brief Add a multipolygon collector.

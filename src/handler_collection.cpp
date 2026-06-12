@@ -49,6 +49,10 @@ void HandlerCollection::set_highway_relation_manager_pass2(HighwayRelationManage
     highway_relation_collector_pass2 = &(manager.handler());
 }
 
+void HandlerCollection::set_turn_restrictions_manager_pass2(TurnRestrictionsManager& manager) {
+    turn_restrictions_manager_pass2 = &(manager.handler());
+}
+
 void HandlerCollection::add_multipolygon_collector(osmium::area::MultipolygonCollector<osmium::area::Assembler>& collector) {
     PlacesHandler& pl = *m_places_handler;
     m_mp_collector_handler2 = &(collector.handler([&pl](const osmium::memory::Buffer& area_buffer) {

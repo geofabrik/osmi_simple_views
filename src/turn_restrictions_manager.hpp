@@ -11,7 +11,7 @@
 #include "ogr_output_base.hpp"
 #include "turn_restriction.hpp"
 
-class TurnRestrictionsManager : public osmium::relations::RelationsManager<TurnRestrictionManager,
+class TurnRestrictionsManager : public osmium::relations::RelationsManager<TurnRestrictionsManager,
 false, true, false>, public OGROutputBase {
 
     std::unique_ptr<gdalcpp::Layer> m_restrictions_n;
@@ -19,22 +19,55 @@ false, true, false>, public OGROutputBase {
     std::unique_ptr<gdalcpp::Layer> m_invalid_restrictions_n;
     std::unique_ptr<gdalcpp::Layer> m_invalid_restrictions_w;
 
-    bool enabled;
+    static constexpr size_t vehicle_classes_count = 41;
 
     void write_invalid_point(const osmium::Relation& relation,
             const ValidationResult& result, std::unique_ptr<OGRGeometry>&& geometry);
     void write_invalid_line(const osmium::Relation& relation,
             const ValidationResult& result, std::unique_ptr<OGRGeometry>&& geometry);
+    void write_valid(const osmium::Relation& relation,
+        std::unique_ptr<OGRGeometry>&& point, std::unique_ptr<OGRGeometry>&& multilinestring);
+    void write(const osmium::Relation& relation, const ValidationResult& validation,
+            std::unique_ptr<OGRPoint>&& point, std::unique_ptr<OGRMultiLineString>&& ml);
+
+    void init_vehicle_classes_lengths();
 
 public:
-    enum Restriction : char {
+    enum class Restriction : char {
         undefined, invalid,
         no_u_turn, no_left_turn, no_right_turn, no_straight_on,
         only_u_turn, only_left_turn, only_right_turn, only_straight_on,
-        no_entry, no_exit
+        no_entry, no_exit,
+        stop, give_way
     };
 
-    static Restriction parse_restriction(const char* value);
+    enum class VehicleSuperclass : char {
+        bicycle, invalid, other, conditional
+    };
+
+    static constexpr std::array<const char*, vehicle_classes_count> vehicle_classes = {
+        "bicycle", "vehicle", "kick_scooter", "carriage", "cycle_rickshaw", "hand_cart",
+        "trailer", "caravan", "motor_vehicle", "motorcycle", "moped", "speed_pedelec",
+        "small_electric_vehicle", "motorcar", "motorhome", "tourist_bus", "coach", "goods", "hgv",
+        "hgv_articulated", "bdouble", "agricultural", "auto_rickshaw", "nev", "golf_cart",
+        "microcar", "atv", "psv", "bus", "taxi", "minibus", "share_taxi", "rideshare",
+        "hov", "carpool", "car_sharing", "emergency", "hazmat", "hazmat:water", "school_bus",
+        "disabled"
+    };
+    std::array<size_t, vehicle_classes_count> vehicle_classes_lengths;
+
+    static Restriction parse_restriction(const char* value, const bool bicycle);
+
+    /**
+     * Check if the provided key is a valid restriction key.
+     *
+     * Returns VehicleSuperclass::other or VehicleSuperclass::bicycle if the argument key starts
+     * with "restriction:" followed by a vehicle class. After the vehicle class, the string ma
+     *  continue with ":conditional".
+     *
+     * VehicleSuperclass::bicycle is returned if the vehicle class matches "bicycle".
+     */
+    VehicleSuperclass is_valid_restriction_key(const char* key) const;
 
     TurnRestrictionsManager() = delete;
 

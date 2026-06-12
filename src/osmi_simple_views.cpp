@@ -48,7 +48,7 @@ void print_help(char* arg0) {
               << "  -f, --format         Output format (default: SQlite)\n" \
               << "  -i, --index          Set index type for location index (default: sparse_mem_array)\n";
     std::cerr << "  -t TYPE, --type=TYPE View to be produced (tagging, highways, places, geometry,\n" \
-                 "                       sac_scale).\n" \
+                 "                       sac_scale, turn_restrictions).\n" \
               << "                       Use `-t view1 -t view2` if you want to produce files of\n" \
               << "                       multiple views.\n" \
               << "  -v, --verbose        Verbose output\n";
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
                 } else if (!strcmp(optarg, "places")) {
                     options.views.push_back(ViewType::places);
                 } else {
-                    std::cerr << "ERROR: -t must be one of tagging, geometry, highways, highway_properties, places\n";
+                    std::cerr << "ERROR: -t must be one of tagging, geometry, highways, sac_scale, places, turn_restrictions\n";
                     print_help(argv[0]);
                     exit(1);
                 }
@@ -186,8 +186,7 @@ int main(int argc, char* argv[]) {
             } else if (vt == ViewType::turn_restrictions) {
                 options.verbose_output << "Pass " << pass_count << " (Relations (Turn restictions view)) ...\n";
                 osmium::io::File input_file(input_filename);
-                restrictions_manager.enable();
-                osmium::relations::read_relations(input_file, highway_collector);
+                osmium::relations::read_relations(input_file, restrictions_manager);
                 options.verbose_output << "Pass " << pass_count << " done\n";
                 ++pass_count;
             }
@@ -202,6 +201,9 @@ int main(int argc, char* argv[]) {
             } else if (vt == ViewType::highways) {
                 highway_collector.create_layer(handlers.add_handler(vt, highway_collector.layer_name));
                 handlers.set_highway_relation_manager_pass2(highway_collector);
+            } else if (vt == ViewType::turn_restrictions) {
+                restrictions_manager.create_layer(handlers.add_handler(vt, restrictions_manager.way_layer_name));
+                handlers.set_turn_restrictions_manager_pass2(restrictions_manager);
             } else {
                 handlers.add_handler(vt, nullptr);
             }
