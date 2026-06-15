@@ -203,7 +203,6 @@ int main(int argc, char* argv[]) {
                 handlers.set_highway_relation_manager(highway_collector);
             } else if (vt == ViewType::turn_restrictions) {
                 handlers.set_turn_restrictions_manager(restrictions_manager);
-                handlers.add_handler(vt);
             } else {
                 handlers.add_handler(vt);
             }

@@ -51,6 +51,8 @@ void TurnRestrictionsManager::write_invalid_line(const osmium::Relation& relatio
         const ValidationResult& result, std::unique_ptr<OGRGeometry>&& geometry) {
     gdalcpp::Feature feature(*(m_invalid_restrictions_w.get()), std::move(geometry));
     TaggingViewHandler::set_basic_fields(feature, relation, "message", result.message.value().c_str());
+    feature.set_field("error_type", osmium::item_type_to_name(result.object_type));
+    feature.set_field("error_id", static_cast<GIntBig>(result.object_id));
     feature.add_to_layer();
 }
 
@@ -62,7 +64,7 @@ void TurnRestrictionsManager::write_valid(const osmium::Relation& relation,
         TaggingViewHandler::set_basic_fields(feature, relation, "restriction", r_value);
         feature.add_to_layer();
     }
-    if (!point->IsEmpty()) {
+    if (point && !point->IsEmpty()) {
         gdalcpp::Feature feature(*(m_restrictions_n.get()), std::move(point));
         TaggingViewHandler::set_basic_fields(feature, relation, "restriction", r_value);
         feature.add_to_layer();
@@ -72,14 +74,14 @@ void TurnRestrictionsManager::write_valid(const osmium::Relation& relation,
 void TurnRestrictionsManager::write(const osmium::Relation& relation,
         const ValidationResult& validation, std::unique_ptr<OGRPoint>&& point,
         std::unique_ptr<OGRMultiLineString>&& ml) {
-    if (!ml->IsEmpty()) {
+    if (ml && !ml->IsEmpty()) {
         std::unique_ptr<OGRGeometry> geom {static_cast<OGRGeometry*>(ml.release())};
         if (validation.failed()) {
             write_invalid_line(relation, validation, std::move(geom));
-        } else {
+        } else if (point) {
             write_valid(relation, std::move(point), std::move(ml));
         }
-    } else {
+    } else if (point) {
         std::unique_ptr<OGRGeometry> geom {static_cast<OGRGeometry*>(point.release())};
         write_invalid_point(relation, validation, std::move(geom));
     }
@@ -198,7 +200,7 @@ void TurnRestrictionsManager::complete_relation(const osmium::Relation& relation
     const osmium::Way* to_way = nullptr;
     std::vector<RestrictionMemberWay> via_ways;
     for (const osmium::RelationMember& member : relation.members()) {
-        if (member.ref() <= 0) {
+        if (member.ref() == 0) {
             continue;
         }
         if (member.type() == osmium::item_type::relation) {
@@ -276,15 +278,7 @@ void TurnRestrictionsManager::complete_relation(const osmium::Relation& relation
             validation = tr.validate_members();
         }
     }
-    if (validation.message.has_value()) {
-        if (!ml->IsEmpty()) {
-            std::unique_ptr<OGRGeometry> geom {static_cast<OGRGeometry*>(ml.release())};
-            write_invalid_line(relation, validation, std::move(geom));
-        } else {
-            std::unique_ptr<OGRGeometry> geom {static_cast<OGRGeometry*>(point.release())};
-            write_invalid_point(relation, validation, std::move(geom));
-        }
-    }
+    write(relation, validation, std::move(point), std::move(ml));
 }
 
 void TurnRestrictionsManager::create_layer(CreateLayerFunc create_layer) {

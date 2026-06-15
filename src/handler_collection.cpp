@@ -230,6 +230,9 @@ void HandlerCollection::node(const osmium::Node& node) {
     if (highway_relation_collector) {
         highway_relation_collector->handler().node(node);
     }
+    if (turn_restrictions_manager) {
+        turn_restrictions_manager->handler().node(node);
+    }
 }
 
 void HandlerCollection::way(const osmium::Way& way) {
@@ -245,6 +248,9 @@ void HandlerCollection::way(const osmium::Way& way) {
         }
         if (highway_relation_collector) {
             highway_relation_collector->handler().way(way);
+        }
+        if (turn_restrictions_manager) {
+            turn_restrictions_manager->handler().way(way);
         }
     } catch (osmium::invalid_location& err) {
         m_options.verbose_output << err.what() << '\n';
@@ -264,6 +270,9 @@ void HandlerCollection::relation(const osmium::Relation& relation) {
         }
         if (highway_relation_collector) {
             highway_relation_collector->handler().relation(relation);
+        }
+        if (turn_restrictions_manager) {
+            turn_restrictions_manager->handler().relation(relation);
         }
     } catch (osmium::invalid_location& err) {
         m_options.verbose_output << err.what() << '\n';
@@ -293,5 +302,8 @@ void HandlerCollection::flush() {
     }
     if (highway_relation_collector) {
         highway_relation_collector->handler().flush();
+    }
+    if (turn_restrictions_manager) {
+        turn_restrictions_manager->handler().flush();
     }
 }

@@ -12,7 +12,7 @@
 #include "turn_restriction.hpp"
 
 class TurnRestrictionsManager : public osmium::relations::RelationsManager<TurnRestrictionsManager,
-false, true, false>, public OGROutputBase {
+true, true, true>, public OGROutputBase {
 
     std::unique_ptr<gdalcpp::Layer> m_restrictions_n;
     std::unique_ptr<gdalcpp::Layer> m_restrictions_w;
