@@ -228,7 +228,7 @@ void TurnRestrictionsManager::complete_relation(const osmium::Relation& relation
                 } else {
                     to_way = way;
                 }
-            } else if (strcmp(member.role(), "via")) {
+            } else if (!strcmp(member.role(), "via")) {
                 if (member_node_id) {
                     validation.reset(osmium::item_type::way, member.ref(), "via way and node in one relation");
                 } else {
