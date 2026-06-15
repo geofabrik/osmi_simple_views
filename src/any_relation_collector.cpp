@@ -56,11 +56,12 @@ void AnyRelationCollector::way_not_in_any_relation(const osmium::Way& way) {
 
 void AnyRelationCollector::complete_relation(osmium::relations::RelationMeta&) {}
 
-void AnyRelationCollector::create_layer(gdalcpp::Dataset* dataset) {
-    m_tagging_ways_without_tags =
-            std::unique_ptr<gdalcpp::Layer>(new gdalcpp::Layer(*dataset, layer_name,
-            wkbLineString, get_gdal_default_layer_options()));
-
+void AnyRelationCollector::create_layer(CreateLayerFunc create_layer) {
+    m_tagging_ways_without_tags = create_layer(layer_name, wkbLineString);
     m_tagging_ways_without_tags->add_field("way_id", OFTString, 10);
     m_tagging_ways_without_tags->add_field("lastchange", OFTString, 21);
+}
+
+void AnyRelationCollector::close() {
+    m_tagging_ways_without_tags.reset();
 }

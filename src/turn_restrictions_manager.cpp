@@ -287,35 +287,34 @@ void TurnRestrictionsManager::complete_relation(const osmium::Relation& relation
     }
 }
 
-void TurnRestrictionsManager::create_layer(gdalcpp::Dataset* dataset) {
-    m_restrictions_n =
-            std::unique_ptr<gdalcpp::Layer>(new gdalcpp::Layer(*dataset, node_layer_name,
-                    wkbPoint, get_gdal_default_layer_options()));
+void TurnRestrictionsManager::create_layer(CreateLayerFunc create_layer) {
+    m_restrictions_n = create_layer(node_layer_name, wkbPoint);
     m_restrictions_n->add_field("rel_id", OFTString, 10);
     m_restrictions_n->add_field("lastchange", OFTString, 21);
     m_restrictions_n->add_field("restriction", OFTString, TaggingViewHandler::MAX_STRING_LENGTH);
     m_restrictions_n->add_field("other_tags", OFTString, TaggingViewHandler::MAX_STRING_LENGTH);
-    m_restrictions_w =
-            std::unique_ptr<gdalcpp::Layer>(new gdalcpp::Layer(*dataset, way_layer_name,
-            wkbMultiLineString, get_gdal_default_layer_options()));
+    m_restrictions_w = create_layer(way_layer_name, wkbMultiLineString);
     m_restrictions_w->add_field("rel_id", OFTString, 10);
     m_restrictions_w->add_field("lastchange", OFTString, 21);
     m_restrictions_w->add_field("restriction", OFTString, TaggingViewHandler::MAX_STRING_LENGTH);
     m_restrictions_w->add_field("other_tags", OFTString, TaggingViewHandler::MAX_STRING_LENGTH);
-    m_invalid_restrictions_n =
-            std::unique_ptr<gdalcpp::Layer>(new gdalcpp::Layer(*dataset, invalid_node_layer_name,
-            wkbPoint, get_gdal_default_layer_options()));
+    m_invalid_restrictions_n = create_layer(invalid_node_layer_name, wkbPoint);
     m_invalid_restrictions_n->add_field("rel_id", OFTString, 10);
     m_invalid_restrictions_n->add_field("lastchange", OFTString, 21);
     m_invalid_restrictions_n->add_field("message", OFTString, TaggingViewHandler::MAX_STRING_LENGTH);
     m_invalid_restrictions_n->add_field("error_type", OFTString, 1);
     m_invalid_restrictions_n->add_field("error_id", OFTInteger64, TaggingViewHandler::MAX_STRING_LENGTH);
-    m_invalid_restrictions_w =
-            std::unique_ptr<gdalcpp::Layer>(new gdalcpp::Layer(*dataset, invalid_way_layer_name,
-            wkbMultiLineString, get_gdal_default_layer_options()));
+    m_invalid_restrictions_w = create_layer(invalid_way_layer_name, wkbMultiLineString);
     m_invalid_restrictions_w->add_field("rel_id", OFTString, 10);
     m_invalid_restrictions_w->add_field("lastchange", OFTString, 21);
     m_invalid_restrictions_w->add_field("message", OFTString, TaggingViewHandler::MAX_STRING_LENGTH);
     m_invalid_restrictions_w->add_field("error_type", OFTString, 1);
     m_invalid_restrictions_w->add_field("error_id", OFTInteger64, TaggingViewHandler::MAX_STRING_LENGTH);
+}
+
+void TurnRestrictionsManager::close() {
+    m_restrictions_n.reset();
+    m_restrictions_w.reset();
+    m_invalid_restrictions_n.reset();
+    m_invalid_restrictions_w.reset();
 }

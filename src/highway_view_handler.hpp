@@ -193,9 +193,10 @@ class HighwayViewHandler : public AbstractViewHandler {
     int pipe_separated_items_count(const char* value);
 
 public:
-    HighwayViewHandler(Options& options);
+    HighwayViewHandler(Options& options, CreateLayerFunc create_layer);
 
-    void give_correct_name();
+    ViewType view_type() const;
+    std::string view_name() const;
 
     void close();
 
@@ -205,8 +206,6 @@ public:
 
     void relation(const osmium::Relation&) {};
     void area(const osmium::Area&) {};
-
-    std::string name();
 
     static bool check_length_value(const char* value);
 

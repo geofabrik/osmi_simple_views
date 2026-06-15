@@ -21,6 +21,9 @@
 #define SRC_ABSTRACT_VIEW_HANDLER_HPP_
 
 #include <array>
+#include <functional>
+#include <memory>
+#include <vector>
 #include <gdalcpp.hpp>
 #include <osmium/handler.hpp>
 #include <osmium/osm/way.hpp>
@@ -28,27 +31,7 @@
 
 class AbstractViewHandler : public osmium::handler::Handler, public OGROutputBase {
 
-    /**
-     * Get filename suffix by output format with a leading dot.
-     *
-     * If the format is not found, an empty string is returned.
-     *
-     * This method is required because GDAL does not provide such a method.
-     */
-    std::string filename_suffix();
-
 protected:
-
-    /// ORG dataset
-    // This has to be a vector of unique_ptr because a vector of objects themselves fails to
-    // compile due to "copy constructor of 'Dataset' is implicitly deleted because field
-    // 'm_options' has a deleted copy constructor".
-    std::vector<std::unique_ptr<gdalcpp::Dataset>> m_datasets;
-
-    /**
-     * Pathes to datasets. This vector is populated before closing a dataset.
-     */
-    std::vector<std::string> m_dataset_names;
 
     static constexpr double UPPER_LIMIT_LATITUDE = 90.0;
 
@@ -57,9 +40,7 @@ protected:
      */
     bool all_nodes_valid(const osmium::WayNodeList& wnl);
 
-    void rename_output_files(const std::string& view_name);
-
-    void close_datasets();
+//    void close_datasets();
 
     inline bool coordinates_valid(const osmium::Location location) {
 #ifdef ONLYMERCATOROUTPUT
@@ -110,13 +91,8 @@ public:
 
     AbstractViewHandler(Options& options);
 
-    /**
-     * Add proper file name suffix to the output files. If there is one output dataset only,
-     * give it the name of the view.
-     *
-     * @arg view_name name of the view.
-     */
-    virtual void give_correct_name() = 0;
+    virtual ViewType view_type() const = 0;
+    virtual std::string view_name() const = 0;
 
     virtual ~AbstractViewHandler();
 
@@ -125,18 +101,6 @@ public:
     virtual void way(const osmium::Way&) = 0;
 
     virtual void area(const osmium::Area&) = 0;
-
-    /**
-     * Add a new dataset to the vector if the last one cannot be use for multiple layers
-     */
-    void ensure_writeable_dataset(const char* layer_name);
-
-    /**
-     * Get a pointer to the dataset being used. The ownership will stay at AbstractViewHandler.
-     */
-    gdalcpp::Dataset* get_dataset_pointer(const char* layer_name);
-
-    std::unique_ptr<gdalcpp::Layer> create_layer(const char* layer_name, OGRwkbGeometryType type, const std::vector<std::string>& options = {});
 
     template <size_t TKeyCount>
     std::string selective_tags_str(const osmium::TagList& tags, const char separator, std::array<const char*, TKeyCount> keys) {

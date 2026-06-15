@@ -19,7 +19,7 @@
 
 #include "tagging_view_handler.hpp"
 
-TaggingViewHandler::TaggingViewHandler(Options& options) :
+TaggingViewHandler::TaggingViewHandler(Options& options, CreateLayerFunc create_layer) :
         AbstractViewHandler(options),
         m_tagging_fixmes_on_nodes(create_layer("tagging_fixmes_on_nodes", wkbPoint)),
         m_tagging_fixmes_on_ways(create_layer("tagging_fixmes_on_ways", wkbLineString)),
@@ -102,7 +102,6 @@ void TaggingViewHandler::close() {
     m_tagging_no_feature_tag_ways.reset();
     m_tagging_long_text_nodes.reset();
     m_tagging_long_text_ways.reset();
-    close_datasets();
 }
 
 void TaggingViewHandler::write_feature_to_simple_layer(gdalcpp::Layer* layer,
@@ -642,8 +641,12 @@ void TaggingViewHandler::handle_object(const osmium::OSMObject& object) {
     long_text(object);
 }
 
-void TaggingViewHandler::give_correct_name() {
-    rename_output_files("tagging");
+ViewType TaggingViewHandler::view_type() const {
+    return ViewType::tagging;
+}
+
+std::string TaggingViewHandler::view_name() const {
+    return "tagging";
 }
 
 void TaggingViewHandler::node(const osmium::Node& node) {

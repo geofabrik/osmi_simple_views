@@ -165,9 +165,10 @@ class GeometryViewHandler : public AbstractViewHandler {
 public:
     GeometryViewHandler() = delete;
 
-    GeometryViewHandler(Options&);
+    GeometryViewHandler(Options&, CreateLayerFunc create_layer);
 
-    void give_correct_name();
+    ViewType view_type() const;
+    std::string view_name() const;
 
     void way(const osmium::Way& way);
 

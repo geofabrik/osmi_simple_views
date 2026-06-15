@@ -22,32 +22,3 @@
 
 OGROutputBase::OGROutputBase(Options& options) :
         m_options(options) { }
-
-std::vector<std::string> OGROutputBase::get_gdal_default_dataset_options() {
-    std::vector<std::string> default_options;
-    // default layer creation options
-    if (m_options.output_format == "SQlite") {
-        CPLSetConfigOption("OGR_SQLITE_PRAGMA", "journal_mode=OFF,TEMP_STORE=MEMORY,temp_store=memory,LOCKING_MODE=EXCLUSIVE");
-        CPLSetConfigOption("OGR_SQLITE_CACHE", "600");
-        CPLSetConfigOption("OGR_SQLITE_JOURNAL", "OFF");
-        CPLSetConfigOption("OGR_SQLITE_SYNCHRONOUS", "OFF");
-        default_options.emplace_back("SPATIALITE=YES");
-    } else if (m_options.output_format == "ESRI Shapefile") {
-        default_options.emplace_back("SHAPE_ENCODING=UTF8");
-    }
-
-    return default_options;
-}
-
-std::vector<std::string> OGROutputBase::get_gdal_default_layer_options() {
-    std::vector<std::string> default_options;
-    // default layer creation options
-    if (m_options.output_format == "SQlite") {
-        default_options.emplace_back("SPATIAL_INDEX=NO");
-        default_options.emplace_back("COMPRESS_GEOM=NO");
-    } else if (m_options.output_format == "ESRI Shapefile") {
-        default_options.emplace_back("SHAPE_ENCODING=UTF8");
-    }
-
-    return default_options;
-}

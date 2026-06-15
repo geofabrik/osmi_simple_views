@@ -66,11 +66,13 @@ void HighwayRelationManager::process_relation(const osmium::Relation& relation) 
     feature.add_to_layer();
 }
 
-void HighwayRelationManager::create_layer(gdalcpp::Dataset* dataset) {
-    m_relations_with_highway =
-            std::unique_ptr<gdalcpp::Layer>(new gdalcpp::Layer(*dataset, layer_name,
-            wkbMultiLineString, get_gdal_default_layer_options()));
+void HighwayRelationManager::create_layer(CreateLayerFunc func) {
+    m_relations_with_highway = func(layer_name, wkbMultiLineString);
     m_relations_with_highway->add_field("rel_id", OFTString, 10);
     m_relations_with_highway->add_field("lastchange", OFTString, 21);
     m_relations_with_highway->add_field("highway", OFTString, TaggingViewHandler::MAX_STRING_LENGTH);
+}
+
+void HighwayRelationManager::close() {
+    m_relations_with_highway.reset();
 }

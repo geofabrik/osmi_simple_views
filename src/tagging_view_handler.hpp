@@ -157,11 +157,12 @@ class TaggingViewHandler : public AbstractViewHandler {
 public:
     TaggingViewHandler() = delete;
 
-    explicit TaggingViewHandler(Options& options);
+    explicit TaggingViewHandler(Options& options, CreateLayerFunc create_layer);
 
     static constexpr size_t MAX_STRING_LENGTH = 254;
 
-    void give_correct_name();
+    ViewType view_type() const;
+    std::string view_name() const;
 
     void close();
 

@@ -23,7 +23,7 @@
 #include <osmium/index/index.hpp>
 #include <osmium/osm/item_type.hpp>
 
-PlacesHandler::PlacesHandler(Options& options) :
+PlacesHandler::PlacesHandler(Options& options, CreateLayerFunc create_layer) :
         AbstractViewHandler(options),
         m_points(create_layer("points", wkbPoint)),
         m_polygons(create_layer("polygons", wkbMultiPolygon)),
@@ -75,8 +75,12 @@ PlacesHandler::PlacesHandler(Options& options) :
 
 }
 
-void PlacesHandler::give_correct_name() {
-    rename_output_files("places");
+ViewType PlacesHandler::view_type() const {
+    return ViewType::places;
+}
+
+std::string PlacesHandler::view_name() const {
+    return "places";
 }
 
 void PlacesHandler::close() {
@@ -85,7 +89,6 @@ void PlacesHandler::close() {
     m_errors_points.reset();
     m_errors_polygons.reset();
     m_cities.reset();
-    close_datasets();
 }
 
 bool PlacesHandler::place_value_ok(const char* value) {

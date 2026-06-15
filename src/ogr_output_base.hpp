@@ -59,34 +59,12 @@ protected:
     /// maximum length of a string field
     static constexpr size_t MAX_FIELD_LENGTH = 254;
 
-    /**
-     * \brief Add default options for the to the back of a vector of options.
-     *
-     * Default dataset creation options are added at the *back* of the vector. If you read the vector in a later step
-     * to set them via the functions provided by the GDAL library, do it in reverse order. Otherwise
-     * the defaults will overwrite your explicitly set options.
-     *
-     * \param output_format output format
-     * \param gdal_options vector where to add the default options.
-     */
-    std::vector<std::string> get_gdal_default_dataset_options();
-
-    /**
-     * \brief Add default options for the to the back of a vector of options.
-     *
-     * Default layer creation options are added at the *back* of the vector. If you read the vector in a later step
-     * to set them via the functions provided by the GDAL library, do it in reverse order. Otherwise
-     * the defaults will overwrite your explicitly set options.
-     *
-     * \param output_format output format
-     * \param gdal_options vector where to add the default options.
-     */
-    std::vector<std::string> get_gdal_default_layer_options();
-
 public:
     OGROutputBase() = delete;
 
     OGROutputBase(Options& options);
+
+    using CreateLayerFunc = std::function<std::unique_ptr<gdalcpp::Layer>(const char*, OGRwkbGeometryType)>;
 };
 
 #endif /* SRC_OGR_OUTPUT_BASE_HPP_ */

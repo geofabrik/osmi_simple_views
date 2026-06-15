@@ -85,8 +85,9 @@ public:
     /**
      * Assign the pointer pointing to a dataset.
      */
-    void create_layer(gdalcpp::Dataset* dataset);
+    void create_layer(CreateLayerFunc create_layer);
 
+    void close();
 };
 
 #endif /* SRC_ANY_RELATION_COLLECTOR_HPP_ */

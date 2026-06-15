@@ -22,7 +22,7 @@
 #include <limits>
 
 
-HighwayViewHandler::HighwayViewHandler(Options& options) :
+HighwayViewHandler::HighwayViewHandler(Options& options, CreateLayerFunc create_layer) :
         AbstractViewHandler(options),
         m_highway_abandoned(create_layer("highway_abandoned", wkbLineString)),
         m_highway_disused(create_layer("highway_disused", wkbLineString)),
@@ -115,8 +115,12 @@ HighwayViewHandler::HighwayViewHandler(Options& options) :
     register_check(highway_long_ref, "ref", m_highway_long_ref.get());
 }
 
-void HighwayViewHandler::give_correct_name() {
-    rename_output_files("highways");
+ViewType HighwayViewHandler::view_type() const {
+    return ViewType::highways;
+}
+
+std::string HighwayViewHandler::view_name() const {
+    return "highways";
 }
 
 void HighwayViewHandler::close() {
@@ -137,7 +141,7 @@ void HighwayViewHandler::close() {
     m_highway_disused.reset();
     m_highway_construction.reset();
     m_highway_proposed.reset();
-    close_datasets();
+//    close_datasets();
 }
 
 void HighwayViewHandler::register_check(std::function<bool (const osmium::TagList&)> function, std::string key, gdalcpp::Layer* layer) {

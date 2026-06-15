@@ -196,16 +196,16 @@ int main(int argc, char* argv[]) {
         osmium::io::Reader reader2(input_filename, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way);
         for (auto vt : options.views) {
             if (vt == ViewType::tagging) {
-                any_collector.create_layer(handlers.add_handler(vt, any_collector.layer_name));
-                handlers.set_any_relation_collector_pass2(any_collector);
+                handlers.add_handler(vt);
+                handlers.set_any_relation_collector(any_collector);
             } else if (vt == ViewType::highways) {
-                highway_collector.create_layer(handlers.add_handler(vt, highway_collector.layer_name));
-                handlers.set_highway_relation_manager_pass2(highway_collector);
+                handlers.add_handler(vt);
+                handlers.set_highway_relation_manager(highway_collector);
             } else if (vt == ViewType::turn_restrictions) {
-                restrictions_manager.create_layer(handlers.add_handler(vt, restrictions_manager.way_layer_name));
-                handlers.set_turn_restrictions_manager_pass2(restrictions_manager);
+                handlers.set_turn_restrictions_manager(restrictions_manager);
+                handlers.add_handler(vt);
             } else {
-                handlers.add_handler(vt, nullptr);
+                handlers.add_handler(vt);
             }
             if (vt == ViewType::places) {
                 handlers.add_multipolygon_collector(collector);
@@ -220,7 +220,7 @@ int main(int argc, char* argv[]) {
                 highway_collector.process_relation(*handle);
             });
         }
+        handlers.give_correct_name();
     }
-    handlers.give_correct_name();
 
 }

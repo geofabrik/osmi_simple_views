@@ -33,7 +33,7 @@ class SacScaleViewHandler : public AbstractViewHandler {
             const char* sac_scale, const char* extra_field = nullptr, const char* extra_value = nullptr);
 
 public:
-    SacScaleViewHandler(Options& options);
+    SacScaleViewHandler(Options& options, CreateLayerFunc create_layer);
 
     SacScaleViewHandler() = delete;
 
@@ -43,7 +43,8 @@ public:
 
     void area(const osmium::Area& area);
 
-    void give_correct_name();
+    ViewType view_type() const;
+    std::string view_name() const;
 
     void close();
 };

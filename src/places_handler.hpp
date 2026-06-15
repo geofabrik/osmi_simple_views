@@ -94,9 +94,10 @@ class PlacesHandler : public AbstractViewHandler {
 public:
     PlacesHandler() = delete;
 
-    PlacesHandler(Options& options);
+    PlacesHandler(Options& options, CreateLayerFunc create_layer);
 
-    void give_correct_name();
+    ViewType view_type() const;
+    std::string view_name() const;
 
     void close();
 

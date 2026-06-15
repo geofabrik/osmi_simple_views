@@ -29,7 +29,7 @@ const std::array<const char*, 4> bad_surface_values = {"rock", "rocks", "stone",
 /// Values forbidding access.
 const std::array<const char*, 2> no_values = {"no", "private"};
 
-SacScaleViewHandler::SacScaleViewHandler(Options& options) :
+SacScaleViewHandler::SacScaleViewHandler(Options& options, CreateLayerFunc create_layer) :
 		AbstractViewHandler(options),
 		m_sac_scale(create_layer("sac_scale", wkbLineString)),
 		m_sac_scale_warnings(create_layer("sac_scale_warnings", wkbLineString)),
@@ -56,15 +56,18 @@ SacScaleViewHandler::SacScaleViewHandler(Options& options) :
 	m_sac_scale_errors->add_field("tags", OFTString, MAX_FIELD_LENGTH);
 }
 
-void SacScaleViewHandler::give_correct_name() {
-    rename_output_files("sac_scale");
+ViewType SacScaleViewHandler::view_type() const {
+    return ViewType::sac_scale;
+}
+
+std::string SacScaleViewHandler::view_name() const {
+    return "sac_scale";
 }
 
 void SacScaleViewHandler::close() {
 	m_sac_scale.reset();
     m_sac_scale_warnings.reset();
     m_sac_scale_errors.reset();
-    close_datasets();
 }
 
 bool SacScaleViewHandler::surface_matches_sac_scale(const osmium::Way& way,

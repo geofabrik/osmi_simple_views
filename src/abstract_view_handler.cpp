@@ -24,57 +24,10 @@
 #include <locale>
 
 AbstractViewHandler::AbstractViewHandler(Options& options) :
-        OGROutputBase(options),
-        m_datasets(),
-        m_dataset_names() {
+        OGROutputBase(options) {
 }
 
 AbstractViewHandler::~AbstractViewHandler() {
-}
-
-void AbstractViewHandler::close_datasets() {
-    for (auto& d : m_datasets) {
-        m_dataset_names.push_back(d->dataset_name());
-        d.reset();
-    }
-}
-
-std::string AbstractViewHandler::filename_suffix() {
-    if (Options::case_insensitive_comp_left(m_options.output_format, "geojson")) {
-        return ".json";
-    } else if (Options::case_insensitive_comp_left(m_options.output_format, "sqlite")) {
-        return ".db";
-    }
-    return "";
-}
-
-void AbstractViewHandler::rename_output_files(const std::string& view_name) {
-    if (m_dataset_names.size() == 1 && filename_suffix().length()) {
-        // rename output file if there is one output dataset only
-        std::string destination_name {m_options.output_directory};
-        destination_name += '/';
-        destination_name += view_name;
-        destination_name += filename_suffix();
-        if (access(destination_name.c_str(), F_OK) == 0) {
-            std::cerr << "ERROR: Cannot rename output file from to " << destination_name << " because file exists already.\n";
-        } else {
-            if (rename(m_dataset_names.front().c_str(), destination_name.c_str())) {
-                std::cerr << "ERROR: Rename from " << m_dataset_names.front() << " to " << destination_name << "failed.\n";
-            }
-        }
-    } else if (m_dataset_names.size() > 1 && filename_suffix().length()) {
-        for (auto& d: m_dataset_names) {
-            std::string destination_name = d;
-            destination_name += filename_suffix();
-            if (access(destination_name.c_str(), F_OK) == 0) {
-                std::cerr << "ERROR: Cannot rename output file from to " << destination_name << " because file exists already.\n";
-            } else {
-                if (rename(d.c_str(), destination_name.c_str())) {
-                    std::cerr << "ERROR: Rename from " << m_dataset_names.front() << " to " << destination_name << "failed.\n";
-                }
-            }
-        }
-    }
 }
 
 bool AbstractViewHandler::all_nodes_valid(const osmium::WayNodeList& wnl) {
@@ -89,28 +42,6 @@ bool AbstractViewHandler::all_nodes_valid(const osmium::WayNodeList& wnl) {
         }
     }
     return true;
-}
-
-void AbstractViewHandler::ensure_writeable_dataset(const char* layer_name) {
-    if (m_datasets.empty() || m_options.one_layer_per_datasource_only()) {
-        std::string output_filename = m_options.output_directory;
-        output_filename += '/';
-        output_filename += layer_name;
-        std::unique_ptr<gdalcpp::Dataset> ds {new gdalcpp::Dataset(m_options.output_format, output_filename, gdalcpp::SRS(m_options.srs), get_gdal_default_dataset_options())};
-        m_datasets.push_back(std::move(ds));
-        m_datasets.back()->enable_auto_transactions(10000);
-    }
-}
-
-gdalcpp::Dataset* AbstractViewHandler::get_dataset_pointer(const char* layer_name) {
-    ensure_writeable_dataset(layer_name);
-    return m_datasets.back().get();
-}
-
-std::unique_ptr<gdalcpp::Layer> AbstractViewHandler::create_layer(const char* layer_name, OGRwkbGeometryType type,
-        const std::vector<std::string>& options /*= {}*/) {
-    ensure_writeable_dataset(layer_name);
-    return std::unique_ptr<gdalcpp::Layer>{new gdalcpp::Layer(*(m_datasets.back()), layer_name, type, options)};
 }
 
 std::string AbstractViewHandler::tags_string(const osmium::TagList& tags, const char* not_include) {

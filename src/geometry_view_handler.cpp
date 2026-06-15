@@ -29,16 +29,16 @@
 #include <vector>
 #include <osmium/geom/haversine.hpp>
 
-GeometryViewHandler::GeometryViewHandler(Options& options) :
+GeometryViewHandler::GeometryViewHandler(Options& options, CreateLayerFunc create_layer) :
         AbstractViewHandler(options),
-        m_geometry_long_ways(create_layer("geometry_long_ways", wkbLineString, get_gdal_default_layer_options())),
-        m_geometry_long_seg_seg(create_layer("geometry_long_seg_seg", wkbLineString, get_gdal_default_layer_options())),
-        m_geometry_long_seg_way(create_layer("geometry_long_seg_way", wkbLineString, get_gdal_default_layer_options())),
-        m_geometry_single_node_in_way(create_layer("geometry_single_node_in_way", wkbPoint, get_gdal_default_layer_options())),
-        m_geometry_duplicate_node_in_way_way(create_layer("geometry_duplicate_node_in_way_way", wkbLineString, get_gdal_default_layer_options())),
-        m_geometry_duplicate_node_in_way_node(create_layer("geometry_duplicate_node_in_way_node", wkbPoint, get_gdal_default_layer_options())),
-        m_geometry_self_intersection_ways(create_layer("geometry_self_intersection_ways", wkbLineString, get_gdal_default_layer_options())),
-        m_geometry_self_intersection_points(create_layer("geometry_self_intersection_points", wkbPoint, get_gdal_default_layer_options())) {
+        m_geometry_long_ways(create_layer("geometry_long_ways", wkbLineString)),
+        m_geometry_long_seg_seg(create_layer("geometry_long_seg_seg", wkbLineString)),
+        m_geometry_long_seg_way(create_layer("geometry_long_seg_way", wkbLineString)),
+        m_geometry_single_node_in_way(create_layer("geometry_single_node_in_way", wkbPoint)),
+        m_geometry_duplicate_node_in_way_way(create_layer("geometry_duplicate_node_in_way_way", wkbLineString)),
+        m_geometry_duplicate_node_in_way_node(create_layer("geometry_duplicate_node_in_way_node", wkbPoint)),
+        m_geometry_self_intersection_ways(create_layer("geometry_self_intersection_ways", wkbLineString)),
+        m_geometry_self_intersection_points(create_layer("geometry_self_intersection_points", wkbPoint)) {
     // add fields to layers
     m_geometry_long_ways->add_field("way_id", OFTString, 10);
     m_geometry_long_ways->add_field("lastchange", OFTString, 21);
@@ -75,8 +75,12 @@ GeometryViewHandler::GeometryViewHandler(Options& options) :
     m_geometry_self_intersection_points->add_field("rel_id", OFTString, 10); // TODO why?
 }
 
-void GeometryViewHandler::give_correct_name() {
-    rename_output_files("geometry");
+ViewType GeometryViewHandler::view_type() const {
+    return ViewType::geometry;
+}
+
+std::string GeometryViewHandler::view_name() const {
+    return "geometry";
 }
 
 std::string GeometryViewHandler::tags_string(const osmium::TagList& tags) {
@@ -370,5 +374,4 @@ void GeometryViewHandler::close() {
     m_geometry_duplicate_node_in_way_node.reset();
     m_geometry_self_intersection_ways.reset();
     m_geometry_self_intersection_points.reset();
-    close_datasets();
 }
