@@ -32,25 +32,6 @@ AbstractViewHandler::AbstractViewHandler(Options& options) :
 AbstractViewHandler::~AbstractViewHandler() {
 }
 
-/**
- * Do a case-insensitive string comparison assuming that the right side is lower case.
- */
-bool case_insensitive_comp_left(const std::string& a, const std::string& b) {
-    return (
-        a.size() == b.size()
-        && std::equal(
-            a.begin(), a.end(), b.begin(),
-            [](const char c, const char d) {
-                return c == d || std::tolower(c) == d;
-            })
-    );
-}
-
-bool AbstractViewHandler::one_layer_per_datasource_only() {
-    return case_insensitive_comp_left(m_options.output_format, "geojson")
-        || case_insensitive_comp_left(m_options.output_format, "esri shapefile");
-}
-
 void AbstractViewHandler::close_datasets() {
     for (auto& d : m_datasets) {
         m_dataset_names.push_back(d->dataset_name());
@@ -59,9 +40,9 @@ void AbstractViewHandler::close_datasets() {
 }
 
 std::string AbstractViewHandler::filename_suffix() {
-    if (case_insensitive_comp_left(m_options.output_format, "geojson")) {
+    if (Options::case_insensitive_comp_left(m_options.output_format, "geojson")) {
         return ".json";
-    } else if (case_insensitive_comp_left(m_options.output_format, "sqlite")) {
+    } else if (Options::case_insensitive_comp_left(m_options.output_format, "sqlite")) {
         return ".db";
     }
     return "";
@@ -111,7 +92,7 @@ bool AbstractViewHandler::all_nodes_valid(const osmium::WayNodeList& wnl) {
 }
 
 void AbstractViewHandler::ensure_writeable_dataset(const char* layer_name) {
-    if (m_datasets.empty() || one_layer_per_datasource_only()) {
+    if (m_datasets.empty() || m_options.one_layer_per_datasource_only()) {
         std::string output_filename = m_options.output_directory;
         output_filename += '/';
         output_filename += layer_name;

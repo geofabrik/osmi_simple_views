@@ -35,6 +35,30 @@ struct Options {
     const int srs = 4326;
 #endif
     osmium::util::VerboseOutput verbose_output {false};
+
+    /**
+     * Return capability to create multiple layers with one data source.
+     *
+     * By default, this method returns false.
+     */
+    bool one_layer_per_datasource_only() {
+        return case_insensitive_comp_left(output_format, "geojson")
+            || case_insensitive_comp_left(output_format, "esri shapefile");
+    }
+
+    /**
+     * Do a case-insensitive string comparison assuming that the right side is lower case.
+     */
+    static bool case_insensitive_comp_left(const std::string& a, const std::string& b) {
+        return (
+            a.size() == b.size()
+            && std::equal(
+                a.begin(), a.end(), b.begin(),
+                [](const char c, const char d) {
+                    return c == d || std::tolower(c) == d;
+                })
+        );
+    }
 };
 
 

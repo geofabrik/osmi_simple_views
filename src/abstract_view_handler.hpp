@@ -37,13 +37,6 @@ class AbstractViewHandler : public osmium::handler::Handler, public OGROutputBas
      */
     std::string filename_suffix();
 
-    /**
-     * Return capability to create multiple layers with one data source.
-     *
-     * By default, this method returns false.
-     */
-    bool one_layer_per_datasource_only();
-
 protected:
 
     /// ORG dataset
