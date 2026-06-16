@@ -263,6 +263,8 @@ void TurnRestrictionsManager::complete_relation(const osmium::Relation& relation
         validation.message = "From way missing";
     } else if (!to_way) {
         validation.message = "To way missing";
+    } else if (!member_node_id && via_ways.empty()) {
+        validation.message = "via node or via way(s) missing";
     }
     if (validation.failed()) {
         write(relation, validation, std::move(point), std::move(ml));
