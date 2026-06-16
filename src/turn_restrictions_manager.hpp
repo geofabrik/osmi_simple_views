@@ -19,7 +19,7 @@ true, true, true>, public OGROutputBase {
     std::unique_ptr<gdalcpp::Layer> m_invalid_restrictions_n;
     std::unique_ptr<gdalcpp::Layer> m_invalid_restrictions_w;
 
-    static constexpr size_t vehicle_classes_count = 41;
+    static constexpr size_t vehicle_classes_count = 42;
 
     void write_invalid_point(const osmium::Relation& relation,
             const ValidationResult& result, std::unique_ptr<OGRGeometry>&& geometry,
@@ -53,7 +53,7 @@ public:
         "hgv_articulated", "bdouble", "agricultural", "auto_rickshaw", "nev", "golf_cart",
         "microcar", "atv", "psv", "bus", "taxi", "minibus", "share_taxi", "rideshare",
         "hov", "carpool", "car_sharing", "emergency", "hazmat", "hazmat:water", "school_bus",
-        "disabled"
+        "disabled", "hgv:trailer"
     };
     std::array<size_t, vehicle_classes_count> vehicle_classes_lengths;
 
