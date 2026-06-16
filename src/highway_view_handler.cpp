@@ -336,6 +336,24 @@ bool HighwayViewHandler::check_valid_turns(const char* turns) {
     return true;
 }
 
+int HighwayViewHandler::get_cycleway_lane_count(const osmium::TagList& tags) {
+    int lanes = 0;
+    const char* cycleway = tags.get_value_by_key("cycleway");
+    const char* cycleway_both = tags.get_value_by_key("cycleway");
+    if ((cycleway && !strcmp(cycleway, "lane")) || (cycleway_both && !strcmp(cycleway_both, "lane"))) {
+        return 2;
+    } else {
+        const char* cycleway_right = tags.get_value_by_key("cycleway:right");
+        const char* cycleway_left = tags.get_value_by_key("cycleway:left");
+        if (cycleway_right && !strcmp(cycleway_right, "lane")) {
+            ++lanes;
+        } else if (cycleway_left && !strcmp(cycleway_left, "lane")) {
+            ++lanes;
+        }
+    }
+    return lanes;
+}
+
 void HighwayViewHandler::check_lanes_tags(const osmium::Way& way) {
     int lanes = check_lanes_value_and_write_error(way, "lanes");
     if (lanes == -1) {
@@ -407,8 +425,26 @@ void HighwayViewHandler::check_lanes_tags(const osmium::Way& way) {
         );
         return;
     }
-    if ((way.tags().has_key("turn:lanes:forward") || way.tags().has_key("turn:lanes:forward")
-            || way.tags().has_key("turn:lanes:both_ways")) && pure_oneway) {
+    const char* turn_lanes_both_ways = way.get_value_by_key("turn:lanes:both_ways");
+    if (turn_lanes_both_ways && !lanes_both) {
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "turn:lanes:both_ways without turn:lanes"
+        );
+        return;
+    }
+    int turn_lanes_count_both = pipe_separated_items_count(turn_lanes_both_ways);
+    if (turn_lanes_count_both > 0 && turn_lanes_count_both < lanes_both) {
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "turn:lanes:both_ways contains too few lanes"
+        );
+        return;
+    }
+    if ((way.tags().has_key("turn:lanes:forward") || way.tags().has_key("turn:lanes:backward")
+            || turn_lanes_both_ways) && pure_oneway) {
         set_fields<osmium::Way>(
                 m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
                 [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
@@ -416,6 +452,7 @@ void HighwayViewHandler::check_lanes_tags(const osmium::Way& way) {
         );
         return;
     }
+    int cycleway_lanes = get_cycleway_lane_count(way.tags());
     // number of lanes vs. turn:lanes
     const char* turn_lanes_value = way.get_value_by_key("turn:lanes");
     int turn_lanes_count = pipe_separated_items_count(turn_lanes_value);
@@ -427,7 +464,7 @@ void HighwayViewHandler::check_lanes_tags(const osmium::Way& way) {
         );
         return;
     }
-    if (turn_lanes_count > 0 && turn_lanes_count < lanes) {
+    if (turn_lanes_count > 0 && turn_lanes_count < lanes + cycleway_lanes) {
         set_fields<osmium::Way>(
                 m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
                 [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
@@ -494,6 +531,21 @@ void HighwayViewHandler::check_lanes_tags(const osmium::Way& way) {
                 m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
                 [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
                 way.id(), "way_id", "error", "turn:lanes:backward contains invalid directions"
+        );
+        return;
+    }
+    // Compare turn lanes count with total lanes count and include cycleways.
+    // Because we do not take the driving side into account, we have to compute the sums of lanes and turn lanes.
+    // Due to the lack of knowledge about the driving side, we cannot find mapping mistakes where turn lanes
+    // are mapped into one direction only.
+    // This code ignores motorcycle lanes for the time being.
+    if ((pure_oneway && turn_lanes_count && lanes + cycleway_lanes > turn_lanes_count)
+            || (turn_lanes_count_fwd && turn_lanes_count_bkwd
+                    && turn_lanes_count_both + turn_lanes_count_fwd + turn_lanes_count_bkwd < lanes + cycleway_lanes)) {
+        set_fields<osmium::Way>(
+                m_highway_lanes.get(), way, "lanes", way.get_value_by_key("lanes", ""), all_tags_str,
+                [](const osmium::Way& way, ogr_factory_type& factory) {return factory.create_linestring(way);},
+                way.id(), "way_id", "error", "turn lanes must include cycleway lanes"
         );
         return;
     }

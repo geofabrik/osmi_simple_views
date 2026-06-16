@@ -136,6 +136,11 @@ class HighwayViewHandler : public AbstractViewHandler {
      */
     static bool name_not_fixme(const osmium::TagList& tags);
 
+    /**
+     * Get number of bicycle lanes which need to be present in turn:lanes*.
+     */
+    static int get_cycleway_lane_count(const osmium::TagList& tags);
+
     void check_lanes_tags(const osmium::Way& way);
 
     static bool oneway_ok(const osmium::TagList& tags);
