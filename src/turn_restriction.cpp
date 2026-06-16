@@ -119,29 +119,26 @@ ValidationResult ViaWayTurnRestriction::validate_members() {
             if (last->end_node == via_way.start_node) {
                 used.at(i) = true;
                 last = &via_way;
-                ++processed;
                 found = true;
                 break;
             } else if (last->end_node == via_way.end_node) {
                 used.at(i) = true;
                 last = &via_way;
                 last->reverse();
-                ++processed;
                 found = true;
                 break;
-            // We reverse ways whose start node is connected to the next way.
-            // However, the from way is never reversed.
+            // We always reverse ways whose start node is connected to the next way.
+            // Searching for connected ways only happens at the end of a way.
+            // However, at the beginning of a chain of ways, we have to look at the start, too.
             } else if (processed == 0 && last->start_node == via_way.start_node) {
                 used.at(i) = true;
                 last = &via_way;
-                ++processed;
                 found = true;
                 break;
             } else if (processed == 0 && last->start_node == via_way.end_node) {
                 used.at(i) = true;
                 last = &via_way;
                 last->reverse();
-                ++processed;
                 found = true;
                 break;
             }
