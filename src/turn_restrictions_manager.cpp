@@ -78,8 +78,11 @@ void TurnRestrictionsManager::write(const osmium::Relation& relation,
         std::unique_ptr<OGRGeometry> geom {static_cast<OGRGeometry*>(ml.release())};
         if (validation.failed()) {
             write_invalid_line(relation, validation, std::move(geom));
-        } else if (point) {
-            write_valid(relation, std::move(point), std::move(ml));
+            if (point) {
+                write_invalid_point(relation, validation, std::move(geom));
+            }
+        } else {
+            write_valid(relation, std::move(point), std::move(geom));
         }
     } else if (point) {
         std::unique_ptr<OGRGeometry> geom {static_cast<OGRGeometry*>(point.release())};
