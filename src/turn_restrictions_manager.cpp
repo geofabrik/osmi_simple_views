@@ -143,9 +143,12 @@ TurnRestrictionsManager::Restriction TurnRestrictionsManager::parse_restriction(
 
 TurnRestrictionsManager::VehicleSuperclass TurnRestrictionsManager::is_valid_restriction_key(const char* key) const {
     if (strncmp(key, "restriction:", 12)) {
-        return VehicleSuperclass::invalid;
+        return VehicleSuperclass::not_a_restriction;
     }
     const char* key_wo_prefix = key + 12;
+    if (!strcmp(key_wo_prefix, "conditional")) {
+        return VehicleSuperclass::conditional;
+    }
     const size_t keylen = strlen(key);
     for (size_t i = 0; i < vehicle_classes_count; ++i) {
         const size_t l = vehicle_classes_lengths.at(i);
@@ -159,8 +162,6 @@ TurnRestrictionsManager::VehicleSuperclass TurnRestrictionsManager::is_valid_res
         const char* after_vehicle_class = key_wo_prefix + l;
         if (*after_vehicle_class == '\0') {
             return (i == 0) ? VehicleSuperclass::bicycle : VehicleSuperclass::other;
-        } else if (*after_vehicle_class != ':') {
-            return VehicleSuperclass::invalid;
         }
         const char* cond_suffix = key_wo_prefix + l + 1;
         if (!strcmp(cond_suffix, "conditional")) {
@@ -182,15 +183,18 @@ ValidationResult TurnRestrictionsManager::check_tagging(const osmium::Relation& 
     }
     if (restriction_type == Restriction::undefined) {
         bool found = false;
+        VehicleSuperclass vsc;
         // If restriction=* is unset, look for restriction:*=* instead.
         for (const osmium::Tag& t : rel.tags()) {
-            VehicleSuperclass vsc = is_valid_restriction_key(t.key());
-            if (vsc != VehicleSuperclass::invalid && vsc != VehicleSuperclass::conditional) {
+            vsc = is_valid_restriction_key(t.key());
+            if (vsc == VehicleSuperclass::bicycle || vsc == VehicleSuperclass::other) {
                 restriction_type = parse_restriction(t.value(), (vsc == VehicleSuperclass::bicycle));
                 if (restriction_type == Restriction::invalid) {
                     return ValidationResult{rel.type(), rel.id(), std::string{"Invalid value of key "} + t.key()};
                 }
                 found = (restriction_type != Restriction::undefined);
+            } else if (vsc == VehicleSuperclass::conditional) {
+                return ValidationResult{};
             }
         }
         if (!found) {

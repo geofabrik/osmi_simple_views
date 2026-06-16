@@ -43,7 +43,7 @@ public:
     };
 
     enum class VehicleSuperclass : char {
-        bicycle, invalid, other, conditional
+        bicycle, invalid, other, conditional, not_a_restriction
     };
 
     static constexpr std::array<const char*, vehicle_classes_count> vehicle_classes = {
@@ -72,7 +72,7 @@ public:
 
     TurnRestrictionsManager() = delete;
 
-    TurnRestrictionsManager(Options& options);
+    explicit TurnRestrictionsManager(Options& options);
 
     static std::string view_name();
 
@@ -104,7 +104,6 @@ public:
 
     void close();
 
-private:
     ValidationResult check_tagging(const osmium::Relation& rel, TurnRestrictionsManager::Restriction& restriction_type);
 };
 

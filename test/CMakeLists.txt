@@ -25,3 +25,9 @@ target_link_libraries(test_highway_view testlib ${OSMIUM_LIBRARIES} ${Boost_LIBR
 add_test(NAME test_highway_view
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND test_highway_view)
+
+add_executable(test_turn_restrictions t/test_turn_restrictions.cpp ../src/turn_restrictions_manager.cpp ../src/turn_restriction.cpp ../src/tagging_view_handler.cpp ../src/ogr_output_base.cpp ../src/abstract_view_handler.cpp)
+target_link_libraries(test_turn_restrictions testlib ${OSMIUM_LIBRARIES} ${Boost_LIBRARIES})
+add_test(NAME test_turn_restrictions
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND test_turn_restrictions)
