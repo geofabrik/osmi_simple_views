@@ -45,9 +45,11 @@ bool TurnRestrictionsManager::new_member(const osmium::Relation&,
 }
 
 void TurnRestrictionsManager::write_invalid_point(const osmium::Relation& relation,
-        const ValidationResult& result, std::unique_ptr<OGRGeometry>&& geometry) {
+        const ValidationResult& result, std::unique_ptr<OGRGeometry>&& geometry,
+        bool present_in_line_layer) {
     gdalcpp::Feature feature(*(m_invalid_restrictions_n.get()), std::move(geometry));
     TaggingViewHandler::set_basic_fields(feature, relation, "message", result.message.value().c_str());
+    feature.set_field("has_line_geom", present_in_line_layer ? 1 : 0);
     feature.add_to_layer();
 }
 
@@ -83,14 +85,15 @@ void TurnRestrictionsManager::write(const osmium::Relation& relation,
         if (validation.failed()) {
             write_invalid_line(relation, validation, std::move(geom));
             if (point) {
-                write_invalid_point(relation, validation, std::move(geom));
+                std::unique_ptr<OGRGeometry> p {static_cast<OGRGeometry*>(point.release())};
+                write_invalid_point(relation, validation, std::move(p), true);
             }
         } else {
             write_valid(relation, std::move(point), std::move(geom));
         }
     } else if (point) {
         std::unique_ptr<OGRGeometry> geom {static_cast<OGRGeometry*>(point.release())};
-        write_invalid_point(relation, validation, std::move(geom));
+        write_invalid_point(relation, validation, std::move(geom), false);
     }
 }
 
@@ -273,6 +276,14 @@ void TurnRestrictionsManager::complete_relation(const osmium::Relation& relation
     } else if (!member_node_id && via_ways.empty()) {
         validation.message = "via node or via way(s) missing";
     }
+    if (!member_node_id && ml && !ml->IsEmpty()) {
+        // If the relation has no member node, use a replacement.
+        const OGRLineString* first_ls = *(ml->begin());
+        point = std::make_unique<OGRPoint>(first_ls->getX(0), first_ls->getY(0));
+    } else if (!member_node_id && !ml) {
+        // There is no geometry to write – neither point nor multitlinestring.
+        return;
+    }
     if (validation.failed()) {
         write(relation, validation, std::move(point), std::move(ml));
         return;
@@ -304,6 +315,8 @@ void TurnRestrictionsManager::create_layer(CreateLayerFunc create_layer) {
     m_invalid_restrictions_n = create_layer(invalid_node_layer_name, wkbPoint);
     m_invalid_restrictions_n->add_field("rel_id", OFTString, 10);
     m_invalid_restrictions_n->add_field("lastchange", OFTString, 21);
+    // has_line_geom stores wether the relation was written to the line layer, too.
+    m_invalid_restrictions_n->add_field("has_line_geom", OFTInteger, 3);
     m_invalid_restrictions_n->add_field("message", OFTString, TaggingViewHandler::MAX_STRING_LENGTH);
     m_invalid_restrictions_n->add_field("error_type", OFTString, 1);
     m_invalid_restrictions_n->add_field("error_id", OFTInteger64, TaggingViewHandler::MAX_STRING_LENGTH);

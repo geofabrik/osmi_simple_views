@@ -22,7 +22,8 @@ true, true, true>, public OGROutputBase {
     static constexpr size_t vehicle_classes_count = 41;
 
     void write_invalid_point(const osmium::Relation& relation,
-            const ValidationResult& result, std::unique_ptr<OGRGeometry>&& geometry);
+            const ValidationResult& result, std::unique_ptr<OGRGeometry>&& geometry,
+            bool present_in_line_layer);
     void write_invalid_line(const osmium::Relation& relation,
             const ValidationResult& result, std::unique_ptr<OGRGeometry>&& geometry);
     void write_valid(const osmium::Relation& relation,
