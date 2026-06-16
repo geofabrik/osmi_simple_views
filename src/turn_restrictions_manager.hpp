@@ -73,6 +73,8 @@ public:
 
     TurnRestrictionsManager(Options& options);
 
+    static std::string view_name();
+
     static constexpr const char* node_layer_name = "restriction_n";
     static constexpr const char* way_layer_name = "restriction_w";
     static constexpr const char* invalid_node_layer_name = "invalid_restrictions_n";

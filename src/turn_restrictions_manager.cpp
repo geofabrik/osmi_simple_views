@@ -11,6 +11,10 @@ TurnRestrictionsManager::TurnRestrictionsManager(Options& options) :
     init_vehicle_classes_lengths();
 }
 
+std::string TurnRestrictionsManager::view_name() {
+    return "turn_restrictions";
+}
+
 void TurnRestrictionsManager::init_vehicle_classes_lengths() {
     for (size_t i = 0; i < vehicle_classes_count; ++i) {
         vehicle_classes_lengths[i] = strlen(vehicle_classes.at(i));

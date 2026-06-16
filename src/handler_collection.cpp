@@ -40,6 +40,11 @@ void HandlerCollection::give_correct_name() {
         }
         rename_output_files(h->view_name(), close_datasets(h->view_type()));
     }
+    // Views without an instance of AbstractViewHandler
+    if (turn_restrictions_manager) {
+        turn_restrictions_manager->close();
+        rename_output_files(TurnRestrictionsManager::view_name(), close_datasets(ViewType::turn_restrictions));
+    }
 }
 
 std::vector<std::string> HandlerCollection::close_datasets(const ViewType view_type) {
