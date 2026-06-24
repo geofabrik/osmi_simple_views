@@ -1,15 +1,17 @@
 # OSMI Simple Views
 
 This repository contains the tools to generated the data which powers the view
-[Tagging](http://tools.geofabrik.de/osmi/?view=tagging&lon=-70.32779&lat=41.68389&zoom=11),
-[Highways](http://tools.geofabrik.de/osmi/?view=highways&lon=-4.20863&lat=40.85298&zoom=8),
-[Places](http://tools.geofabrik.de/osmi/?view=places&lon=-64.55104&lat=9.07186&zoom=8&overlays=megacities,largecities,cities,towns,villages,hamlets,islands,suburbs,farms,localities,municipalities,errors_unknown_place_type,errors_population_format,errors_place_without_name,errors_population_number_format,errors_pop_type_mismatch,population)
+[Tagging](https://tools.geofabrik.de/osmi/?view=tagging&lon=-70.32779&lat=41.68389&zoom=11),
+[Highways](https://tools.geofabrik.de/osmi/?view=highways&lon=-4.20863&lat=40.85298&zoom=8),
+[Places](https://tools.geofabrik.de/osmi/?view=places&lon=-64.55104&lat=9.07186&zoom=8&overlays=megacities,largecities,cities,towns,villages,hamlets,islands,suburbs,farms,localities,municipalities,errors_unknown_place_type,errors_population_format,errors_place_without_name,errors_population_number_format,errors_pop_type_mismatch,population)
 and
-[Geometry](http://tools.geofabrik.de/osmi/?view=geometry&lon=9.77490&lat=45.91982&zoom=8)
-of the OpenStreetMap Inspector (OSMI) by [Geofabrik](http://www.geofabrik.de/).
+[Geometry](https://tools.geofabrik.de/osmi/?view=geometry&lon=9.77490&lat=45.91982&zoom=8)
+of the
+[OpenStreetMap Inspector (OSMI)](https://tools.geofabrik.de/osmi/)
+by [Geofabrik](https://www.geofabrik.de/).
 
 This software uses the [Osmium library](https://github.com/osmcode/libosmium) by Jochen Topf for everything related with
-reading OSM data and the [GDAL](http://gdal.org/) library (via Jochen Topf's C++ wrapper
+reading OSM data and the [GDAL](https://gdal.org/) library (via Jochen Topf's C++ wrapper
 [gdalcpp](https://github.com/joto/gdalcpp)) to write the output data.
 
 
@@ -25,7 +27,7 @@ The Catch unit test framework is available under the terms of [Boost Software
 License](test/include/LICENSE_1_0.txt).
 
 The geometry view contains code to detect self intersections of ways which is a
-modified copy of a part of [OSMCoastline](osmcode.org/osmcoastline/) by Jochen
+modified copy of a part of [OSMCoastline](https://osmcode.org/osmcoastline/) by Jochen
 Topf, available GNU General Public License 3 or newer.
 
 
@@ -50,7 +52,7 @@ Documentation for mappers explaining the contents of all layers and views is ava
 ## Dependencies
 
 * C++11 compiler
-* libosmium (`libosmium-dev`) and all its [important dependencies](http://osmcode.org/libosmium/manual.html#dependencies)
+* libosmium (`libosmium-dev`) and all its [important dependencies](https://osmcode.org/libosmium/manual.html#dependencies)
 * GDAL library (`libgdal-dev`)
 * proj.4 (`libproj4-dev`)
 * CMake (`cmake`)
